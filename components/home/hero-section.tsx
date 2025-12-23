@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 const images = [
   "/1.png",
@@ -14,32 +14,32 @@ const images = [
 ];
 
 const heroContent = {
-  title: "Saúde Integrativa & Fitoterapia Avançada",
-  subtitle: "Descubra o poder da natureza aliado à ciência com o Método Fitoclin da Dra. Isa. Tratamentos personalizados para o seu bem-estar pleno.",
+  badge: "Medicina Integrativa & Fitoterapia",
+  title: "A Ciência da Natureza a favor da sua Saúde",
+  subtitle: "O Método Fitoclin une a sabedoria ancestral das plantas com a precisão da medicina moderna para tratar a causa, não apenas os sintomas.",
 };
 
 export function HeroSection() {
   const [currentImage, setCurrentImage] = useState(0);
 
-  // Auto-play do slider
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <section className="relative w-full h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-black">
+    <section className="relative w-full h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-background">
       
       {/* Background Image Slider */}
       <AnimatePresence mode="popLayout">
         <motion.div
           key={currentImage}
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 0.6, scale: 1 }} // Opacity 0.6 para dar contraste com o texto branco
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 0.5, scale: 1 }} 
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.5 }}
+          transition={{ duration: 2 }}
           className="absolute inset-0 w-full h-full"
         >
           <Image
@@ -47,66 +47,74 @@ export function HeroSection() {
             alt="Ambiente Fitoclin"
             fill
             className="object-cover"
-            priority={true} // Importante para LCP (Largest Contentful Paint)
+            priority={true}
           />
         </motion.div>
       </AnimatePresence>
 
-      {/* Overlay Gradiente para legibilidade extra */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-black/30" />
+      {/* GRADIENTE DE FADE-IN (Mágico) */}
+      {/* Vai do transparente no topo até a cor solida do fundo (#062214) embaixo */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#062214] via-[#062214]/60 to-transparent" />
+      
+      {/* Overlay radial para focar no centro/texto */}
+      <div className="absolute inset-0 bg-radial-[circle_at_center,_var(--tw-gradient-stops)] from-transparent via-[#062214]/40 to-[#062214]" />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 text-center md:text-left">
-        <div className="max-w-3xl space-y-6">
+      <div className="relative z-10 container mx-auto px-6 pt-20 text-center">
+        <div className="max-w-4xl mx-auto space-y-8">
+          
+          {/* Badge */}
           <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex justify-center"
+          >
+            <span className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-[#2A5432]/30 border border-[#76A771]/30 text-[#76A771] text-sm font-semibold backdrop-blur-md uppercase tracking-wider">
+              <Sparkles className="w-3 h-3" /> {heroContent.badge}
+            </span>
+          </motion.div>
+
+          {/* Título com Gradiente */}
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
           >
-            <span className="inline-block py-1 px-3 rounded-full bg-secondary/30 border border-secondary/50 text-secondary-foreground text-sm font-semibold mb-4 backdrop-blur-sm">
-              Bem-vindo à Fitoclin
-            </span>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
+            <span className="text-gradient block">
               {heroContent.title}
-            </h1>
-          </motion.div>
+            </span>
+          </motion.h1>
 
+          {/* Subtítulo */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            className="text-lg md:text-xl text-gray-200 max-w-xl"
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
             {heroContent.subtitle}
           </motion.p>
 
+          {/* Botões */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start"
+            transition={{ delay: 0.9, duration: 0.8 }}
+            className="flex flex-col sm:flex-row gap-5 pt-6 justify-center"
           >
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full text-lg h-14 px-8">
+            {/* Botão Principal com Gradiente Linear */}
+            <Button size="lg" className="btn-gradient rounded-full text-lg h-14 px-10">
               Agendar Avaliação
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-primary hover:bg-white hover:text-primary rounded-full text-lg h-14 px-8 backdrop-blur-sm bg-white/10">
-              Conhecer o Método <ArrowRight className="ml-2 w-5 h-5" />
+            
+            {/* Botão Secundário Outline */}
+            <Button size="lg" variant="outline" className="border-[#76A771]/50 text-[#F1F1F1] hover:bg-[#76A771]/10 hover:text-white rounded-full text-lg h-14 px-10 bg-transparent backdrop-blur-sm">
+              Conhecer o Método <ArrowRight className="ml-2 w-5 h-5 text-[#76A771]" />
             </Button>
           </motion.div>
         </div>
-      </div>
-
-      {/* Indicadores do Slider */}
-      <div className="absolute bottom-10 left-0 right-0 z-20 flex justify-center gap-3">
-        {images.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentImage(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentImage ? "bg-primary w-8" : "bg-white/50 hover:bg-white"
-            }`}
-          />
-        ))}
       </div>
     </section>
   );
