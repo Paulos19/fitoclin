@@ -74,6 +74,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html, body {
+    @apply overflow-x-hidden; /* Remove a rolagem lateral */
+    width: 100%; /* Usa 100% em vez de 100vw para evitar somar a barra de scroll */
+    max-width: 100%;
+    position: relative; /* Garante que nada saia do fluxo */
+  }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-secondary/30 selection:text-white;
   }
