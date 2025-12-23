@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { CheckCircle2, ArrowRight, Award, BookOpen, Globe, GraduationCap } from "lucide-react";
+import { ArrowRight, Award, BookOpen, Globe, GraduationCap } from "lucide-react";
 import Image from "next/image";
 
 export function AboutSection() {
@@ -17,7 +17,7 @@ export function AboutSection() {
     { value: "15+", label: "Anos de Experiência" },
     { value: "50+", label: "Artigos Publicados" },
     { value: "3+", label: "Cursos Criados" },
-    { value: "5k+", label: "Vidas Transformadas" }, // Estimativa para impacto
+    { value: "5k+", label: "Vidas Transformadas" },
   ];
 
   return (
@@ -36,17 +36,24 @@ export function AboutSection() {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden border border-[#76A771]/20 shadow-2xl shadow-[#000000]/50">
-              {/* Substitua depois pela foto real da Dra. Isa */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0A311D] via-[#1a3c24] to-[#062214] flex items-center justify-center">
-                 {/* Placeholder até ter a foto real */}
-                 <span className="text-white/20 font-bold text-2xl">[Foto Dra. Isa]</span>
-              </div>
+            <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden border border-[#76A771]/20 shadow-2xl shadow-[#000000]/50 group">
+              {/* IMAGEM REAL DA DRA. ISA */}
+              <Image
+                src="/isa.png"
+                alt="Dra. Isa - Especialista em Fitoterapia"
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                priority // Carrega com prioridade por ser "above the fold" em telas grandes
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
               
+              {/* Overlay sutil para garantir leitura do badge se a foto for muito clara embaixo */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#062214]/80 via-transparent to-transparent opacity-60" />
+
               {/* Badge Flutuante de Autoridade */}
-              <div className="absolute bottom-6 left-6 bg-[#062214]/80 backdrop-blur-md py-3 px-5 rounded-lg border-l-4 border-[#76A771] shadow-lg">
+              <div className="absolute bottom-6 left-6 bg-[#062214]/90 backdrop-blur-md py-3 px-5 rounded-lg border-l-4 border-[#76A771] shadow-lg z-10">
                 <p className="text-white font-bold text-lg">Dra. Isa</p>
-                <p className="text-[#76A771] text-xs uppercase tracking-widest">USP</p>
+                <p className="text-[#76A771] text-xs uppercase tracking-widest">PhD pela USP</p>
               </div>
             </div>
           </motion.div>
@@ -75,7 +82,7 @@ export function AboutSection() {
             {/* Grid de Destaques (Ícones) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {highlights.map((item, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-[#0A311D]/50 border border-[#2A5432]/30">
+                <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-[#0A311D]/50 border border-[#2A5432]/30 hover:border-[#76A771]/50 transition-colors">
                   <div className="p-2 bg-[#2A5432]/20 rounded-full text-[#76A771]">
                     <item.icon className="w-5 h-5" />
                   </div>
@@ -95,7 +102,7 @@ export function AboutSection() {
             </div>
 
             <div className="pt-4">
-              <Button className="btn-gradient rounded-full px-8 h-12 text-base shadow-lg shadow-[#76A771]/20">
+              <Button className="btn-gradient rounded-full px-8 h-12 text-base shadow-lg shadow-[#76A771]/20 hover:shadow-[#76A771]/40 transition-all">
                 Conhecer minha Trajetória <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </div>
