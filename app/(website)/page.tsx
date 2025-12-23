@@ -3,38 +3,68 @@ import { HeroSection } from "@/components/home/hero-section";
 import { AboutSection } from "@/components/home/about-section";
 import { MethodSection } from "@/components/home/method-section";
 import { ServicesSection } from "@/components/home/services-section";
-import { CoursesSection } from "@/components/home/courses-section"; // Nova
-import { PricingSection } from "@/components/home/pricing-section"; // Nova
+import { CoursesSection } from "@/components/home/courses-section";
+import { PricingSection } from "@/components/home/pricing-section";
 import { MaterialsSection } from "@/components/home/materials-section";
 import { Footer } from "@/components/layout/footer";
+import { PrismaClient } from "@prisma/client";
 
-export default function Home() {
+const prisma = new PrismaClient();
+
+// Revalidar a cada 60 segundos para garantir performance e dados frescos
+export const revalidate = 60; 
+
+export default async function Home() {
+  // 1. Buscar Configurações Gerais (Hero, Sobre, Contatos)
+  const siteInfo = await prisma.siteInfo.findUnique({
+    where: { key: "homepage_config" }
+  });
+
+  // 2. Buscar Cursos Ativos
+  const courses = await prisma.course.findMany({
+    where: { active: true },
+    orderBy: { createdAt: 'desc' },
+    take: 3 // Mostramos apenas os 3 mais recentes na home
+  });
+
+  // 3. Buscar Planos Ativos
+  const plans = await prisma.plan.findMany({
+    where: { active: true },
+    orderBy: { price: 'asc' } // Ordenado pelo menor preço
+  });
+
   return (
     <main className="min-h-screen bg-[#062214] text-white selection:bg-[#76A771] selection:text-[#062214]">
       <Navbar />
       
-      {/* 1. Atração & Impacto */}
-      <HeroSection />
+      {/* Seção 1: Hero Dinâmico */}
+      <HeroSection 
+        title={siteInfo?.heroTitle} 
+        subtitle={siteInfo?.heroSubtitle} 
+      />
       
-      {/* 2. Autoridade (Quem é a Doutora) */}
-      <AboutSection />
+      {/* Seção 2: Sobre Dinâmico */}
+      <AboutSection 
+        aboutText={siteInfo?.aboutText}
+        whatsapp={siteInfo?.whatsapp}
+        instagram={siteInfo?.instagram}
+      />
       
-      {/* 3. Lógica (O Método) */}
+      {/* Seção 3: Método (Estático por enquanto) */}
       <MethodSection />
       
-      {/* 4. Soluções Clínicas (Serviços) */}
+      {/* Seção 4: Serviços (Estático por enquanto) */}
       <ServicesSection />
       
-      {/* 5. Soluções Educacionais (Cursos) */}
-      <CoursesSection />
+      {/* Seção 5: Cursos Dinâmicos */}
+      <CoursesSection courses={courses} />
       
-      {/* 6. Oferta de Recorrência (Assinaturas) */}
-      <PricingSection />
+      {/* Seção 6: Planos Dinâmicos */}
+      <PricingSection plans={plans} />
       
-      {/* 7. Isca Digital (Materiais Gratuitos) */}
+      {/* Seção 7: Materiais (Estático) */}
       <MaterialsSection />
       
-      <Footer />
     </main>
   );
 }

@@ -1,43 +1,25 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Star, Users } from "lucide-react";
+import { ArrowRight, BookOpen, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
-// Mock Data - Futuramente virá do banco de dados
-const courses = [
-  {
-    id: 1,
-    title: "Fitoterapia Clínica Baseada em Evidências",
-    category: "Formação Profissional",
-    students: "1.2k+ Alunos",
-    rating: 4.9,
-    description: "Domine a prescrição de fitoterápicos com segurança e fundamentação científica para aplicar no consultório.",
-    status: "Inscrições Abertas",
-  },
-  {
-    id: 2,
-    title: "Suplementação Inteligente",
-    category: "Curso Avançado",
-    students: "850+ Alunos",
-    rating: 5.0,
-    description: "Aprenda a modular a bioquímica do paciente através da suplementação assertiva e personalizada.",
-    status: "Lista de Espera",
-  },
-  {
-    id: 3,
-    title: "Gestão de Carreira Médica",
-    category: "Mentoria",
-    students: "300+ Alunos",
-    rating: 4.8,
-    description: "Estratégias para médicos que desejam elevar o valor do seu atendimento e fidelizar pacientes.",
-    status: "Vagas Limitadas",
-  },
-];
+// Interface para os dados que vêm do Prisma
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  price?: string | null;
+  imageUrl?: string | null;
+  linkUrl?: string | null;
+}
 
-export function CoursesSection() {
+export function CoursesSection({ courses }: { courses: Course[] }) {
+  if (courses.length === 0) return null; // Não mostra a seção se não houver cursos
+
   return (
-    <section id="cursos" className="py-24 bg-[#04180e] relative"> {/* Fundo levemente mais escuro para contraste */}
+    <section id="cursos" className="py-24 bg-[#04180e] relative">
       <div className="container mx-auto px-6">
         
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -49,15 +31,12 @@ export function CoursesSection() {
               Aprenda com a <span className="text-[#76A771]">Dra. Isa</span>
             </h2>
             <p className="text-gray-400 mt-4 text-lg">
-              Cursos desenvolvidos para profissionais de saúde e pacientes que buscam conhecimento profundo e aplicável.
+              Cursos e formações desenvolvidos para profissionais e pacientes.
             </p>
           </div>
-          <Button variant="link" className="text-[#76A771] hover:text-white transition-colors p-0 text-base">
-            Ver todos os cursos <ArrowRight className="ml-2 w-5 h-5" />
-          </Button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {courses.map((course, index) => (
             <motion.div
               key={course.id}
@@ -67,39 +46,52 @@ export function CoursesSection() {
               viewport={{ once: true }}
               className="bg-[#0A311D] border border-[#2A5432] rounded-2xl overflow-hidden hover:border-[#76A771] transition-all duration-300 group flex flex-col h-full"
             >
-              {/* Header do Card */}
-              <div className="p-1 h-2 bg-gradient-to-r from-[#2A5432] to-[#76A771]" />
+              {/* Imagem de Capa do Curso */}
+              <div className="relative h-48 w-full bg-[#062214]">
+                {course.imageUrl ? (
+                  <Image 
+                    src={course.imageUrl} 
+                    alt={course.title} 
+                    fill 
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-[#2A5432]">
+                    <ImageIcon className="w-12 h-12 opacity-20" />
+                  </div>
+                )}
+                {/* Badge de Preço */}
+                <div className="absolute top-4 right-4 bg-[#062214]/90 backdrop-blur px-3 py-1 rounded-full text-[#76A771] text-xs font-bold border border-[#76A771]/30">
+                   {course.price || "Grátis"}
+                </div>
+              </div>
               
               <div className="p-8 flex flex-col flex-grow">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="bg-[#062214] text-[#76A771] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-[#2A5432]">
-                    {course.category}
-                  </span>
-                  <div className="flex items-center gap-1 text-yellow-500 text-sm font-bold">
-                    <Star className="w-4 h-4 fill-current" /> {course.rating}
-                  </div>
-                </div>
-
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#76A771] transition-colors">
+                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#76A771] transition-colors line-clamp-2">
                   {course.title}
                 </h3>
                 
-                <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">
+                <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
                   {course.description}
                 </p>
 
                 <div className="flex items-center gap-4 text-gray-500 text-sm mb-6 border-t border-[#2A5432]/50 pt-4">
                   <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" /> {course.students}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" /> Online
+                    <BookOpen className="w-4 h-4" /> 100% Online
                   </div>
                 </div>
 
-                <Button className={`w-full ${course.status === 'Inscrições Abertas' ? 'btn-gradient' : 'bg-[#2A5432]/20 text-gray-300 hover:bg-[#2A5432]/40'}`}>
-                  {course.status === 'Inscrições Abertas' ? 'Inscreva-se Agora' : course.status}
-                </Button>
+                {course.linkUrl ? (
+                  <a href={course.linkUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                    <Button className="w-full btn-gradient">
+                      Inscreva-se Agora <ExternalLink className="ml-2 w-4 h-4" />
+                    </Button>
+                  </a>
+                ) : (
+                  <Button disabled className="w-full bg-[#2A5432]/20 text-gray-500">
+                    Em Breve
+                  </Button>
+                )}
               </div>
             </motion.div>
           ))}
