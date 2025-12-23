@@ -166,3 +166,45 @@ model Exam {
 
   uploadedAt DateTime @default(now())
 }
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       String?  // Ex: "R$ 997,00" ou "12x de R$ 99"
+  imageUrl    String?
+  linkUrl     String?  // Link para Hotmart/Eduzz
+  active      Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String   // Ex: "Plano Mensal"
+  price       String   // Ex: "R$ 199"
+  period      String   // Ex: "/mês"
+  features    String   // Lista de benefícios separados por ponto-e-vírgula (;)
+  highlight   Boolean  @default(false) // Se é o plano destaque
+  buttonText  String   @default("Assinar Agora")
+  buttonLink  String?
+  
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteInfo {
+  id          String   @id @default(cuid())
+  // Identificador único para garantir que só tenhamos 1 registro de config
+  key         String   @unique @default("homepage_config") 
+  
+  heroTitle    String?
+  heroSubtitle String?
+  aboutText    String?
+  whatsapp     String?
+  instagram    String?
+  
+  updatedAt   DateTime @updatedAt
+}
