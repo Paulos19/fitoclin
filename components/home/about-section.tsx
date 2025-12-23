@@ -53,7 +53,7 @@ export function AboutSection() {
               {/* Badge Flutuante de Autoridade */}
               <div className="absolute bottom-6 left-6 bg-[#062214]/90 backdrop-blur-md py-3 px-5 rounded-lg border-l-4 border-[#76A771] shadow-lg z-10">
                 <p className="text-white font-bold text-lg">Dra. Isa</p>
-                <p className="text-[#76A771] text-xs uppercase tracking-widest">PhD pela USP</p>
+                <p className="text-[#76A771] text-xs uppercase tracking-widest">Medicina pela USP</p>
               </div>
             </div>
           </motion.div>
