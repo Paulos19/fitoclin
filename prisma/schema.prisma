@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- ENUMS (Tipos fixos) ---
+
+enum Role {
+  ADMIN // Dra. Isa
+  PATIENT // Pacientes
+}
+
+enum AppointmentStatus {
+  SCHEDULED // Agendado
+  COMPLETED // Realizado
+  CANCELED // Cancelado
+  MISSED // Faltou
+}
+
+enum ConsultationType {
+  FIRST_VISIT // Primeira Consulta
+  FOLLOW_UP // Retorno
+  EMERGENCY // Urgência
+}
+
+// --- MODELOS PRINCIPAIS ---
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String // Será hash
+  role      Role     @default(PATIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  image   String? // Foto de perfil
+  patient Patient? // Se for paciente, terá esse perfil
+
+  // Auditoria (Quem criou o registro, etc)
+  appointments    Appointment[]
+  doctorSchedules DoctorSchedule[]
+}
+
+model Patient {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dados Pessoais
+  phone      String?
+  birthDate  DateTime?
+  gender     String?
+  occupation String?
+
+  // Endereço
+  address String?
+  city    String?
+  state   String?
+
+  // Histórico
+  bio String? // Resumo clínico inicial
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos do Sistema
+  medicalRecords MedicalRecord[] // Prontuário
+  prescriptions  Prescription[] // Receitas
+  appointments   Appointment[] // Consultas
+  exams          Exam[] // Exames Anexados
+}
+
+// --- PRONTUÁRIO ELETRÔNICO (PEP) ---
+
+model MedicalRecord {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  date  DateTime @default(now())
+  title String // Ex: "Consulta de Retorno - 3 Meses"
+
+  // 5 PILARES DO MÉTODO FITOCLIN (Armazenado como texto ou JSON estruturado)
+  pilar1_investigacao String? // Investigação Profunda
+  pilar2_fitoterapia  String? // Fitoterapia Personalizada
+  pilar3_metabolismo  String? // Modulação Metabólica
+  pilar4_estresse     String? // Gestão do Estresse
+  pilar5_evolucao     String? // Evolução
+
+  notes String? // Anotações gerais livres
+
+  createdAt DateTime @default(now())
+}
+
+// --- PRESCRIÇÃO FITOTERÁPICA ---
+
+model Prescription {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  title   String // Ex: "Protocolo Desinflamação"
+  content String // Conteúdo completo (HTML ou JSON da receita)
+  pdfUrl  String? // Link se gerou PDF
+
+  validUntil DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+// --- AGENDA & CONSULTAS ---
+
+model Appointment {
+  id String @id @default(cuid())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  doctorId String // User ID da Dra. Isa
+  doctor   User   @relation(fields: [doctorId], references: [id])
+
+  date     DateTime // Data e Hora
+  duration Int      @default(60) // Em minutos
+
+  status AppointmentStatus @default(SCHEDULED)
+  type   ConsultationType  @default(FIRST_VISIT)
+
+  meetLink String? // Link do Google Meet (manual ou auto)
+  notes    String? // Notas pré-consulta
+
+  createdAt DateTime @default(now())
+}
+
+model DoctorSchedule {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dayOfWeek Int // 0 = Domingo, 1 = Segunda... 6 = Sábado
+  startTime String // Ex: "09:00"
+  endTime   String // Ex: "18:00"
+
+  isEnabled Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, dayOfWeek]) // Só pode ter uma regra por dia da semana
+}
+
+// --- EXAMES & ARQUIVOS ---
+
+model Exam {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  title    String
+  fileUrl  String // URL do upload (Blob/S3)
+  fileType String // pdf, jpg, etc
+
+  uploadedAt DateTime @default(now())
+}
