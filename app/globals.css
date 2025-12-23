@@ -4,49 +4,38 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* --- PALETA FITOCLIN PREMIUM (Dark Concept) --- */
-  
-  /* BACKGROUND: Verde Escuro Profundo (#062214) */
-  --background: hsl(150 70% 8%);
-  
-  /* TEXTO: Off-white (#F1F1F1) para contraste alto */
-  --foreground: hsl(0 0% 95%);
+  /* --- FORÇA O TEMA ESCURO NO NAVEGADOR --- */
+  color-scheme: dark;
 
-  /* CARD: Verde Médio (#0A311D) - levemente mais claro que o fundo */
-  --card: hsl(149 66% 12%);
+  /* --- PALETA FITOCLIN PREMIUM --- */
+  --background: hsl(150 70% 8%);      /* #062214 */
+  --foreground: hsl(0 0% 95%);        /* #F1F1F1 */
+
+  --card: hsl(149 66% 12%);           /* #0A311D */
   --card-foreground: hsl(0 0% 95%);
 
   --popover: hsl(149 66% 12%);
   --popover-foreground: hsl(0 0% 95%);
 
-  /* PRIMARY: Verde Musgo (#2A5432) - Base solida */
-  --primary: hsl(131 33% 25%);
+  --primary: hsl(131 33% 25%);        /* #2A5432 (Verde Musgo) */
   --primary-foreground: hsl(0 0% 100%);
 
-  /* SECONDARY: Verde Lima/Claro (#76A771) - Usado para acentos de luz */
-  --secondary: hsl(115 25% 55%);
+  --secondary: hsl(115 25% 55%);      /* #76A771 (Verde Lima) */
   --secondary-foreground: hsl(150 70% 5%);
 
-  /* ACCENTS DO LOGOTIPO (Usados em gráficos/detalhes) */
-  --accent-blue: #3C78B4;
-  --accent-coral: #E35D5D;
-  --accent-yellow: #F4B441;
-
-  /* MUTED: Para textos secundários */
   --muted: hsl(149 30% 20%);
   --muted-foreground: hsl(149 10% 70%);
 
   --destructive: hsl(0 62% 30%);
   --destructive-foreground: hsl(0 0% 98%);
 
-  --border: hsl(149 30% 20%); /* Bordas sutis */
+  --border: hsl(149 30% 20%);
   --input: hsl(149 30% 20%);
-  --ring: hsl(115 25% 55%); /* Foco na cor Lima */
+  --ring: hsl(115 25% 55%);
 
   --radius: 0.75rem;
 }
 
-/* --- TEMA TAILWIND V4 --- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -69,41 +58,89 @@
   --radius-lg: var(--radius);
 }
 
-/* --- ESTILOS GLOBAIS & GRADIENTES --- */
+/* --- SCROLLBAR GLOBAL (Chrome, Edge, Safari) --- 
+   Colocado fora do @layer para garantir prioridade */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #062214; /* Cor exata do fundo */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #2A5432; /* Verde Musgo */
+  border-radius: 99px;
+  border: 2px solid #062214; /* Borda cria efeito de "flutuante" */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #76A771; /* Verde Lima no hover */
+}
+
+::-webkit-scrollbar-corner {
+  background: #062214;
+}
+
+/* --- ESTILOS GLOBAIS --- */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   
+  html {
+    /* Suporte Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #2A5432 #062214;
+  }
+  
   html, body {
-    @apply overflow-x-hidden; /* Remove a rolagem lateral */
-    width: 100%; /* Usa 100% em vez de 100vw para evitar somar a barra de scroll */
+    @apply overflow-x-hidden;
+    width: 100%;
     max-width: 100%;
-    position: relative; /* Garante que nada saia do fluxo */
+    position: relative;
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-secondary/30 selection:text-white;
+    @apply bg-background text-foreground antialiased selection:bg-[#76A771]/30 selection:text-white;
   }
 }
 
 @layer components {
-  /* Botão Gradiente Premium */
   .btn-gradient {
-    @apply bg-gradient-to-r from-[#2A5432] to-[#76A771] text-white shadow-lg hover:shadow-primary/20 hover:brightness-110 transition-all duration-300 border-none;
+    @apply bg-gradient-to-r from-[#2A5432] to-[#76A771] text-white shadow-lg hover:shadow-primary/20 hover:brightness-110 transition-all duration-300 border-none cursor-pointer;
   }
   
-  /* Texto Gradiente Dourado/Lima */
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-[#F1F1F1] to-[#76A771];
+  /* Scrollbar Fina para áreas internas (Textareas, Tabelas) */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #2A5432 transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #2A5432;
+    border-radius: 10px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #76A771;
   }
 
-  /* Fade do Banner para o Fundo */
   .hero-fade-overlay {
     background: linear-gradient(to bottom, 
-      rgba(6, 34, 20, 0.3) 0%,     /* Transparente no topo */
-      rgba(6, 34, 20, 0.8) 60%,    /* Começa a escurecer */
-      rgba(6, 34, 20, 1) 100%      /* Sólido na cor do fundo no rodapé */
+      rgba(6, 34, 20, 0.3) 0%,
+      rgba(6, 34, 20, 0.8) 60%,
+      rgba(6, 34, 20, 1) 100%
     );
   }
 }

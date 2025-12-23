@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { put } from "@vercel/blob";
 
 const prisma = new PrismaClient();
 
@@ -86,6 +87,26 @@ export async function updatePatientProfile(formData: FormData) {
   const session = await auth();
   if (!session) return { error: "Não autorizado" };
 
+  // 1. Tratamento da Imagem (Vercel Blob)
+  const profileImage = formData.get("profileImage") as File;
+  let newImageUrl: string | undefined;
+
+  if (profileImage && profileImage.size > 0) {
+    try {
+      // Upload para o Vercel Blob
+      // Nome do arquivo: profiles/ID-TIMESTAMP.extensão
+      const filename = `profiles/${session.user.id}-${Date.now()}.${profileImage.name.split('.').pop()}`;
+      const blob = await put(filename, profileImage, {
+        access: 'public',
+      });
+      newImageUrl = blob.url;
+    } catch (err) {
+      console.error("Erro no upload da imagem:", err);
+      return { error: "Falha ao enviar a foto de perfil." };
+    }
+  }
+
+  // 2. Validação dos outros campos
   const rawData = {
     phone: formData.get("phone"),
     birthDate: formData.get("birthDate"),
@@ -97,32 +118,44 @@ export async function updatePatientProfile(formData: FormData) {
   };
 
   const validated = ProfileSchema.safeParse(rawData);
-  if (!validated.success) return { error: "Dados inválidos" };
+  if (!validated.success) return { error: "Dados inválidos nos campos de texto" };
 
   const data = validated.data;
 
   try {
-    // Converter data string para objeto Date (se existir)
-    // O input type="date" retorna "YYYY-MM-DD", o que funciona bem com new Date()
-    // Mas precisamos ajustar o fuso para não voltar um dia (adicionando T12:00:00)
     const birthDateObj = data.birthDate 
       ? new Date(data.birthDate + "T12:00:00") 
       : undefined;
 
-    await prisma.patient.update({
-      where: { userId: session.user.id }, // Atualiza baseado no ID do usuário logado
-      data: {
-        phone: data.phone,
-        birthDate: birthDateObj,
-        gender: data.gender,
-        occupation: data.occupation,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-      },
+    // 3. Atualização no Banco (Transaction para garantir integridade)
+    await prisma.$transaction(async (tx) => {
+      // Atualiza tabela Patient
+      await tx.patient.update({
+        where: { userId: session.user.id },
+        data: {
+          phone: data.phone,
+          birthDate: birthDateObj,
+          gender: data.gender,
+          occupation: data.occupation,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+        },
+      });
+
+      // Se houver nova imagem, atualiza tabela User
+      if (newImageUrl) {
+        await tx.user.update({
+          where: { id: session.user.id },
+          data: { image: newImageUrl },
+        });
+      }
     });
 
     revalidatePath("/dashboard/profile");
+    // Revalidar layout para atualizar o avatar no Header instantaneamente
+    revalidatePath("/", "layout"); 
+    
     return { success: "Perfil atualizado com sucesso!" };
   } catch (error) {
     console.error(error);
