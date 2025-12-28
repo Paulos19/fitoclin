@@ -45,6 +45,7 @@ model User {
   // Auditoria (Quem criou o registro, etc)
   appointments    Appointment[]
   doctorSchedules DoctorSchedule[]
+  notifications   Notification[]
 }
 
 model Patient {
@@ -115,25 +116,42 @@ model Prescription {
 
 // --- AGENDA & CONSULTAS ---
 
+model Notification {
+  id     String @id @default(cuid())
+  userId String // Quem vai receber (no caso, a Dra/Admin)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  message String
+  read    Boolean @default(false) // Para marcar como lida depois
+  link    String? // Opcional: Link para clicar e ir direto (ex: ver o agendamento)
+
+  createdAt DateTime @default(now())
+}
+
 model Appointment {
   id String @id @default(cuid())
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
 
-  doctorId String // User ID da Dra. Isa
+  doctorId String
   doctor   User   @relation(fields: [doctorId], references: [id])
 
-  date     DateTime // Data e Hora
-  duration Int      @default(60) // Em minutos
+  date     DateTime
+  duration Int      @default(60)
 
   status AppointmentStatus @default(SCHEDULED)
   type   ConsultationType  @default(FIRST_VISIT)
 
-  meetLink String? // Link do Google Meet (manual ou auto)
-  notes    String? // Notas pré-consulta
+  meetLink String?
+  notes    String?
 
   createdAt DateTime @default(now())
+
+  // 👇 TRAVA DE SEGURANÇA:
+  // Impede 2 agendamentos para o mesmo médico no mesmo horário exato.
+  @@unique([doctorId, date])
 }
 
 model DoctorSchedule {
@@ -168,43 +186,43 @@ model Exam {
 }
 
 model Course {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String
-  price       String?  // Ex: "R$ 997,00" ou "12x de R$ 99"
+  price       String? // Ex: "R$ 997,00" ou "12x de R$ 99"
   imageUrl    String?
-  linkUrl     String?  // Link para Hotmart/Eduzz
-  active      Boolean  @default(true)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  linkUrl     String? // Link para Hotmart/Eduzz
+  active      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Plan {
-  id          String   @id @default(cuid())
-  name        String   // Ex: "Plano Mensal"
-  price       String   // Ex: "R$ 199"
-  period      String   // Ex: "/mês"
-  features    String   // Lista de benefícios separados por ponto-e-vírgula (;)
-  highlight   Boolean  @default(false) // Se é o plano destaque
-  buttonText  String   @default("Assinar Agora")
-  buttonLink  String?
-  
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String  @id @default(cuid())
+  name       String // Ex: "Plano Mensal"
+  price      String // Ex: "R$ 199"
+  period     String // Ex: "/mês"
+  features   String // Lista de benefícios separados por ponto-e-vírgula (;)
+  highlight  Boolean @default(false) // Se é o plano destaque
+  buttonText String  @default("Assinar Agora")
+  buttonLink String?
+
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SiteInfo {
-  id          String   @id @default(cuid())
+  id  String @id @default(cuid())
   // Identificador único para garantir que só tenhamos 1 registro de config
-  key         String   @unique @default("homepage_config") 
-  
+  key String @unique @default("homepage_config")
+
   heroTitle    String?
   heroSubtitle String?
   aboutText    String?
   whatsapp     String?
   instagram    String?
-  
-  updatedAt   DateTime @updatedAt
+
+  updatedAt DateTime @updatedAt
 }
