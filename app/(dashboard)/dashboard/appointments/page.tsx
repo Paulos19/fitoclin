@@ -6,6 +6,7 @@ import { Calendar, Clock, Video, MapPin, CheckCircle2, History, CalendarDays } f
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog"; // <--- Importamos o componente aqui
 
 const prisma = new PrismaClient();
 
@@ -24,7 +25,7 @@ export default async function MyAppointmentsPage() {
     where: { patientId: patient.id },
     orderBy: { date: 'desc' },
     include: {
-      doctor: true // Para mostrar com quem é a consulta (se houver múltiplos médicos no futuro)
+      doctor: true 
     }
   });
 
@@ -36,22 +37,27 @@ export default async function MyAppointmentsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start gap-4 border-b border-[#2A5432]/30 pb-6">
+      {/* Header com Ação de Agendar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#2A5432]/30 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Minhas Consultas</h1>
           <p className="text-gray-400 mt-1">Gerencie seus agendamentos e veja seu histórico de atendimentos.</p>
         </div>
         
-        {/* Card de Próxima (Resumo rápido) */}
-        {upcoming.length > 0 && (
-          <div className="hidden md:flex items-center gap-3 bg-[#76A771]/10 px-4 py-2 rounded-lg border border-[#76A771]/20">
-             <div className="h-2 w-2 rounded-full bg-[#76A771] animate-pulse" />
-             <span className="text-[#76A771] font-medium text-sm">
-               Próxima: {new Date(upcoming[upcoming.length - 1].date).toLocaleDateString('pt-BR')}
-             </span>
-          </div>
-        )}
+        <div className="flex flex-col-reverse md:flex-row items-end md:items-center gap-3 w-full md:w-auto">
+          {/* Card de Próxima (Resumo rápido) */}
+          {upcoming.length > 0 && (
+            <div className="hidden md:flex items-center gap-3 bg-[#76A771]/10 px-4 py-2 rounded-lg border border-[#76A771]/20 h-10">
+               <div className="h-2 w-2 rounded-full bg-[#76A771] animate-pulse" />
+               <span className="text-[#76A771] font-medium text-sm">
+                 Próxima: {new Date(upcoming[upcoming.length - 1].date).toLocaleDateString('pt-BR')}
+               </span>
+            </div>
+          )}
+
+          {/* Botão Principal de Agendamento */}
+          <NewAppointmentDialog />
+        </div>
       </div>
 
       <Tabs defaultValue="upcoming" className="w-full">
@@ -77,9 +83,10 @@ export default async function MyAppointmentsPage() {
               <CardContent className="p-12 flex flex-col items-center text-center text-gray-500 gap-4">
                 <CalendarDays className="w-12 h-12 opacity-20" />
                 <p>Você não tem consultas agendadas para o futuro.</p>
-                <Button variant="link" className="text-[#76A771]">
-                  Entrar em contato para agendar
-                </Button>
+                {/* Reutilizamos o Dialog aqui também como call-to-action */}
+                <div className="mt-2 scale-90">
+                    <NewAppointmentDialog />
+                </div>
               </CardContent>
             </Card>
           ) : (
@@ -102,8 +109,8 @@ export default async function MyAppointmentsPage() {
                     
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                         <h3 className="font-bold text-white text-lg">Consulta com Dra. Isa</h3>
-                         <Badge className="bg-[#76A771]/20 text-[#76A771] hover:bg-[#76A771]/30 border-none">Confirmado</Badge>
+                          <h3 className="font-bold text-white text-lg">Consulta com Dra. Isa</h3>
+                          <Badge className="bg-[#76A771]/20 text-[#76A771] hover:bg-[#76A771]/30 border-none">Confirmado</Badge>
                       </div>
                       
                       <div className="flex flex-wrap gap-4 text-sm text-gray-400">
