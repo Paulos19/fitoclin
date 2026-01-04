@@ -76,6 +76,9 @@ model Patient {
   appointments   Appointment[] // Consultas
   exams          Exam[] // Exames Anexados
   transactions   Transaction[]
+  anamnesis      Anamnesis?
+  weeklyCheckins WeeklyCheckin[]
+  documents      Document[]
 }
 
 // --- PRONTUÁRIO ELETRÔNICO (PEP) ---
@@ -247,25 +250,108 @@ model Transaction {
 }
 
 model Lead {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String
-  email     String?
-  source    String   // Ex: "Instagram", "Indicação", "Google"
-  
-  status    LeadStatus @default(NEW)
-  notes     String?  // Ex: "Quer emagrecer, prefere tarde"
+  id     String  @id @default(cuid())
+  name   String
+  phone  String
+  email  String?
+  source String // Ex: "Instagram", "Indicação", "Google"
+
+  status LeadStatus @default(NEW)
+  notes  String? // Ex: "Quer emagrecer, prefere tarde"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Anamnesis {
+  id String @id @default(cuid())
+
+  // Vínculo
+  patientId String  @unique
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  // --- PARTE 1: INFORMAÇÕES BÁSICAS ---
+  fullName          String
+  age               String
+  profession        String
+  phone             String
+  consultationDate  DateTime? // Data informada pelo paciente
+  isFirstTime       Boolean // Já passou antes?
+  diagnosedDiseases String?   @db.Text
+  mainComplaint     String    @db.Text // Principal incômodo
+
+  // --- PARTE 2: ESCALAS (0 a 10) ---
+  // Física
+  sleepQuality  Int // 0-10
+  bowelFunction Int // Intestino
+  energyLevel   Int
+  bodyPain      Int
+  immunity      Int
+
+  // Emocional
+  anxiety          Int
+  sadness          Int
+  mentalClarity    Int
+  stressHandling   Int
+  lifeSatisfaction Int
+  purpose          Int
+
+  // Espiritual
+  spirituality Int
+  selfCare     Int
+  innerPeace   Int
+
+  // --- PARTE 3: HÁBITOS ---
+  medications String? @db.Text
+  supplements String? @db.Text // Chás, fito
+  allergies   String? @db.Text
+  dietQuality Int // 0-10 (Como avalia alimentação)
+
+  // --- LGPD ---
+  lgpdAuthorized Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WeeklyCheckin {
+  id String @id @default(cuid())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  // Métricas principais (0-10)
+  sleepQuality Int
+  energyLevel  Int
+  mood         Int
+  digestion    Int
+
+  notes String? @db.Text // Alguma observação da semana (ex: "Comi glúten")
+
+  createdAt DateTime @default(now())
+
+  // Índice para facilitar ordenação por data
+  @@index([patientId, createdAt])
+}
+
+model Document {
+  id    String @id @default(cuid())
+  title String // Ex: "Hemograma Completo"
+  url   String // Link do arquivo (Blob ou Drive)
+  type  String // "EXAM", "PRESCRIPTION", "OTHER"
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
 enum LeadStatus {
-  NEW         // Novo (Chegou agora)
-  CONTACTED   // Já mandei oi
-  SCHEDULED   // Agendou a consulta
-  WON         // Virou Paciente (Sucesso!)
-  LOST        // Desistiu / Sem resposta
+  NEW // Novo (Chegou agora)
+  CONTACTED // Já mandei oi
+  SCHEDULED // Agendou a consulta
+  WON // Virou Paciente (Sucesso!)
+  LOST // Desistiu / Sem resposta
 }
 
 enum TransactionType {

@@ -16,6 +16,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getPatientEvolution } from "@/actions/tracking"; // 👈 Import da Action
+import { EvolutionChart } from "@/components/dashboard/evolution-chart"; // 👈 Import do Gráfico
+import { CheckinDialog } from "@/components/dashboard/checkin-dialog"; // 👈 Import do Modal
 
 // Instância do Prisma (Idealmente, mova para um arquivo lib/db.ts singleton em produção)
 const prisma = new PrismaClient();
@@ -186,16 +189,16 @@ export default async function DashboardPage() {
                 <CardTitle className="text-white text-sm uppercase tracking-wider">Atalhos</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                 <Link href="/dashboard/patients" className="block">
-                   <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
-                     <Users className="mr-2 w-4 h-4 text-[#76A771]"/> Novo Paciente
-                   </Button>
-                 </Link>
-                 <Link href="/dashboard/schedule" className="block">
-                   <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
-                     <Calendar className="mr-2 w-4 h-4 text-[#76A771]"/> Bloquear Horário
-                   </Button>
-                 </Link>
+                  <Link href="/dashboard/patients" className="block">
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
+                      <Users className="mr-2 w-4 h-4 text-[#76A771]"/> Novo Paciente
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/schedule" className="block">
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
+                      <Calendar className="mr-2 w-4 h-4 text-[#76A771]"/> Bloquear Horário
+                    </Button>
+                  </Link>
               </CardContent>
            </Card>
         </div>
@@ -225,6 +228,9 @@ export default async function DashboardPage() {
 
   const nextAppointment = patient?.appointments[0];
   const lastRecord = patient?.medicalRecords[0];
+  
+  // 👇 BUSCAR DADOS DE EVOLUÇÃO
+  const evolutionData = await getPatientEvolution();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -281,6 +287,18 @@ export default async function DashboardPage() {
                </Card>
             </div>
          </div>
+      </div>
+
+      {/* --- SECÇÃO DE EVOLUÇÃO (NOVO) --- */}
+      <div className="space-y-4">
+         <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-[#76A771]" /> Sua Jornada de Evolução
+            </h2>
+            <CheckinDialog />
+         </div>
+         
+         <EvolutionChart data={evolutionData} />
       </div>
 
       {/* --- GRID DE STATUS --- */}
