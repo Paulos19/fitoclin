@@ -16,8 +16,9 @@ import {
   ChevronRight,
   UserCircle,
   Pill,
-  ChartArea,
-  DollarSignIcon,
+  BarChart3,
+  DollarSign,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
@@ -35,8 +36,8 @@ const adminLinks = [
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
   { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
-  { name: "CRM", href: "/dashboard/crm", icon: ChartArea },
-  { name: "Financeiro", href: "/dashboard/financial", icon: DollarSignIcon },
+  { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
+  { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -44,6 +45,7 @@ const patientLinks = [
   { name: "Meu Painel", href: "/dashboard", icon: LayoutDashboard },
   { name: "Minhas Consultas", href: "/dashboard/appointments", icon: Calendar },
   { name: "Minhas Prescrições", href: "/dashboard/prescriptions", icon: Pill },
+  { name: "Meus Exames", href: "/dashboard/documents", icon: FolderOpen }, // 👈 Novo Link
   { name: "Meus Dados", href: "/dashboard/profile", icon: UserCircle },
 ];
 
