@@ -75,6 +75,7 @@ model Patient {
   prescriptions  Prescription[] // Receitas
   appointments   Appointment[] // Consultas
   exams          Exam[] // Exames Anexados
+  transactions   Transaction[]
 }
 
 // --- PRONTUÁRIO ELETRÔNICO (PEP) ---
@@ -225,4 +226,55 @@ model SiteInfo {
   instagram    String?
 
   updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  description String // Ex: "Consulta Maria", "Conta de Luz", "Venda Curso"
+  amount      Decimal         @db.Decimal(10, 2) // Valor exato
+  type        TransactionType // INCOME (Entrada) ou EXPENSE (Saída)
+  category    String // Ex: "Consultas", "Marketing", "Infraestrutura"
+
+  status PaymentStatus @default(PAID) // Padrão como pago para agilizar
+  date   DateTime      @default(now()) // Data da transação
+
+  // Opcional: Vincular a um paciente (para saber quem pagou)
+  patientId String?
+  patient   Patient? @relation(fields: [patientId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  source    String   // Ex: "Instagram", "Indicação", "Google"
+  
+  status    LeadStatus @default(NEW)
+  notes     String?  // Ex: "Quer emagrecer, prefere tarde"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum LeadStatus {
+  NEW         // Novo (Chegou agora)
+  CONTACTED   // Já mandei oi
+  SCHEDULED   // Agendou a consulta
+  WON         // Virou Paciente (Sucesso!)
+  LOST        // Desistiu / Sem resposta
+}
+
+enum TransactionType {
+  INCOME // Receita
+  EXPENSE // Despesa
+}
+
+enum PaymentStatus {
+  PENDING // Pendente
+  PAID // Pago
+  CANCELED // Cancelado
 }
