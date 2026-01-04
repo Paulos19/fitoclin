@@ -1,15 +1,17 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+
+const prisma = new PrismaClient();
 
 // 1. Buscar Notificações do Usuário Logado
 export async function getNotifications() {
   const session = await auth();
   if (!session) return [];
 
-  return await db.notification.findMany({
+  return await prisma.notification.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
     take: 15 // Limita às últimas 15 para não poluir
@@ -21,7 +23,7 @@ export async function markAsRead(id: string) {
   const session = await auth();
   if (!session) return;
 
-  await db.notification.update({
+  await prisma.notification.update({
     where: { 
         id, 
         userId: session.user.id // Segurança: só o dono pode marcar
@@ -37,7 +39,7 @@ export async function markAllAsRead() {
     const session = await auth();
     if (!session) return;
 
-    await db.notification.updateMany({
+    await prisma.notification.updateMany({
         where: { userId: session.user.id, read: false },
         data: { read: true }
     });

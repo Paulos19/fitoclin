@@ -1,10 +1,12 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sendEmail, getAppointmentTemplate } from "@/lib/mail";
+
+const prisma = new PrismaClient();
 
 // --- SCHEMAS DE VALIDAÇÃO ---
 
@@ -24,9 +26,9 @@ export async function saveScheduleSettings(data: any) {
   try {
     const schedules = ScheduleSettingsSchema.parse(data);
 
-    await db.$transaction(
+    await prisma.$transaction(
       schedules.map((schedule) => 
-        db.doctorSchedule.upsert({
+        prisma.doctorSchedule.upsert({
           where: {
             userId_dayOfWeek: {
               userId: session.user.id,
@@ -81,7 +83,7 @@ export async function createAppointment(formData: FormData) {
   let patientId = formData.get("patientId") as string;
 
   if (!patientId) {
-    const patientProfile = await db.patient.findUnique({
+    const patientProfile = await prisma.patient.findUnique({
       where: { userId: session.user.id }
     });
 
@@ -93,7 +95,7 @@ export async function createAppointment(formData: FormData) {
   }
 
   // C. Identificação do Médico (Dra. Isa / Admin)
-  const doctor = await db.user.findFirst({ where: { role: 'ADMIN' } });
+  const doctor = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
   if (!doctor) return { error: "Agenda médica não configurada no sistema." };
 
   const data = {
@@ -106,7 +108,7 @@ export async function createAppointment(formData: FormData) {
 
   try {
     // --- INÍCIO DA TRANSAÇÃO ---
-    const result = await db.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       
       // 1. Criar o Agendamento
       const appointment = await tx.appointment.create({
@@ -185,7 +187,7 @@ export async function updateMeetLink(formData: FormData) {
 
   try {
     // Atualiza o link no banco
-    const updatedAppointment = await db.appointment.update({
+    const updatedAppointment = await prisma.appointment.update({
       where: { id: appointmentId },
       data: { meetLink },
       include: {

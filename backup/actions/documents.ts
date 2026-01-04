@@ -1,9 +1,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { put, del } from "@vercel/blob"; // 👈 Import do Blob
+
+const prisma = new PrismaClient();
 
 // Configurações de limite (ex: 4MB)
 const MAX_FILE_SIZE = 4 * 1024 * 1024; 
@@ -26,7 +28,7 @@ export async function uploadDocument(formData: FormData) {
   try {
     // 1. Identificar o Paciente (se não veio no form, tenta buscar pelo user logado)
     if (!patientId) {
-        const patient = await db.patient.findUnique({
+        const patient = await prisma.patient.findUnique({
             where: { userId: session.user.id }
         });
         if (!patient) return { error: "Perfil de paciente não encontrado." };
@@ -40,7 +42,7 @@ export async function uploadDocument(formData: FormData) {
     });
 
     // 3. Salvar referência no Banco de Dados
-    await db.document.create({
+    await prisma.document.create({
       data: {
         title,
         url: blob.url, // URL retornada pelo Vercel Blob
@@ -67,7 +69,7 @@ export async function deleteDocument(id: string) {
 
     try {
         // 1. Buscar o documento para ter a URL
-        const doc = await db.document.findUnique({ where: { id } });
+        const doc = await prisma.document.findUnique({ where: { id } });
         
         if (!doc) return { error: "Documento não encontrado." };
 
@@ -75,7 +77,7 @@ export async function deleteDocument(id: string) {
         await del(doc.url);
 
         // 3. Deletar do Banco
-        await db.document.delete({ where: { id } });
+        await prisma.document.delete({ where: { id } });
 
         revalidatePath("/dashboard/documents");
         revalidatePath(`/dashboard/records/${doc.patientId}`);

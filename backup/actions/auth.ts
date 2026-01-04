@@ -1,10 +1,12 @@
 "use server";
 
 import { z } from "zod";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+
+const prisma = new PrismaClient();
 
 // Schema de Validação
 const RegisterSchema = z.object({
@@ -27,7 +29,7 @@ export async function register(prevState: any, formData: FormData) {
 
   try {
     // 2. Verificar se usuário já existe
-    const existingUser = await db.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -42,7 +44,7 @@ export async function register(prevState: any, formData: FormData) {
     const role = email === process.env.EMAIL_ADMIN ? "ADMIN" : "PATIENT";
 
     // 5. Criar usuário no Banco
-    await db.user.create({
+    await prisma.user.create({
       data: {
         name,
         email,

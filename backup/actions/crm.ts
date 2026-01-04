@@ -1,9 +1,11 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sendEmail, getWelcomeTemplate } from "@/lib/mail";
+
+const prisma = new PrismaClient();
 
 // Schema permissivo que aceita string vazia como "válido" (tratamos antes de salvar)
 const LeadSchema = z.object({
@@ -29,7 +31,7 @@ export async function createLead(formData: FormData) {
     const data = LeadSchema.parse(rawData);
     
     // Cria no banco convertendo "" de volta para null (para manter o banco limpo)
-    const newLead = await db.lead.create({ 
+    const newLead = await prisma.lead.create({ 
       data: {
         name: data.name,
         phone: data.phone,
@@ -69,7 +71,7 @@ export async function createLead(formData: FormData) {
 
 export async function updateLeadStatus(id: string, newStatus: string) {
   try {
-    await db.lead.update({
+    await prisma.lead.update({
       where: { id },
       data: { status: newStatus as any },
     });
@@ -82,7 +84,7 @@ export async function updateLeadStatus(id: string, newStatus: string) {
 }
 
 export async function getLeads() {
-  return await db.lead.findMany({
+  return await prisma.lead.findMany({
     orderBy: { createdAt: "desc" },
   });
 }

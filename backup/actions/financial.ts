@@ -1,8 +1,10 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+const prisma = new PrismaClient();
 
 // Schema de validação para nova transação
 const TransactionSchema = z.object({
@@ -29,7 +31,7 @@ export async function createTransaction(formData: FormData) {
   try {
     const data = TransactionSchema.parse(rawData);
 
-    await db.transaction.create({
+    await prisma.transaction.create({
       data: {
         ...data,
         // Se for paciente vazio, remove do objeto para não dar erro de chave estrangeira
@@ -51,7 +53,7 @@ export async function getFinancialSummary() {
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  const transactions = await db.transaction.findMany({
+  const transactions = await prisma.transaction.findMany({
     where: {
       date: {
         gte: firstDay,
@@ -79,6 +81,6 @@ export async function getFinancialSummary() {
 }
 
 export async function deleteTransaction(id: string) {
-    await db.transaction.delete({ where: { id } });
+    await prisma.transaction.delete({ where: { id } });
     revalidatePath("/dashboard/financial");
 }

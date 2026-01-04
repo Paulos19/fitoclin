@@ -1,9 +1,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+const prisma = new PrismaClient();
 
 const RecordSchema = z.object({
   patientId: z.string(),
@@ -40,7 +42,7 @@ export async function saveMedicalRecord(formData: FormData) {
   const data = validated.data;
 
   try {
-    await db.medicalRecord.create({
+    await prisma.medicalRecord.create({
       data: {
         patientId: data.patientId,
         title: data.title,

@@ -1,9 +1,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+const prisma = new PrismaClient();
 
 const CheckinSchema = z.object({
   sleepQuality: z.coerce.number().min(0).max(10),
@@ -17,7 +19,7 @@ export async function saveWeeklyCheckin(formData: FormData) {
   const session = await auth();
   if (!session?.user) return { error: "Não autorizado" };
 
-  const patient = await db.patient.findUnique({
+  const patient = await prisma.patient.findUnique({
     where: { userId: session.user.id }
   });
 
@@ -33,7 +35,7 @@ export async function saveWeeklyCheckin(formData: FormData) {
     });
 
     // Impede spam: Verifica se já fez check-in nos últimos 5 dias
-    const lastCheckin = await db.weeklyCheckin.findFirst({
+    const lastCheckin = await prisma.weeklyCheckin.findFirst({
         where: { patientId: patient.id },
         orderBy: { createdAt: 'desc' }
     });
@@ -45,7 +47,7 @@ export async function saveWeeklyCheckin(formData: FormData) {
         }
     }
 
-    await db.weeklyCheckin.create({
+    await prisma.weeklyCheckin.create({
       data: {
         ...data,
         patientId: patient.id,
@@ -63,7 +65,7 @@ export async function getPatientEvolution() {
     const session = await auth();
     if (!session?.user) return [];
 
-    const patient = await db.patient.findUnique({
+    const patient = await prisma.patient.findUnique({
         where: { userId: session.user.id },
         include: { 
             weeklyCheckins: {

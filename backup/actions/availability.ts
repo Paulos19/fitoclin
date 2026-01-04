@@ -1,8 +1,10 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { addMinutes, format, parse, isBefore, startOfDay, isEqual } from "date-fns";
+
+const prisma = new PrismaClient();
 
 export async function getAvailableSlots(dateStr: string) {
   const session = await auth();
@@ -16,10 +18,10 @@ export async function getAvailableSlots(dateStr: string) {
 
   // 2. Buscar a configuração de horário da Dra. para esse dia da semana
   // Assumimos que a Dra. é o ADMIN. Em sistema multi-médico, receberíamos o doctorId.
-  const adminUser = await db.user.findFirst({ where: { role: "ADMIN" } });
+  const adminUser = await prisma.user.findFirst({ where: { role: "ADMIN" } });
   if (!adminUser) return { error: "Agenda médica não configurada." };
 
-  const schedule = await db.doctorSchedule.findUnique({
+  const schedule = await prisma.doctorSchedule.findUnique({
     where: {
       userId_dayOfWeek: {
         userId: adminUser.id,
@@ -51,7 +53,7 @@ export async function getAvailableSlots(dateStr: string) {
   const startOfDayDate = new Date(`${dateStr}T00:00:00`);
   const endOfDayDate = new Date(`${dateStr}T23:59:59`);
 
-  const existingAppointments = await db.appointment.findMany({
+  const existingAppointments = await prisma.appointment.findMany({
     where: {
       doctorId: adminUser.id,
       date: {

@@ -1,5 +1,4 @@
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -12,16 +11,15 @@ import {
 import { SiteInfoForm } from "@/components/dashboard/settings/site-info-form";
 import { CoursesManager } from "@/components/dashboard/settings/courses-manager";
 import { PlansManager } from "@/components/dashboard/settings/plans-manager";
-
-const prisma = new PrismaClient();
+import { db } from "@/lib/db"; // 👈 Importamos a instância Singleton aqui
 
 export default async function SettingsPage() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/dashboard");
 
-  // 1. Buscar dados brutos do Prisma
-  // ATENÇÃO: Agora incluímos modules e lessons para popular o construtor de cursos
-  const rawCourses = await prisma.course.findMany({ 
+  // 1. Buscar dados usando a instância global 'db'
+  // Isso previne o erro de "cached plan" pois reutiliza a conexão existente
+  const rawCourses = await db.course.findMany({ 
     orderBy: { createdAt: 'desc' },
     include: {
       modules: {
@@ -33,10 +31,12 @@ export default async function SettingsPage() {
     }
   });
 
-  const rawPlans = await prisma.plan.findMany({ orderBy: { price: 'asc' } });
-  const siteInfo = await prisma.siteInfo.findUnique({ where: { key: "homepage_config" } });
+  const rawPlans = await db.plan.findMany({ orderBy: { price: 'asc' } });
+  
+  // Alterado para db.siteInfo
+  const siteInfo = await db.siteInfo.findUnique({ where: { key: "homepage_config" } });
 
-  // 2. Converter Decimal para Number (para evitar erro de serialização do Next.js)
+  // 2. Converter Decimal para Number
   const courses = rawCourses.map(course => ({
     ...course,
     price: course.price ? Number(course.price) : 0, 
@@ -81,7 +81,6 @@ export default async function SettingsPage() {
 
         {/* --- ABA CURSOS --- */}
         <TabsContent value="courses" className="mt-6">
-           {/* O componente CoursesManager agora receberá a árvore completa (curso -> módulos -> aulas) */}
            <CoursesManager courses={courses} />
         </TabsContent>
 

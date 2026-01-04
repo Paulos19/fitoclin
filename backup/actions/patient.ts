@@ -1,11 +1,13 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { put } from "@vercel/blob";
+
+const prisma = new PrismaClient();
 
 const PatientSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -45,7 +47,7 @@ export async function createPatient(formData: FormData) {
   try {
     // Verifica duplicidade apenas se for email real
     if (email) {
-      const existing = await db.user.findUnique({ where: { email } });
+      const existing = await prisma.user.findUnique({ where: { email } });
       if (existing) return { error: "Este email já está cadastrado!" };
     }
 
@@ -53,7 +55,7 @@ export async function createPatient(formData: FormData) {
     const hashedPassword = await bcrypt.hash("fitoclin123", 10);
 
     // Criação Atômica: User + Patient
-    await db.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
           name,
@@ -126,7 +128,7 @@ export async function updatePatientProfile(formData: FormData) {
       : undefined;
 
     // 3. Atualização no Banco (Transaction para garantir integridade)
-    await db.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // Atualiza tabela Patient
       await tx.patient.update({
         where: { userId: session.user.id },

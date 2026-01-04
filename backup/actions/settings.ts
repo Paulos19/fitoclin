@@ -1,9 +1,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+const prisma = new PrismaClient();
 
 // --- SCHEMAS DE VALIDAÇÃO ---
 
@@ -70,7 +72,7 @@ export async function upsertCourse(data: any) {
     // --- UPDATE ---
     if (validatedData.id) {
       // 1. Atualizar dados do Curso
-      await db.course.update({
+      await prisma.course.update({
         where: { id: validatedData.id },
         data: {
           title: validatedData.title,
@@ -87,13 +89,13 @@ export async function upsertCourse(data: any) {
 
         if (moduleId && !moduleId.startsWith("temp-")) { 
           // Atualiza módulo existente
-          await db.module.update({
+          await prisma.module.update({
             where: { id: moduleId },
             data: { title: mod.title, order: mod.order }
           });
         } else {
           // Cria novo módulo
-          const newMod = await db.module.create({
+          const newMod = await prisma.module.create({
             data: {
               title: mod.title,
               order: mod.order,
@@ -106,7 +108,7 @@ export async function upsertCourse(data: any) {
         // Processar Aulas
         for (const lesson of mod.lessons) {
           if (lesson.id && !lesson.id.startsWith("temp-")) {
-            await db.lesson.update({
+            await prisma.lesson.update({
               where: { id: lesson.id },
               data: {
                 title: lesson.title,
@@ -115,7 +117,7 @@ export async function upsertCourse(data: any) {
               }
             });
           } else {
-            await db.lesson.create({
+            await prisma.lesson.create({
               data: {
                 title: lesson.title,
                 videoUrl: lesson.videoUrl,
@@ -129,7 +131,7 @@ export async function upsertCourse(data: any) {
 
     } else {
       // --- CREATE ---
-      await db.course.create({
+      await prisma.course.create({
         data: {
           title: validatedData.title,
           description: validatedData.description,
@@ -168,7 +170,7 @@ export async function deleteCourse(id: string) {
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
   
   try {
-    await db.course.delete({ where: { id } });
+    await prisma.course.delete({ where: { id } });
     revalidatePath("/dashboard/settings");
     revalidatePath("/dashboard/courses");
     return { success: "Curso removido." };
@@ -200,9 +202,9 @@ export async function upsertPlan(formData: FormData, id?: string) {
 
   try {
     if (id) {
-      await db.plan.update({ where: { id }, data: validated.data });
+      await prisma.plan.update({ where: { id }, data: validated.data });
     } else {
-      await db.plan.create({ data: validated.data });
+      await prisma.plan.create({ data: validated.data });
     }
     revalidatePath("/dashboard/settings");
     revalidatePath("/");
@@ -217,7 +219,7 @@ export async function deletePlan(id: string) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
   try {
-    await db.plan.delete({ where: { id } });
+    await prisma.plan.delete({ where: { id } });
     revalidatePath("/dashboard/settings");
     revalidatePath("/");
     return { success: "Plano removido." };
@@ -239,7 +241,7 @@ export async function updateSiteInfo(formData: FormData) {
   if (!validated.success) return { error: "Dados inválidos" };
 
   try {
-    await db.siteInfo.upsert({
+    await prisma.siteInfo.upsert({
       where: { key: "homepage_config" },
       update: validated.data,
       create: { key: "homepage_config", ...validated.data },

@@ -1,9 +1,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+const prisma = new PrismaClient();
 
 // Validação dos dados (garante que números sejam 0-10)
 const AnamnesisSchema = z.object({
@@ -47,7 +49,7 @@ export async function saveAnamnesis(formData: FormData) {
   if (!session?.user) return { error: "Não autorizado" };
 
   // Busca o ID do Paciente vinculado ao Usuário logado
-  const patient = await db.patient.findUnique({
+  const patient = await prisma.patient.findUnique({
     where: { userId: session.user.id }
   });
 
@@ -64,7 +66,7 @@ export async function saveAnamnesis(formData: FormData) {
     const data = AnamnesisSchema.parse(rawData);
 
     // Salva no banco (Upsert: Cria ou Atualiza se já existir)
-    await db.anamnesis.upsert({
+    await prisma.anamnesis.upsert({
       where: { patientId: patient.id },
       update: { ...data, consultationDate: data.consultationDate ? new Date(data.consultationDate) : undefined },
       create: { 
@@ -75,9 +77,9 @@ export async function saveAnamnesis(formData: FormData) {
     });
 
     // 🔔 Notifica a Dra. Isa (Admin)
-    const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
+    const admin = await prisma.user.findFirst({ where: { role: "ADMIN" } });
     if (admin) {
-      await db.notification.create({
+      await prisma.notification.create({
         data: {
           userId: admin.id,
           title: "Anamnese Recebida 📝",
