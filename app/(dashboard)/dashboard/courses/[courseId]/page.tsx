@@ -1,12 +1,32 @@
 import { auth } from "@/auth";
-import { getCourseContent, toggleLessonProgress } from "@/actions/courses";
+import { getCourseContent } from "@/actions/courses"; // toggleLessonProgress não é usado aqui diretamente, mas via client component
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { CheckCircle2, Circle, Play, ChevronLeft } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { LessonCheckButton } from "./lesson-check-button";
+
+// 👇 CORREÇÃO: Função para transformar links comuns em links de Embed
+function getVideoEmbedUrl(url: string | null) {
+  if (!url) return null;
+
+  // 1. YouTube (Suporta: watch?v=, youtu.be/, embed/)
+  // Regex captura o ID de 11 caracteres
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`; // rel=0 evita vídeos recomendados de terceiros
+  }
+
+  // 2. Vimeo (Suporta: vimeo.com/ID, player.vimeo.com/)
+  const vimeoMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  // 3. Outros (Vercel Blob, MP4 direto, etc) - Retorna original
+  return url;
+}
 
 type Props = {
   params: Promise<{ courseId: string }>;
@@ -24,14 +44,10 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
   if (!course) return <div>Curso não encontrado.</div>;
 
   // Determinar qual aula exibir
-  // 1. Se veio na URL (?lessonId=...), usa essa.
-  // 2. Se não, tenta pegar a primeira aula do primeiro módulo.
   const activeLessonId = resolvedSearchParams.lessonId;
-  
   let activeLesson = null;
   
   if (activeLessonId) {
-    // Busca nos módulos
     for (const mod of course.modules) {
         const found = mod.lessons.find(l => l.id === activeLessonId);
         if (found) { activeLesson = found; break; }
@@ -39,6 +55,9 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
   } else if (course.modules.length > 0 && course.modules[0].lessons.length > 0) {
       activeLesson = course.modules[0].lessons[0];
   }
+
+  // 👇 Prepara a URL correta para o iframe
+  const embedUrl = activeLesson ? getVideoEmbedUrl(activeLesson.videoUrl) : null;
 
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] animate-in fade-in">
@@ -58,15 +77,16 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
                 <div className="space-y-4">
                     {/* Player Wrapper (16:9) */}
                     <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-[#2A5432] shadow-2xl">
-                        {activeLesson.videoUrl ? (
+                        {embedUrl ? (
                             <iframe 
-                                src={activeLesson.videoUrl} 
+                                src={embedUrl} 
                                 className="absolute inset-0 w-full h-full"
                                 allow="autoplay; fullscreen; picture-in-picture"
                                 allowFullScreen
+                                title={activeLesson.title}
                             />
                         ) : (
-                            <div className="flex items-center justify-center h-full text-gray-500">
+                            <div className="flex items-center justify-center h-full text-gray-500 bg-[#062214]">
                                 <p>Esta aula não possui vídeo.</p>
                             </div>
                         )}

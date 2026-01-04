@@ -4,10 +4,8 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { put } from "@vercel/blob"; // 👈 Import necessário
 
-// --- SCHEMAS DE VALIDAÇÃO ---
-
-// 1. Schema de Aulas
 const LessonSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1, "Título da aula obrigatório"),
@@ -32,7 +30,6 @@ const CourseSchema = z.object({
   imageUrl: z.string().optional(),
   linkUrl: z.string().optional(),
   active: z.boolean().default(false),
-  // Agora validamos como número, o Prisma converterá para Decimal
   price: z.coerce.number().min(0).default(0),
   modules: z.array(ModuleSchema).default([]),
 });
@@ -40,7 +37,6 @@ const CourseSchema = z.object({
 // 4. Outros Schemas
 const PlanSchema = z.object({
   name: z.string().min(1),
-  // Validamos como número, o Prisma converterá para Decimal
   price: z.coerce.number().min(0),
   period: z.string().min(1),
   features: z.string().min(1),
@@ -58,6 +54,27 @@ const SiteInfoSchema = z.object({
 });
 
 
+// --- NOVA ACTION: UPLOAD DE IMAGEM (ESPECÍFICA) ---
+export async function uploadCourseImage(formData: FormData) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
+
+  const file = formData.get("file") as File;
+  if (!file || file.size === 0) return { error: "Arquivo inválido" };
+
+  try {
+    const filename = `courses/cover-${Date.now()}-${file.name}`;
+    const blob = await put(filename, file, {
+      access: 'public',
+    });
+    return { success: true, url: blob.url };
+  } catch (error) {
+    console.error("Erro upload:", error);
+    return { error: "Falha no upload da imagem" };
+  }
+}
+
+
 // --- ACTIONS DE CURSO (LMS COMPLETO) ---
 
 export async function upsertCourse(data: any) {
@@ -69,30 +86,27 @@ export async function upsertCourse(data: any) {
 
     // --- UPDATE ---
     if (validatedData.id) {
-      // 1. Atualizar dados do Curso
       await db.course.update({
         where: { id: validatedData.id },
         data: {
           title: validatedData.title,
           description: validatedData.description,
-          imageUrl: validatedData.imageUrl,
+          imageUrl: validatedData.imageUrl, // Salva a URL recebida
           active: validatedData.active,
-          price: validatedData.price, // Prisma aceita number para campo Decimal
+          price: validatedData.price,
         },
       });
 
-      // 2. Gerenciar Módulos e Aulas
+      // Gerenciar Módulos e Aulas
       for (const mod of validatedData.modules) {
         let moduleId = mod.id;
 
         if (moduleId && !moduleId.startsWith("temp-")) { 
-          // Atualiza módulo existente
           await db.module.update({
             where: { id: moduleId },
             data: { title: mod.title, order: mod.order }
           });
         } else {
-          // Cria novo módulo
           const newMod = await db.module.create({
             data: {
               title: mod.title,
@@ -103,7 +117,6 @@ export async function upsertCourse(data: any) {
           moduleId = newMod.id;
         }
 
-        // Processar Aulas
         for (const lesson of mod.lessons) {
           if (lesson.id && !lesson.id.startsWith("temp-")) {
             await db.lesson.update({
@@ -186,11 +199,9 @@ export async function upsertPlan(formData: FormData, id?: string) {
 
   const rawData = Object.fromEntries(formData.entries());
   
-  // Tratamento de dados para o Zod
   const processedData = {
     ...rawData,
     highlight: rawData.highlight === 'on' || rawData.highlight === 'true',
-    // O schema coerce.number() vai lidar com isso
     price: rawData.price 
   };
 
@@ -208,7 +219,6 @@ export async function upsertPlan(formData: FormData, id?: string) {
     revalidatePath("/");
     return { success: "Plano salvo com sucesso!" };
   } catch (e) {
-    console.error(e);
     return { error: "Erro ao salvar plano." };
   }
 }

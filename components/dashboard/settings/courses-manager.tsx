@@ -32,13 +32,16 @@ import {
   Video, 
   GripVertical, 
   Youtube,
-  PlayCircle
+  PlayCircle,
+  Image as ImageIcon,
+  Upload
 } from "lucide-react";
-import { upsertCourse, deleteCourse } from "@/actions/settings";
+import { upsertCourse, deleteCourse, uploadCourseImage } from "@/actions/settings";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
-// Tipos locais para o estado do formulário
+// Tipos locais
 type Lesson = {
   id?: string;
   title: string;
@@ -67,8 +70,11 @@ export function CoursesManager({ courses }: { courses: any[] }) {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<CourseForm | null>(null);
+  
+  // Estado para o arquivo de imagem selecionado
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Estado inicial limpo
   const initialForm: CourseForm = {
     title: "",
     description: "",
@@ -81,8 +87,8 @@ export function CoursesManager({ courses }: { courses: any[] }) {
   const [formData, setFormData] = useState<CourseForm>(initialForm);
 
   const handleOpen = (course?: any) => {
+    setSelectedImageFile(null); // Limpa seleção anterior
     if (course) {
-      // Edição: Popula o formulário com os dados existentes
       setEditingCourse(course);
       setFormData({
         id: course.id,
@@ -93,17 +99,50 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         price: Number(course.price) || 0,
         modules: course.modules || [] 
       });
+      setImagePreview(course.imageUrl || null);
     } else {
-      // Criação: Limpa o formulário
       setEditingCourse(null);
       setFormData(initialForm);
+      setImagePreview(null);
     }
     setIsOpen(true);
   };
 
+  // Lidar com a seleção do arquivo
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        setSelectedImageFile(file);
+        // Cria preview local
+        const url = URL.createObjectURL(file);
+        setImagePreview(url);
+    }
+  };
+
   const handleSave = async () => {
     startTransition(async () => {
-      const res = await upsertCourse(formData);
+      let finalImageUrl = formData.imageUrl;
+
+      // 1. Se tem arquivo novo, faz upload primeiro
+      if (selectedImageFile) {
+        const uploadForm = new FormData();
+        uploadForm.append("file", selectedImageFile);
+        
+        const uploadRes = await uploadCourseImage(uploadForm);
+        
+        if (uploadRes.success && uploadRes.url) {
+            finalImageUrl = uploadRes.url;
+        } else {
+            toast.error("Erro ao fazer upload da imagem.");
+            return; // Para se o upload falhar
+        }
+      }
+
+      // 2. Salva o curso com a URL final
+      const dataToSave = { ...formData, imageUrl: finalImageUrl };
+      
+      const res = await upsertCourse(dataToSave);
+      
       if (res.success) {
         toast.success(res.success);
         setIsOpen(false);
@@ -121,8 +160,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     });
   };
 
-  // --- Funções de Manipulação de Módulos ---
-
+  // --- Funções de Manipulação de Módulos (Iguais) ---
   const addModule = () => {
     setFormData(prev => ({
       ...prev,
@@ -141,8 +179,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     setFormData(prev => ({ ...prev, modules: newModules }));
   };
 
-  // --- Funções de Manipulação de Aulas ---
-
+  // --- Funções de Manipulação de Aulas (Iguais) ---
   const addLesson = (moduleIndex: number) => {
     const newModules = [...formData.modules];
     newModules[moduleIndex].lessons.push({
@@ -176,7 +213,12 @@ export function CoursesManager({ courses }: { courses: any[] }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         {courses.map((course) => (
-          <Card key={course.id} className="bg-[#0A311D]/50 border-[#2A5432]/30">
+          <Card key={course.id} className="bg-[#0A311D]/50 border-[#2A5432]/30 overflow-hidden">
+            {course.imageUrl && (
+                <div className="relative h-40 w-full bg-black/20">
+                    <Image src={course.imageUrl} alt={course.title} fill className="object-cover opacity-80" />
+                </div>
+            )}
             <CardHeader className="flex flex-row items-start justify-between pb-2">
               <div>
                 <CardTitle className="text-white text-lg">{course.title}</CardTitle>
@@ -191,8 +233,8 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                     )}
                 </div>
               </div>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white" onClick={() => handleOpen(course)}>
+              <div className="flex gap-1 bg-black/40 rounded p-1 backdrop-blur-sm">
+                <Button size="icon" variant="ghost" className="text-gray-300 hover:text-white" onClick={() => handleOpen(course)}>
                   <Edit2 className="w-4 h-4" />
                 </Button>
                 <Button size="icon" variant="ghost" className="text-red-400 hover:text-red-300" onClick={() => handleDelete(course.id)}>
@@ -223,6 +265,30 @@ export function CoursesManager({ courses }: { courses: any[] }) {
             {/* 1. CONFIGURAÇÕES GERAIS */}
             <div className="p-4 rounded-xl border border-[#2A5432]/50 bg-[#0A311D]/20 space-y-4">
                 <h4 className="text-sm font-bold text-[#76A771] uppercase tracking-wider">Informações Básicas</h4>
+                
+                {/* ÁREA DE UPLOAD DA CAPA */}
+                <div className="flex gap-4 items-start">
+                    <div className="relative w-32 h-20 bg-black/40 rounded-lg border border-[#2A5432] flex items-center justify-center overflow-hidden shrink-0">
+                        {imagePreview ? (
+                            <Image src={imagePreview} alt="Capa" fill className="object-cover" />
+                        ) : (
+                            <ImageIcon className="w-8 h-8 text-gray-600" />
+                        )}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                        <Label>Capa do Curso</Label>
+                        <div className="flex gap-2">
+                            <Input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="bg-[#0A311D] border-[#2A5432] text-xs file:bg-[#2A5432] file:text-white file:border-0 file:rounded-md file:mr-2"
+                            />
+                        </div>
+                        <p className="text-[10px] text-gray-500">Recomendado: 1280x720px (JPG/PNG)</p>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label>Título do Curso</Label>
@@ -312,7 +378,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                                     </Button>
                                                 </div>
                                                 
-                                                {/* INPUT DE VÍDEO */}
                                                 <div className="flex items-center gap-2 pl-8">
                                                     {lesson.videoUrl.includes('youtube') || lesson.videoUrl.includes('youtu.be') ? (
                                                         <Youtube className="w-4 h-4 text-red-500" />
