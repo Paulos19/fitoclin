@@ -16,6 +16,8 @@ import {
   ChevronRight,
   UserCircle,
   Pill,
+  ChartArea,
+  DollarSignIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
@@ -33,6 +35,8 @@ const adminLinks = [
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
   { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
+  { name: "CRM", href: "/dashboard/crm", icon: ChartArea },
+  { name: "Financeiro", href: "/dashboard/financial", icon: DollarSignIcon },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 

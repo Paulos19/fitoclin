@@ -4,7 +4,6 @@ import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-// 👇 CORREÇÃO: Importamos as funções que realmente existem no novo lib/mail.ts
 import { sendEmail, getAppointmentTemplate } from "@/lib/mail";
 
 const prisma = new PrismaClient();
@@ -81,11 +80,9 @@ export async function createAppointment(formData: FormData) {
   dateObj.setHours(hours, minutes, 0, 0); 
 
   // B. Identificação do Paciente
-  // Se for Admin criando, o patientId vem no form. Se for Paciente, buscamos pelo usuário logado.
   let patientId = formData.get("patientId") as string;
 
   if (!patientId) {
-    // Busca o perfil de Paciente associado ao User logado
     const patientProfile = await prisma.patient.findUnique({
       where: { userId: session.user.id }
     });
@@ -110,12 +107,10 @@ export async function createAppointment(formData: FormData) {
   };
 
   try {
-    // --- INÍCIO DA TRANSAÇÃO (Atomicidade) ---
-    // Garante que o Agendamento e a Notificação sejam criados juntos.
+    // --- INÍCIO DA TRANSAÇÃO ---
     const result = await prisma.$transaction(async (tx) => {
       
       // 1. Criar o Agendamento
-      // Se já existir um registro com mesmo doctorId + date, o banco lança erro P2002 aqui.
       const appointment = await tx.appointment.create({
         data: {
           date: data.date,
@@ -127,7 +122,7 @@ export async function createAppointment(formData: FormData) {
           type: "FIRST_VISIT"
         },
         include: {
-          patient: { include: { user: true } } // Traz dados para o email e notificação
+          patient: { include: { user: true } } 
         }
       });
 
@@ -138,10 +133,10 @@ export async function createAppointment(formData: FormData) {
 
       await tx.notification.create({
         data: {
-          userId: doctor.id, // Destino: Dra. Isa
+          userId: doctor.id,
           title: "Novo Agendamento! 🗓️",
           message: `${patientName} agendou para ${dateFormatted} às ${timeFormatted}.`,
-          link: "/dashboard/appointments", // Link para acesso rápido
+          link: "/dashboard/appointments",
           read: false
         }
       });
@@ -150,11 +145,10 @@ export async function createAppointment(formData: FormData) {
     });
     // --- FIM DA TRANSAÇÃO ---
 
-    // D. Envio de Email (Fora da transação para performance)
+    // D. Envio de Email
     if (result.patient?.user?.email) {
       const { email, name } = result.patient.user;
       
-      // 👇 CORREÇÃO: Usamos sendEmail e o template correto
       sendEmail({
         to: email,
         subject: "Confirmação de Agendamento - FitoClin",
@@ -164,22 +158,62 @@ export async function createAppointment(formData: FormData) {
       });
     }
 
-    // E. Revalidação de Cache
-    revalidatePath("/dashboard/schedule"); // Atualiza a agenda da médica
-    revalidatePath("/dashboard/appointments"); // Atualiza a lista do paciente
-    revalidatePath("/dashboard"); // Atualiza o header (notificações) e widgets
+    revalidatePath("/dashboard/schedule");
+    revalidatePath("/dashboard/appointments");
+    revalidatePath("/dashboard");
 
     return { success: "Agendamento realizado com sucesso!" };
 
   } catch (error: any) {
-    // F. Tratamento Específico de Erros
-    
-    // Violação de Unique Constraint (Horário Duplicado)
     if (error.code === 'P2002') {
       return { error: "Ops! Este horário acabou de ser reservado por outra pessoa. Por favor, escolha outro horário." };
     }
-
     console.error("Erro crítico ao criar agendamento:", error);
     return { error: "Erro interno ao processar agendamento. Tente novamente." };
+  }
+}
+
+// --- 3. ATUALIZAR LINK DA CHAMADA (NOVA FUNÇÃO) ---
+
+export async function updateMeetLink(formData: FormData) {
+  const session = await auth();
+  // Apenas Admin pode alterar o link do Meet
+  if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
+
+  const appointmentId = formData.get("appointmentId") as string;
+  const meetLink = formData.get("meetLink") as string;
+
+  if (!appointmentId) return { error: "ID do agendamento obrigatório." };
+
+  try {
+    // Atualiza o link no banco
+    const updatedAppointment = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { meetLink },
+      include: {
+        patient: { include: { user: true } }
+      }
+    });
+
+    // Opcional: Notificar o paciente por e-mail sobre a atualização do link
+    if (updatedAppointment.patient?.user?.email && meetLink) {
+        sendEmail({
+            to: updatedAppointment.patient.user.email,
+            subject: "Atualização: Link da Sua Consulta - FitoClin",
+            html: getAppointmentTemplate(
+                updatedAppointment.patient.user.name || "Paciente", 
+                updatedAppointment.date, 
+                "Consulta (Link Atualizado)"
+            )
+        }).catch(err => console.error("Erro ao enviar email de update:", err));
+    }
+
+    revalidatePath("/dashboard/appointments");
+    revalidatePath("/dashboard/schedule");
+    
+    return { success: "Link da videochamada atualizado!" };
+  } catch (error) {
+    console.error("Erro ao atualizar link:", error);
+    return { error: "Erro ao atualizar o link." };
   }
 }
