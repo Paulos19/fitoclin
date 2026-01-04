@@ -4,24 +4,46 @@ import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { put } from "@vercel/blob"; // Importação necessária
 
 const prisma = new PrismaClient();
 
-// --- SCHEMAS ---
-const CourseSchema = z.object({
-  title: z.string().min(1, "Título obrigatório"),
-  description: z.string().min(1),
-  price: z.string().optional(),
-  imageUrl: z.string().optional(), // URL da imagem
-  linkUrl: z.string().optional(),
-  active: z.coerce.boolean(),
+// --- SCHEMAS DE VALIDAÇÃO ---
+
+// 1. Schema de Aulas
+const LessonSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1, "Título da aula obrigatório"),
+  videoUrl: z.string().optional().or(z.literal("")), 
+  description: z.string().optional(),
+  order: z.number().default(0),
 });
 
-// ... (Outros schemas PlanSchema e SiteInfoSchema mantêm-se iguais) ...
+// 2. Schema de Módulos
+const ModuleSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1, "Título do módulo obrigatório"),
+  order: z.number().default(0),
+  lessons: z.array(LessonSchema).default([]),
+});
+
+// 3. Schema do Curso
+const CourseSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(3, "Título obrigatório"),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+  linkUrl: z.string().optional(),
+  active: z.boolean().default(false),
+  // Agora validamos como número, o Prisma converterá para Decimal
+  price: z.coerce.number().min(0).default(0),
+  modules: z.array(ModuleSchema).default([]),
+});
+
+// 4. Outros Schemas
 const PlanSchema = z.object({
   name: z.string().min(1),
-  price: z.string().min(1),
+  // Validamos como número, o Prisma converterá para Decimal
+  price: z.coerce.number().min(0),
   period: z.string().min(1),
   features: z.string().min(1),
   highlight: z.coerce.boolean(),
@@ -38,78 +60,145 @@ const SiteInfoSchema = z.object({
 });
 
 
-// --- ACTIONS DE CURSO ---
+// --- ACTIONS DE CURSO (LMS COMPLETO) ---
 
-export async function upsertCourse(formData: FormData, id?: string) {
+export async function upsertCourse(data: any) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
-  // 1. Processamento da Imagem (Thumbnail)
-  const thumbFile = formData.get("thumbFile") as File;
-  let imageUrl = formData.get("imageUrl") as string; // Mantém a URL antiga se não vier nova
-
-  if (thumbFile && thumbFile.size > 0) {
-    try {
-      // Upload para Vercel Blob
-      const filename = `courses/thumb-${Date.now()}-${thumbFile.name}`;
-      const blob = await put(filename, thumbFile, {
-        access: 'public',
-      });
-      imageUrl = blob.url;
-    } catch (error) {
-      console.error("Erro upload thumb:", error);
-      return { error: "Falha ao salvar a imagem do curso" };
-    }
-  }
-
-  // 2. Monta o objeto com a URL correta
-  const rawData = {
-    title: formData.get("title"),
-    description: formData.get("description"),
-    price: formData.get("price"),
-    linkUrl: formData.get("linkUrl"),
-    active: formData.get("active"),
-    imageUrl: imageUrl, 
-  };
-
-  const validated = CourseSchema.safeParse(rawData);
-
-  if (!validated.success) return { error: "Dados inválidos" };
-
   try {
-    if (id) {
-      await prisma.course.update({ where: { id }, data: validated.data });
+    const validatedData = CourseSchema.parse(data);
+
+    // --- UPDATE ---
+    if (validatedData.id) {
+      // 1. Atualizar dados do Curso
+      await prisma.course.update({
+        where: { id: validatedData.id },
+        data: {
+          title: validatedData.title,
+          description: validatedData.description,
+          imageUrl: validatedData.imageUrl,
+          active: validatedData.active,
+          price: validatedData.price, // Prisma aceita number para campo Decimal
+        },
+      });
+
+      // 2. Gerenciar Módulos e Aulas
+      for (const mod of validatedData.modules) {
+        let moduleId = mod.id;
+
+        if (moduleId && !moduleId.startsWith("temp-")) { 
+          // Atualiza módulo existente
+          await prisma.module.update({
+            where: { id: moduleId },
+            data: { title: mod.title, order: mod.order }
+          });
+        } else {
+          // Cria novo módulo
+          const newMod = await prisma.module.create({
+            data: {
+              title: mod.title,
+              order: mod.order,
+              courseId: validatedData.id!
+            }
+          });
+          moduleId = newMod.id;
+        }
+
+        // Processar Aulas
+        for (const lesson of mod.lessons) {
+          if (lesson.id && !lesson.id.startsWith("temp-")) {
+            await prisma.lesson.update({
+              where: { id: lesson.id },
+              data: {
+                title: lesson.title,
+                videoUrl: lesson.videoUrl,
+                order: lesson.order
+              }
+            });
+          } else {
+            await prisma.lesson.create({
+              data: {
+                title: lesson.title,
+                videoUrl: lesson.videoUrl,
+                order: lesson.order,
+                moduleId: moduleId!
+              }
+            });
+          }
+        }
+      }
+
     } else {
-      await prisma.course.create({ data: validated.data });
+      // --- CREATE ---
+      await prisma.course.create({
+        data: {
+          title: validatedData.title,
+          description: validatedData.description,
+          imageUrl: validatedData.imageUrl,
+          active: validatedData.active,
+          price: validatedData.price,
+          modules: {
+            create: validatedData.modules.map(mod => ({
+              title: mod.title,
+              order: mod.order,
+              lessons: {
+                create: mod.lessons.map(lesson => ({
+                  title: lesson.title,
+                  videoUrl: lesson.videoUrl,
+                  order: lesson.order
+                }))
+              }
+            }))
+          }
+        },
+      });
     }
+
     revalidatePath("/dashboard/settings");
-    revalidatePath("/");
+    revalidatePath("/dashboard/courses");
     return { success: "Curso salvo com sucesso!" };
-  } catch (e) {
-    return { error: "Erro ao salvar curso." };
+
+  } catch (error) {
+    console.error("Erro ao salvar curso:", error);
+    return { error: "Erro ao processar dados do curso." };
   }
 }
 
 export async function deleteCourse(id: string) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
-  await prisma.course.delete({ where: { id } });
-  revalidatePath("/dashboard/settings");
-  revalidatePath("/");
-  return { success: "Curso removido." };
+  
+  try {
+    await prisma.course.delete({ where: { id } });
+    revalidatePath("/dashboard/settings");
+    revalidatePath("/dashboard/courses");
+    return { success: "Curso removido." };
+  } catch (e) {
+    return { error: "Erro ao remover." };
+  }
 }
 
-// ... (O restante das actions upsertPlan, deletePlan, updateSiteInfo permanece igual) ...
-// Vou incluir aqui para garantir que você tenha o arquivo completo se copiar/colar
+
+// --- ACTIONS DE PLANOS ---
 
 export async function upsertPlan(formData: FormData, id?: string) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
   const rawData = Object.fromEntries(formData.entries());
-  const validated = PlanSchema.safeParse(rawData);
+  
+  // Tratamento de dados para o Zod
+  const processedData = {
+    ...rawData,
+    highlight: rawData.highlight === 'on' || rawData.highlight === 'true',
+    // O schema coerce.number() vai lidar com isso
+    price: rawData.price 
+  };
 
-  if (!validated.success) return { error: "Dados inválidos" };
+  const validated = PlanSchema.safeParse(processedData);
+
+  if (!validated.success) return { error: "Dados inválidos: " + validated.error.message };
 
   try {
     if (id) {
@@ -121,6 +210,7 @@ export async function upsertPlan(formData: FormData, id?: string) {
     revalidatePath("/");
     return { success: "Plano salvo com sucesso!" };
   } catch (e) {
+    console.error(e);
     return { error: "Erro ao salvar plano." };
   }
 }
@@ -128,11 +218,18 @@ export async function upsertPlan(formData: FormData, id?: string) {
 export async function deletePlan(id: string) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
-  await prisma.plan.delete({ where: { id } });
-  revalidatePath("/dashboard/settings");
-  revalidatePath("/");
-  return { success: "Plano removido." };
+  try {
+    await prisma.plan.delete({ where: { id } });
+    revalidatePath("/dashboard/settings");
+    revalidatePath("/");
+    return { success: "Plano removido." };
+  } catch (e) {
+    return { error: "Erro ao remover." };
+  }
 }
+
+
+// --- ACTIONS DE INFO DO SITE ---
 
 export async function updateSiteInfo(formData: FormData) {
   const session = await auth();
