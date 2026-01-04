@@ -178,3 +178,28 @@ export async function createAppointment(formData: FormData) {
     return { error: "Erro interno ao processar agendamento. Tente novamente." };
   }
 }
+
+// --- 3. ATUALIZAR LINK DO MEET (APENAS ADMIN) ---
+
+export async function updateMeetLink(formData: FormData) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
+
+  const appointmentId = formData.get("appointmentId") as string;
+  const meetLink = formData.get("meetLink") as string;
+
+  if (!appointmentId) return { error: "ID do agendamento inválido." };
+
+  try {
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { meetLink },
+    });
+
+    revalidatePath("/dashboard/appointments");
+    return { success: "Link da sala atualizado com sucesso!" };
+  } catch (error) {
+    console.error("Erro ao atualizar link:", error);
+    return { error: "Erro ao atualizar link." };
+  }
+}
