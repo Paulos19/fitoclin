@@ -25,7 +25,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"; // Certifique-se de ter o tooltip do shadcn instalado
+} from "@/components/ui/tooltip";
 
 // --- Definição dos Menus ---
 const adminLinks = [
@@ -52,15 +52,9 @@ export function Sidebar({ role }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const links = role === "ADMIN" ? adminLinks : patientLinks;
 
-  // Variantes do Framer Motion para animações suaves
   const sidebarVariants = {
     expanded: { width: "16rem" }, // w-64
     collapsed: { width: "5rem" }, // w-20
-  };
-
-  const logoVariants = {
-    expanded: { opacity: 1, scale: 1, display: "block" },
-    collapsed: { opacity: 0, scale: 0.8, transitionEnd: { display: "none" } },
   };
 
   return (
@@ -72,10 +66,10 @@ export function Sidebar({ role }: SidebarProps) {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
           "relative flex flex-col h-full border-r z-20 shadow-xl",
-          "bg-[#062214] border-[#2A5432]/30 text-white" // Fundo Verde Escuro Profundo
+          "bg-[#062214] border-[#2A5432]/30 text-white"
         )}
       >
-        {/* --- Toggle Button (Botão de Colapsar) --- */}
+        {/* Toggle Button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
@@ -83,19 +77,13 @@ export function Sidebar({ role }: SidebarProps) {
             "bg-[#76A771] border-[#062214] text-[#062214] hover:bg-white"
           )}
         >
-          {isCollapsed ? (
-            <ChevronRight className="h-3 w-3" />
-          ) : (
-            <ChevronLeft className="h-3 w-3" />
-          )}
+          {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </button>
 
-        {/* --- Header (Logo) --- */}
+        {/* Header (Logo) */}
         <div className="flex h-20 items-center px-4 overflow-hidden relative">
-          {/* Logo Ícone (Sempre visível ou substitui o texto quando colapsado) */}
           <div className="flex items-center gap-3 w-full">
             <div className="relative shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-[#2A5432]/50 border border-[#2A5432]">
-               {/* Se tiver um ícone SVG ou PNG pequeno, use aqui. Usando fallback visual */}
                <Image 
                  src="/logo.png" 
                  alt="Fitoclin Logo" 
@@ -105,7 +93,6 @@ export function Sidebar({ role }: SidebarProps) {
                />
             </div>
 
-            {/* Texto da Marca (Some ao colapsar) */}
             <AnimatePresence>
               {!isCollapsed && (
                 <motion.div
@@ -126,26 +113,24 @@ export function Sidebar({ role }: SidebarProps) {
           </div>
         </div>
 
-        {/* --- Separator --- */}
+        {/* Separator */}
         <div className="h-[1px] mx-4 bg-gradient-to-r from-transparent via-[#2A5432] to-transparent mb-4 opacity-50" />
 
-        {/* --- Navegação --- */}
+        {/* Navegação */}
         <nav className="flex-1 overflow-y-auto px-3 space-y-2 py-4 custom-scrollbar">
           {links.map((link) => {
             const isActive = pathname === link.href;
 
-            // Componente Link Base
             const LinkContent = (
               <Link
                 href={link.href}
                 className={cn(
                   "relative flex items-center gap-3 rounded-xl px-3 py-3 transition-all duration-300 group overflow-hidden",
                   isActive
-                    ? "bg-[#2A5432] text-white shadow-[0_0_15px_rgba(118,167,113,0.15)]" // Ativo: Verde Musgo + Glow Sutil
+                    ? "bg-[#2A5432] text-white shadow-[0_0_15px_rgba(118,167,113,0.15)]"
                     : "text-[#F1F1F1]/70 hover:bg-[#2A5432]/30 hover:text-white"
                 )}
               >
-                {/* Indicador Ativo (Barra lateral) */}
                 {isActive && (
                   <motion.div
                     layoutId="active-pill"
@@ -173,15 +158,11 @@ export function Sidebar({ role }: SidebarProps) {
               </Link>
             );
 
-            // Se estiver colapsado, envolve em Tooltip
             if (isCollapsed) {
               return (
                 <Tooltip key={link.href}>
                   <TooltipTrigger asChild>{LinkContent}</TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="bg-[#0A311D] text-[#F1F1F1] border-[#2A5432]"
-                  >
+                  <TooltipContent side="right" className="bg-[#0A311D] text-[#F1F1F1] border-[#2A5432]">
                     {link.name}
                   </TooltipContent>
                 </Tooltip>
@@ -192,18 +173,17 @@ export function Sidebar({ role }: SidebarProps) {
           })}
         </nav>
 
-        {/* --- Footer (Logout) --- */}
+        {/* Footer (Logout) */}
         <div className="p-3 mt-auto">
            <div className="h-[1px] bg-[#2A5432]/30 mb-3" />
-          
            {isCollapsed ? (
              <Tooltip>
                <TooltipTrigger asChild>
                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-full h-10 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/60"
-                    onClick={() => signOut({ callbackUrl: "/login" })}
+                   variant="ghost"
+                   size="icon"
+                   className="w-full h-10 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/60"
+                   onClick={() => signOut({ callbackUrl: "/login" })}
                  >
                    <LogOut className="w-5 h-5" />
                  </Button>

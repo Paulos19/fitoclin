@@ -4,7 +4,8 @@ import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { sendPreConsultationEmail } from "@/lib/mail";
+// 👇 CORREÇÃO: Importamos as funções que realmente existem no novo lib/mail.ts
+import { sendEmail, getAppointmentTemplate } from "@/lib/mail";
 
 const prisma = new PrismaClient();
 
@@ -153,8 +154,12 @@ export async function createAppointment(formData: FormData) {
     if (result.patient?.user?.email) {
       const { email, name } = result.patient.user;
       
-      // Executa sem await bloqueante ou com tratamento de erro isolado
-      sendPreConsultationEmail(email, name, result.date).catch((err) => {
+      // 👇 CORREÇÃO: Usamos sendEmail e o template correto
+      sendEmail({
+        to: email,
+        subject: "Confirmação de Agendamento - FitoClin",
+        html: getAppointmentTemplate(name || "Paciente", result.date, "Primeira Consulta")
+      }).catch((err) => {
         console.error("⚠️ Falha silenciosa no envio de email:", err);
       });
     }
@@ -176,30 +181,5 @@ export async function createAppointment(formData: FormData) {
 
     console.error("Erro crítico ao criar agendamento:", error);
     return { error: "Erro interno ao processar agendamento. Tente novamente." };
-  }
-}
-
-// --- 3. ATUALIZAR LINK DO MEET (APENAS ADMIN) ---
-
-export async function updateMeetLink(formData: FormData) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
-
-  const appointmentId = formData.get("appointmentId") as string;
-  const meetLink = formData.get("meetLink") as string;
-
-  if (!appointmentId) return { error: "ID do agendamento inválido." };
-
-  try {
-    await prisma.appointment.update({
-      where: { id: appointmentId },
-      data: { meetLink },
-    });
-
-    revalidatePath("/dashboard/appointments");
-    return { success: "Link da sala atualizado com sucesso!" };
-  } catch (error) {
-    console.error("Erro ao atualizar link:", error);
-    return { error: "Erro ao atualizar link." };
   }
 }

@@ -6,6 +6,7 @@ import { ServicesSection } from "@/components/home/services-section";
 import { CoursesSection } from "@/components/home/courses-section";
 import { PricingSection } from "@/components/home/pricing-section";
 import { MaterialsSection } from "@/components/home/materials-section";
+import { ContactSection } from "@/components/home/contact-section"; // 👈 Novo Import
 import { Footer } from "@/components/layout/footer";
 import { PrismaClient } from "@prisma/client";
 
@@ -16,6 +17,7 @@ export const revalidate = 60;
 
 export default async function Home() {
   // 1. Buscar Configurações Gerais (Hero, Sobre, Contatos)
+  // Tenta buscar, se não existir (primeiro acesso), retorna null e os componentes lidam com isso
   const siteInfo = await prisma.siteInfo.findUnique({
     where: { key: "homepage_config" }
   });
@@ -34,6 +36,7 @@ export default async function Home() {
   });
 
   return (
+    // Mantendo o tema escuro que você definiu
     <main className="min-h-screen bg-[#062214] text-white selection:bg-[#76A771] selection:text-[#062214]">
       <Navbar />
       
@@ -50,10 +53,10 @@ export default async function Home() {
         instagram={siteInfo?.instagram}
       />
       
-      {/* Seção 3: Método (Estático por enquanto) */}
+      {/* Seção 3: Método (Estático) */}
       <MethodSection />
       
-      {/* Seção 4: Serviços (Estático por enquanto) */}
+      {/* Seção 4: Serviços (Estático) */}
       <ServicesSection />
       
       {/* Seção 5: Cursos Dinâmicos */}
@@ -64,6 +67,10 @@ export default async function Home() {
       
       {/* Seção 7: Materiais (Estático) */}
       <MaterialsSection />
+
+      {/* Seção 8: Contato & Captura de Leads (NOVO) */}
+      {/* Esta seção tem fundo claro (slate-50), criando um contraste no final da page */}
+      <ContactSection />
       
     </main>
   );

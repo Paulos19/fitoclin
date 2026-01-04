@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
-import { getNotifications } from "@/actions/notifications"; // <--- Importe a action
+import { getNotifications } from "@/actions/notifications"; 
 
 export default async function DashboardLayout({
   children,
@@ -18,7 +18,8 @@ export default async function DashboardLayout({
   const role = (session.user.role as "ADMIN" | "PATIENT") || "PATIENT";
   
   // Buscar notificações no servidor
-  const notifications = await getNotifications();
+  // Nota: Se der erro aqui, verifique se actions/notifications.ts existe e tem essa função exportada
+  const notifications = await getNotifications().catch(() => []); 
 
   return (
     <div className="flex h-screen w-full bg-[#062214] overflow-hidden">
@@ -27,8 +28,6 @@ export default async function DashboardLayout({
       </aside>
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        
-        {/* Passamos as notificações para o Header */}
         <Header user={session.user} notifications={notifications} />
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#062214] p-6 scroll-smooth">
