@@ -4,13 +4,16 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { put } from "@vercel/blob"; // 👈 Import necessário
+import { put } from "@vercel/blob"; 
 
+// --- SCHEMAS DE VALIDAÇÃO ---
+
+// 1. Schema de Aulas
 const LessonSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1, "Título da aula obrigatório"),
-  videoUrl: z.string().optional().or(z.literal("")), 
-  description: z.string().optional(),
+  videoUrl: z.string().nullish(), 
+  description: z.string().nullish(),
   order: z.number().default(0),
 });
 
@@ -26,9 +29,9 @@ const ModuleSchema = z.object({
 const CourseSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(3, "Título obrigatório"),
-  description: z.string().optional(),
-  imageUrl: z.string().optional(),
-  linkUrl: z.string().optional(),
+  description: z.string().nullish(), 
+  imageUrl: z.string().nullish(),    
+  linkUrl: z.string().nullish(),     
   active: z.boolean().default(false),
   price: z.coerce.number().min(0).default(0),
   modules: z.array(ModuleSchema).default([]),
@@ -41,20 +44,21 @@ const PlanSchema = z.object({
   period: z.string().min(1),
   features: z.string().min(1),
   highlight: z.coerce.boolean(),
-  buttonText: z.string().optional(),
-  buttonLink: z.string().optional(),
+  buttonText: z.string().nullish(), 
+  buttonLink: z.string().nullish(),
 });
 
 const SiteInfoSchema = z.object({
-  heroTitle: z.string().optional(),
-  heroSubtitle: z.string().optional(),
-  aboutText: z.string().optional(),
-  whatsapp: z.string().optional(),
-  instagram: z.string().optional(),
+  heroTitle: z.string().nullish(),
+  heroSubtitle: z.string().nullish(),
+  aboutText: z.string().nullish(),
+  whatsapp: z.string().nullish(),
+  instagram: z.string().nullish(),
 });
 
 
-// --- NOVA ACTION: UPLOAD DE IMAGEM (ESPECÍFICA) ---
+// --- ACTIONS DE IMAGEM ---
+
 export async function uploadCourseImage(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
@@ -84,20 +88,20 @@ export async function upsertCourse(data: any) {
   try {
     const validatedData = CourseSchema.parse(data);
 
-    // --- UPDATE ---
+    // --- CENÁRIO A: ATUALIZAÇÃO (UPDATE) ---
     if (validatedData.id) {
       await db.course.update({
         where: { id: validatedData.id },
         data: {
           title: validatedData.title,
-          description: validatedData.description,
-          imageUrl: validatedData.imageUrl, // Salva a URL recebida
+          description: validatedData.description || null, 
+          imageUrl: validatedData.imageUrl || null,
           active: validatedData.active,
           price: validatedData.price,
         },
       });
 
-      // Gerenciar Módulos e Aulas
+      // 2. Gerenciar Módulos e Aulas
       for (const mod of validatedData.modules) {
         let moduleId = mod.id;
 
@@ -123,7 +127,8 @@ export async function upsertCourse(data: any) {
               where: { id: lesson.id },
               data: {
                 title: lesson.title,
-                videoUrl: lesson.videoUrl,
+                videoUrl: lesson.videoUrl || null,
+                description: lesson.description || null,
                 order: lesson.order
               }
             });
@@ -131,7 +136,8 @@ export async function upsertCourse(data: any) {
             await db.lesson.create({
               data: {
                 title: lesson.title,
-                videoUrl: lesson.videoUrl,
+                videoUrl: lesson.videoUrl || null,
+                description: lesson.description || null,
                 order: lesson.order,
                 moduleId: moduleId!
               }
@@ -141,12 +147,12 @@ export async function upsertCourse(data: any) {
       }
 
     } else {
-      // --- CREATE ---
+      // --- CENÁRIO B: CRIAÇÃO (CREATE) ---
       await db.course.create({
         data: {
           title: validatedData.title,
-          description: validatedData.description,
-          imageUrl: validatedData.imageUrl,
+          description: validatedData.description || null,
+          imageUrl: validatedData.imageUrl || null,
           active: validatedData.active,
           price: validatedData.price,
           modules: {
@@ -156,7 +162,8 @@ export async function upsertCourse(data: any) {
               lessons: {
                 create: mod.lessons.map(lesson => ({
                   title: lesson.title,
-                  videoUrl: lesson.videoUrl,
+                  videoUrl: lesson.videoUrl || null,
+                  description: lesson.description || null,
                   order: lesson.order
                 }))
               }
@@ -172,6 +179,11 @@ export async function upsertCourse(data: any) {
 
   } catch (error) {
     console.error("Erro ao salvar curso:", error);
+    // 👇 CORREÇÃO: Usar .issues em vez de .errors para maior compatibilidade de tipos
+    if (error instanceof z.ZodError) {
+       const errorMessage = error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+       return { error: `Erro de validação: ${errorMessage}` };
+    }
     return { error: "Erro ao processar dados do curso." };
   }
 }
@@ -207,18 +219,30 @@ export async function upsertPlan(formData: FormData, id?: string) {
 
   const validated = PlanSchema.safeParse(processedData);
 
-  if (!validated.success) return { error: "Dados inválidos: " + validated.error.message };
+  if (!validated.success) return { error: "Dados inválidos: " + validated.error.issues[0].message };
+
+  // 👇 CORREÇÃO: Garantir que buttonText não seja null (pois é obrigatório no banco)
+  const dataToSave = {
+    name: validated.data.name,
+    price: validated.data.price,
+    period: validated.data.period,
+    features: validated.data.features,
+    highlight: validated.data.highlight,
+    buttonText: validated.data.buttonText ?? "Assinar Agora", // Fallback se null/undefined
+    buttonLink: validated.data.buttonLink ?? null, // Aceita null se opcional
+  };
 
   try {
     if (id) {
-      await db.plan.update({ where: { id }, data: validated.data });
+      await db.plan.update({ where: { id }, data: dataToSave });
     } else {
-      await db.plan.create({ data: validated.data });
+      await db.plan.create({ data: dataToSave });
     }
     revalidatePath("/dashboard/settings");
     revalidatePath("/");
     return { success: "Plano salvo com sucesso!" };
   } catch (e) {
+    console.error(e);
     return { error: "Erro ao salvar plano." };
   }
 }

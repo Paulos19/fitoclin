@@ -341,6 +341,7 @@ model Course {
   imageUrl    String?
   active      Boolean  @default(false)
   price       Decimal? @default(0.00) @db.Decimal(10, 2)
+  linkUrl     String?
 
   modules Module[]
 

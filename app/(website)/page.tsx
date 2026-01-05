@@ -6,71 +6,71 @@ import { ServicesSection } from "@/components/home/services-section";
 import { CoursesSection } from "@/components/home/courses-section";
 import { PricingSection } from "@/components/home/pricing-section";
 import { MaterialsSection } from "@/components/home/materials-section";
-import { ContactSection } from "@/components/home/contact-section"; // 👈 Novo Import
+import { ContactSection } from "@/components/home/contact-section"; 
 import { Footer } from "@/components/layout/footer";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db"; 
 
-const prisma = new PrismaClient();
-
-// Revalidar a cada 60 segundos para garantir performance e dados frescos
 export const revalidate = 60; 
 
 export default async function Home() {
-  // 1. Buscar Configurações Gerais (Hero, Sobre, Contatos)
-  // Tenta buscar, se não existir (primeiro acesso), retorna null e os componentes lidam com isso
-  const siteInfo = await prisma.siteInfo.findUnique({
+  // 1. Buscar Configurações
+  const siteInfo = await db.siteInfo.findUnique({
     where: { key: "homepage_config" }
   });
 
-  // 2. Buscar Cursos Ativos
-  const courses = await prisma.course.findMany({
+  // 2. Buscar Cursos e converter Decimal -> Number
+  const rawCourses = await db.course.findMany({
     where: { active: true },
+    include: { _count: { select: { modules: true } } },
     orderBy: { createdAt: 'desc' },
-    take: 3 // Mostramos apenas os 3 mais recentes na home
+    take: 3
   });
 
-  // 3. Buscar Planos Ativos
-  const plans = await prisma.plan.findMany({
+  const courses = rawCourses.map(c => ({
+    ...c,
+    price: c.price ? Number(c.price) : 0, // Converte Decimal para number
+  }));
+
+  // 3. Buscar Planos e converter Decimal -> Number
+  const rawPlans = await db.plan.findMany({
     where: { active: true },
-    orderBy: { price: 'asc' } // Ordenado pelo menor preço
+    orderBy: { price: 'asc' }
   });
+
+  const plans = rawPlans.map(p => ({
+    ...p,
+    price: Number(p.price), // Converte Decimal para number
+  }));
 
   return (
-    // Mantendo o tema escuro que você definiu
-    <main className="min-h-screen bg-[#062214] text-white selection:bg-[#76A771] selection:text-[#062214]">
+    <main className="min-h-screen bg-[#062214] text-white selection:bg-[#76A771] selection:text-[#062214] flex flex-col">
       <Navbar />
       
-      {/* Seção 1: Hero Dinâmico */}
       <HeroSection 
         title={siteInfo?.heroTitle} 
         subtitle={siteInfo?.heroSubtitle} 
       />
       
-      {/* Seção 2: Sobre Dinâmico */}
       <AboutSection 
         aboutText={siteInfo?.aboutText}
         whatsapp={siteInfo?.whatsapp}
         instagram={siteInfo?.instagram}
       />
       
-      {/* Seção 3: Método (Estático) */}
       <MethodSection />
       
-      {/* Seção 4: Serviços (Estático) */}
       <ServicesSection />
       
-      {/* Seção 5: Cursos Dinâmicos */}
+      {/* Agora passamos os dados convertidos */}
       <CoursesSection courses={courses} />
       
-      {/* Seção 6: Planos Dinâmicos */}
       <PricingSection plans={plans} />
       
-      {/* Seção 7: Materiais (Estático) */}
       <MaterialsSection />
 
-      {/* Seção 8: Contato & Captura de Leads (NOVO) */}
-      {/* Esta seção tem fundo claro (slate-50), criando um contraste no final da page */}
       <ContactSection />
+
+      <Footer />
       
     </main>
   );
