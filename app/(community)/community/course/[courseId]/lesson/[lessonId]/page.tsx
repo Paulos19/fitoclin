@@ -4,18 +4,28 @@ import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { LessonCheckButton } from "@/components/community/lesson-check-button"; 
 import { VideoPlayer } from "@/components/community/video-player"; 
+import { hasCourseAccess } from "@/lib/access";
 
 export default async function LessonPage({
   params,
 }: {
-  params: Promise<{ courseId: string; lessonId: string }>; // 👈 Promise com os dois params
+  params: Promise<{ courseId: string; lessonId: string }>;
 }) {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const { courseId, lessonId } = await params; // 👈 Await desestruturando
+  const { courseId, lessonId } = await params;
 
-  // Buscar dados específicos da aula
+  // 1. BLINDAGEM DE SEGURANÇA 🔒
+  // Verifica se tem assinatura ativa OU se comprou este curso especificamente
+  const canAccess = await hasCourseAccess(session.user.id, courseId);
+  
+  if (!canAccess) {
+    // Se não tem acesso, redireciona para a página de visão geral (onde tem o botão de comprar)
+    redirect(`/community/course/${courseId}`);
+  }
+
+  // 2. Buscar dados da aula
   const lesson = await db.lesson.findUnique({
     where: { id: lessonId },
     include: {

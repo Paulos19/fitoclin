@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
 import { CommunityHeader } from "@/components/community/header";
 
 export default async function CommunityLayout({
@@ -10,24 +9,10 @@ export default async function CommunityLayout({
 }) {
   const session = await auth();
 
-  // 1. Verificação de Autenticação
+  // Apenas autenticação básica. 
+  // A verificação de "Pagou ou não" será feita página a página.
   if (!session || !session.user) {
     redirect("/login");
-  }
-
-  // 2. Verificação de Assinatura (Mantenha sua lógica de segurança aqui)
-  const subscription = await db.subscription.findUnique({
-    where: { userId: session.user.id },
-    select: { stripeCurrentPeriodEnd: true }
-  });
-
-  const isAdmin = session.user.role === "ADMIN";
-  const hasActiveSubscription = subscription?.stripeCurrentPeriodEnd
-    ? subscription.stripeCurrentPeriodEnd.getTime() + 86_400_000 > Date.now()
-    : false;
-
-  if (!isAdmin && !hasActiveSubscription) {
-    redirect("/dashboard?error=subscription_required");
   }
 
   return (
