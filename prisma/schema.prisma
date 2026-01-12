@@ -38,6 +38,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  stripeCustomerId String? @unique
+
+  subscription Subscription?
+
   // Relacionamentos
   image   String? // Foto de perfil
   patient Patient? // Se for paciente, terá esse perfil
@@ -47,6 +51,23 @@ model User {
   doctorSchedules      DoctorSchedule[]
   notifications        Notification[]
   userLessonProgresses UserLessonProgress[]
+}
+
+model Subscription {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Campos do Stripe
+  stripeSubscriptionId   String?   @unique // O ID da assinatura (sub_xyz)
+  stripePriceId          String?   // O ID do preço (price_abc) - define se é Mensal ou Anual
+  stripeCurrentPeriodEnd DateTime? // A data exata que a assinatura expira/renova
+  
+  stripeCustomerId String? @unique // O ID do cliente (cus_xyz)
+  status String? // active, trialing, past_due, canceled, unpaid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Patient {
@@ -199,6 +220,7 @@ model Plan {
   highlight  Boolean @default(false) // Se é o plano destaque
   buttonText String  @default("Assinar Agora")
   buttonLink String?
+  stripePriceId String?
 
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
