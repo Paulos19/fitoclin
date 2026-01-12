@@ -1,28 +1,39 @@
-import { getCourseContent } from "@/actions/courses";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { LmsSidebar } from "@/components/community/lms-sidebar";
+import { db } from "@/lib/db";
+import { CommunityHeader } from "@/components/community/header";
 
-export default async function CourseLayout({
+export default async function CommunityLayout({
   children,
-  params, // 👈 Agora isso é uma Promise
 }: {
   children: React.ReactNode;
-  params: Promise<{ courseId: string }>; // 👈 Tipagem atualizada
 }) {
-  const { courseId } = await params; // 👈 O await mágico
-  const course = await getCourseContent(courseId);
+  const session = await auth();
 
-  if (!course) {
-    redirect("/community");
+  // 1. Verificação de Autenticação
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  // 2. Verificação de Assinatura (Mantenha sua lógica de segurança aqui)
+  const subscription = await db.subscription.findUnique({
+    where: { userId: session.user.id },
+    select: { stripeCurrentPeriodEnd: true }
+  });
+
+  const isAdmin = session.user.role === "ADMIN";
+  const hasActiveSubscription = subscription?.stripeCurrentPeriodEnd
+    ? subscription.stripeCurrentPeriodEnd.getTime() + 86_400_000 > Date.now()
+    : false;
+
+  if (!isAdmin && !hasActiveSubscription) {
+    redirect("/dashboard?error=subscription_required");
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-64px)]"> 
-      <aside className="w-full lg:w-80 lg:shrink-0 lg:fixed lg:top-[64px] lg:bottom-0 lg:z-30 overflow-y-auto bg-white border-r border-gray-100 hidden lg:block">
-        <LmsSidebar courseId={course.id} modules={course.modules} />
-      </aside>
-
-      <main className="flex-1 lg:pl-80 w-full">
+    <div className="min-h-screen bg-[#FDFDFD] text-[#1A1A1A] font-sans">
+      <CommunityHeader user={session.user} />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
     </div>

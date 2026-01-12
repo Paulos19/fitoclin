@@ -24,12 +24,13 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) {
-            // Retorna o usuário para o NextAuth criar a sessão
+            // Retorna o usuário com o campo stripeCustomerId
             return {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                stripeCustomerId: user.stripeCustomerId, // 👈 Importante retornar aqui
             };
           }
         }
@@ -39,4 +40,25 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    // 1. Passa do Authorize (User) para o Token (JWT)
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.stripeCustomerId = user.stripeCustomerId; // 👈 Salva no token
+      }
+      return token;
+    },
+    // 2. Passa do Token para a Sessão (Client Side)
+    async session({ session, token }) {
+      if (session.user && token) {
+        // 👇 CORREÇÃO: Usamos 'as string' para garantir o tipo
+        session.user.id = token.id as string; 
+        session.user.role = token.role as "ADMIN" | "PATIENT";
+        session.user.stripeCustomerId = token.stripeCustomerId as string | null;
+      }
+      return session;
+    }
+  }
 });

@@ -41,6 +41,7 @@ model User {
   stripeCustomerId String? @unique
 
   subscription Subscription?
+  purchases    Purchase[]
 
   // Relacionamentos
   image   String? // Foto de perfil
@@ -60,11 +61,11 @@ model Subscription {
 
   // Campos do Stripe
   stripeSubscriptionId   String?   @unique // O ID da assinatura (sub_xyz)
-  stripePriceId          String?   // O ID do preço (price_abc) - define se é Mensal ou Anual
+  stripePriceId          String? // O ID do preço (price_abc) - define se é Mensal ou Anual
   stripeCurrentPeriodEnd DateTime? // A data exata que a assinatura expira/renova
-  
+
   stripeCustomerId String? @unique // O ID do cliente (cus_xyz)
-  status String? // active, trialing, past_due, canceled, unpaid
+  status           String? // active, trialing, past_due, canceled, unpaid
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -212,14 +213,14 @@ model Exam {
 }
 
 model Plan {
-  id         String  @id @default(cuid())
-  name       String // Ex: "Plano Mensal"
-  price      Decimal @default(0.00) @db.Decimal(10, 2)
-  period     String // Ex: "/mês"
-  features   String // Lista de benefícios separados por ponto-e-vírgula (;)
-  highlight  Boolean @default(false) // Se é o plano destaque
-  buttonText String  @default("Assinar Agora")
-  buttonLink String?
+  id            String  @id @default(cuid())
+  name          String // Ex: "Plano Mensal"
+  price         Decimal @default(0.00) @db.Decimal(10, 2)
+  period        String // Ex: "/mês"
+  features      String // Lista de benefícios separados por ponto-e-vírgula (;)
+  highlight     Boolean @default(false) // Se é o plano destaque
+  buttonText    String  @default("Assinar Agora")
+  buttonLink    String?
   stripePriceId String?
 
   active    Boolean  @default(true)
@@ -357,18 +358,34 @@ model Document {
 }
 
 model Course {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
-  description String?  @db.Text
+  description String?    @db.Text
   imageUrl    String?
-  active      Boolean  @default(false)
-  price       Decimal? @default(0.00) @db.Decimal(10, 2)
+  active      Boolean    @default(false)
+  price       Decimal?   @default(0.00) @db.Decimal(10, 2)
   linkUrl     String?
+  purchases   Purchase[]
 
   modules Module[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Purchase {
+  id       String @id @default(cuid())
+  userId   String
+  courseId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId]) // Um usuário não compra o mesmo curso 2x
+  @@index([courseId])
 }
 
 model Module {
