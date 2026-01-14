@@ -35,6 +35,7 @@ import {
 
 // --- Definição dos Menus ---
 
+// Menu Completo da Dra. Isa
 const adminLinks = [
   { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
@@ -43,6 +44,18 @@ const adminLinks = [
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
+];
+
+// Menu do Assinante (CRM Profissional)
+// É igual ao admin, mas sem as "Configurações" globais do sistema SaaS
+const professionalLinks = [
+  { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Meus Pacientes", href: "/dashboard/patients", icon: Users },
+  { name: "Minha Agenda", href: "/dashboard/schedule", icon: Calendar },
+  { name: "Prontuários", href: "/dashboard/records", icon: FileText },
+  { name: "Meu CRM", href: "/dashboard/crm", icon: BarChart3 },
+  { name: "Meu Financeiro", href: "/dashboard/financial", icon: DollarSign },
+  // Removemos Settings global, mas mantemos Profile/Subscription no lugar se quiser
 ];
 
 const patientLinks = [
@@ -56,7 +69,7 @@ const patientLinks = [
 ];
 
 interface SidebarProps {
-  role: "ADMIN" | "PATIENT";
+  role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
   isSubscribed?: boolean;
 }
 
@@ -64,7 +77,10 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  const links = role === "ADMIN" ? adminLinks : patientLinks;
+  // Seleção dinâmica dos links
+  let links = patientLinks;
+  if (role === "ADMIN") links = adminLinks;
+  if (role === "PROFESSIONAL") links = professionalLinks;
 
   const sidebarVariants = {
     expanded: { width: "16rem" }, // w-64
@@ -119,7 +135,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                     Fitoclin
                   </span>
                   <span className="text-[10px] uppercase font-bold text-[#76A771] tracking-widest">
-                    {role === "ADMIN" ? "Profissional" : "Paciente"}
+                    {role === "ADMIN" ? "Admin" : role === "PROFESSIONAL" ? "Profissional" : "Paciente"}
                   </span>
                 </motion.div>
               )}
@@ -133,9 +149,6 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
         {/* Navegação Principal */}
         <nav className="flex-1 overflow-y-auto px-3 space-y-2 py-2 custom-scrollbar">
           {links.map((link) => {
-            // 👇 CORREÇÃO AQUI:
-            // Se for a rota exata "/dashboard", a comparação deve ser exata (===).
-            // Para outras rotas (ex: /dashboard/courses), permitimos sub-rotas (startsWith).
             const isActive = 
               link.href === "/dashboard" 
                 ? pathname === "/dashboard"
@@ -193,7 +206,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
           })}
         </nav>
 
-        {/* Área VIP - Comunidade (Apenas Assinantes) */}
+        {/* Área VIP - Comunidade (Apenas Assinantes Pacientes) */}
         {role === "PATIENT" && isSubscribed && (
           <div className="px-3 mb-2 mt-2">
             {!isCollapsed ? (

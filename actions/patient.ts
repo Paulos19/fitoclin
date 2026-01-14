@@ -15,7 +15,7 @@ const PatientSchema = z.object({
 
 const ProfileSchema = z.object({
   phone: z.string().optional(),
-  birthDate: z.string().optional(), // Recebe como string "YYYY-MM-DD"
+  birthDate: z.string().optional(),
   gender: z.string().optional(),
   occupation: z.string().optional(),
   address: z.string().optional(),
@@ -25,7 +25,10 @@ const ProfileSchema = z.object({
 
 export async function createPatient(formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
+  
+  // 1. Permissão: Admin e Profissional podem criar
+  const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL";
+  if (!isAllowed) return { error: "Não autorizado" };
 
   const rawData = {
     name: formData.get("name"),
@@ -38,21 +41,21 @@ export async function createPatient(formData: FormData) {
 
   const { name, email, phone } = validated.data;
 
-  // Se não tiver email, geramos um placeholder (ex: paciente+ID@fitoclin.sistema)
-  // para permitir cadastro sem email real por enquanto
+  // Placeholder se não tiver email
   const finalEmail = email || `paciente.${Date.now()}@sistema.local`;
 
   try {
-    // Verifica duplicidade apenas se for email real
     if (email) {
       const existing = await db.user.findUnique({ where: { email } });
       if (existing) return { error: "Este email já está cadastrado!" };
     }
 
-    // Senha padrão inicial (pode ser alterada depois pelo "Esqueci minha senha")
     const hashedPassword = await bcrypt.hash("fitoclin123", 10);
 
-    // Criação Atômica: User + Patient
+    // 2. Definir o Dono (Professional ID)
+    // Se quem está criando é PROFESSIONAL, ele é o dono. Se é ADMIN, fica null (ou define lógica)
+    const professionalId = session?.user?.role === "PROFESSIONAL" ? session?.user?.id : null;
+
     await db.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
@@ -67,7 +70,8 @@ export async function createPatient(formData: FormData) {
         data: {
           userId: newUser.id,
           phone: phone,
-          // Outros campos iniciam vazios
+          // 👇 Vínculo de propriedade
+          professionalId: professionalId, 
         }
       });
     });
@@ -85,26 +89,21 @@ export async function updatePatientProfile(formData: FormData) {
   const session = await auth();
   if (!session) return { error: "Não autorizado" };
 
-  // 1. Tratamento da Imagem (Vercel Blob)
+  // Tratamento da Imagem
   const profileImage = formData.get("profileImage") as File;
   let newImageUrl: string | undefined;
 
   if (profileImage && profileImage.size > 0) {
     try {
-      // Upload para o Vercel Blob
-      // Nome do arquivo: profiles/ID-TIMESTAMP.extensão
       const filename = `profiles/${session.user.id}-${Date.now()}.${profileImage.name.split('.').pop()}`;
-      const blob = await put(filename, profileImage, {
-        access: 'public',
-      });
+      const blob = await put(filename, profileImage, { access: 'public' });
       newImageUrl = blob.url;
     } catch (err) {
-      console.error("Erro no upload da imagem:", err);
-      return { error: "Falha ao enviar a foto de perfil." };
+      console.error("Erro no upload:", err);
+      return { error: "Falha ao enviar a foto." };
     }
   }
 
-  // 2. Validação dos outros campos
   const rawData = {
     phone: formData.get("phone"),
     birthDate: formData.get("birthDate"),
@@ -116,7 +115,7 @@ export async function updatePatientProfile(formData: FormData) {
   };
 
   const validated = ProfileSchema.safeParse(rawData);
-  if (!validated.success) return { error: "Dados inválidos nos campos de texto" };
+  if (!validated.success) return { error: "Dados inválidos" };
 
   const data = validated.data;
 
@@ -125,9 +124,7 @@ export async function updatePatientProfile(formData: FormData) {
       ? new Date(data.birthDate + "T12:00:00") 
       : undefined;
 
-    // 3. Atualização no Banco (Transaction para garantir integridade)
     await db.$transaction(async (tx) => {
-      // Atualiza tabela Patient
       await tx.patient.update({
         where: { userId: session.user.id },
         data: {
@@ -141,7 +138,6 @@ export async function updatePatientProfile(formData: FormData) {
         },
       });
 
-      // Se houver nova imagem, atualiza tabela User
       if (newImageUrl) {
         await tx.user.update({
           where: { id: session.user.id },
@@ -151,7 +147,6 @@ export async function updatePatientProfile(formData: FormData) {
     });
 
     revalidatePath("/dashboard/profile");
-    // Revalidar layout para atualizar o avatar no Header instantaneamente
     revalidatePath("/", "layout"); 
     
     return { success: "Perfil atualizado com sucesso!" };

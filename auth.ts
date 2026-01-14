@@ -2,10 +2,8 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db"; // Usando o singleton do seu projeto
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
@@ -19,18 +17,17 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
           
-          const user = await prisma.user.findUnique({ where: { email } });
+          const user = await db.user.findUnique({ where: { email } });
           if (!user) return null;
           
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) {
-            // Retorna o usuário com o campo stripeCustomerId
             return {
                 id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                stripeCustomerId: user.stripeCustomerId, // 👈 Importante retornar aqui
+                stripeCustomerId: user.stripeCustomerId,
             };
           }
         }
@@ -41,21 +38,35 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     }),
   ],
   callbacks: {
-    // 1. Passa do Authorize (User) para o Token (JWT)
+    // 1. JWT: Aqui acontece a mágica da atualização
     async jwt({ token, user }) {
+      // Se acabou de logar, usa os dados do usuário
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.stripeCustomerId = user.stripeCustomerId; // 👈 Salva no token
+        token.stripeCustomerId = user.stripeCustomerId;
       }
+
+      // SE já está logado (token.sub existe), buscamos dados frescos no banco
+      // Isso garante que se o Webhook mudar a role, o usuário vê a mudança no próximo F5
+      if (token.sub) {
+        const existingUser = await db.user.findUnique({ 
+          where: { id: token.sub } 
+        });
+
+        if (existingUser) {
+          token.role = existingUser.role; // Atualiza a role no token
+          token.stripeCustomerId = existingUser.stripeCustomerId;
+        }
+      }
+
       return token;
     },
-    // 2. Passa do Token para a Sessão (Client Side)
+    // 2. Session: Passa os dados do token (já atualizado acima) para o front
     async session({ session, token }) {
       if (session.user && token) {
-        // 👇 CORREÇÃO: Usamos 'as string' para garantir o tipo
         session.user.id = token.id as string; 
-        session.user.role = token.role as "ADMIN" | "PATIENT";
+        session.user.role = token.role as "ADMIN" | "PATIENT" | "PROFESSIONAL";
         session.user.stripeCustomerId = token.stripeCustomerId as string | null;
       }
       return session;

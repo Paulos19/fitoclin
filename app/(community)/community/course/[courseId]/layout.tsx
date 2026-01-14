@@ -1,17 +1,16 @@
 import { getCourseContent } from "@/actions/courses";
 import { redirect } from "next/navigation";
 import { LmsSidebar } from "@/components/community/lms-sidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default async function CourseLayout({
   children,
-  params, // 👈 Agora é uma Promise no Next.js 15/16
+  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ courseId: string }>; // 👈 Tipagem Correta
+  params: Promise<{ courseId: string }>;
 }) {
-  // 👇 Await obrigatório antes de usar os parâmetros
-  const { courseId } = await params; 
-
+  const { courseId } = await params;
   const course = await getCourseContent(courseId);
 
   if (!course) {
@@ -19,16 +18,19 @@ export default async function CourseLayout({
   }
 
   return (
-    // Removemos o Header daqui pois ele já vem do layout pai
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-140px)]"> 
-      
-      {/* Sidebar */}
-      <aside className="w-full lg:w-80 lg:shrink-0 lg:fixed lg:top-[88px] lg:bottom-0 lg:z-30 overflow-y-auto bg-white border-r border-gray-100 hidden lg:block">
-        <LmsSidebar courseId={course.id} modules={course.modules} />
+    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-[#F9FBF9]">
+      {/* SIDEBAR (Desktop)
+        - Sticky: Fixa enquanto rola o conteúdo.
+        - Top: Ajustado para ficar abaixo do Header da comunidade.
+      */}
+      <aside className="hidden lg:block w-80 shrink-0 sticky top-[80px] h-[calc(100vh-80px)] border-r border-[#E8F5E9] bg-white/50 backdrop-blur-sm">
+        <ScrollArea className="h-full">
+           <LmsSidebar courseId={course.id} modules={course.modules} />
+        </ScrollArea>
       </aside>
 
-      {/* Conteúdo Principal */}
-      <main className="flex-1 lg:pl-80 w-full">
+      {/* CONTEÚDO PRINCIPAL */}
+      <main className="flex-1 w-full min-w-0">
         {children}
       </main>
     </div>

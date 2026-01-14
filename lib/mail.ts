@@ -88,3 +88,39 @@ export const getAppointmentTemplate = (name: string, date: Date, type: string) =
     </p>
   </div>
 `;
+
+export const getCRMWelcomeTemplate = (name: string) => `
+  <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+    
+    <div style="text-align: center; margin-bottom: 30px; background-color: #051F12; padding: 20px; border-radius: 8px;">
+      <img src="${LOGO_URL}" alt="Logo Fitoclin" style="width: 120px; height: auto;" />
+    </div>
+
+    <h2 style="color: #051F12; text-align: center; font-size: 24px;">Bem-vindo ao Fitoclin PRO! 🚀</h2>
+    
+    <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">Olá, <strong>${name}</strong>.</p>
+    
+    <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">
+      Sua assinatura do <strong>CRM Profissional</strong> foi confirmada. Agora você tem em mãos uma ferramenta completa para gerir sua clínica e encantar seus pacientes.
+    </p>
+
+    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 25px 0;">
+      <p style="margin: 0 0 10px 0; font-weight: bold; color: #166534;">O que você pode fazer agora:</p>
+      <ul style="margin: 0; padding-left: 20px; color: #15803d;">
+        <li style="margin-bottom: 5px;">Cadastrar seus primeiros pacientes</li>
+        <li style="margin-bottom: 5px;">Configurar sua agenda de atendimentos</li>
+        <li style="margin-bottom: 5px;">Criar prescrições digitais personalizadas</li>
+      </ul>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="background-color: #D4AF37; color: #051F12; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 50px; display: inline-block;">
+        Acessar Meu Dashboard CRM
+      </a>
+    </div>
+
+    <p style="font-size: 14px; color: #6b7280; text-align: center;">
+      Se precisar de ajuda para configurar, nossa equipe de suporte está à disposição.
+    </p>
+  </div>
+`;

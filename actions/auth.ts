@@ -13,7 +13,7 @@ const RegisterSchema = z.object({
   password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
 });
 
-// === CORREÇÃO: Adicionado prevState (mesmo que não usado) como primeiro argumento ===
+// === REGISTER ACTION ===
 export async function register(prevState: any, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
   
@@ -38,7 +38,7 @@ export async function register(prevState: any, formData: FormData) {
     // 3. Criptografar senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Definir Role (Lógica do Admin Mestre)
+    // 4. Definir Role (Lógica do Admin Mestre baseada em variável de ambiente)
     const role = email === process.env.EMAIL_ADMIN ? "ADMIN" : "PATIENT";
 
     // 5. Criar usuário no Banco
@@ -48,7 +48,7 @@ export async function register(prevState: any, formData: FormData) {
         email,
         password: hashedPassword,
         role,
-        // Se for paciente, já cria o perfil vazio para evitar erro depois
+        // Se for paciente, já cria o perfil vazio para evitar erro de relacionamento depois
         patient: role === "PATIENT" ? { create: {} } : undefined
       },
     });
@@ -56,12 +56,12 @@ export async function register(prevState: any, formData: FormData) {
     return { success: "Conta criada com sucesso!" };
 
   } catch (error) {
-    console.error(error);
+    console.error("Erro no registro:", error);
     return { error: "Erro ao criar conta. Tente novamente." };
   }
 }
 
-// === CORREÇÃO: Adicionado prevState como primeiro argumento ===
+// === LOGIN ACTION ===
 export async function login(prevState: any, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
 
@@ -74,9 +74,9 @@ export async function login(prevState: any, formData: FormData) {
     await signIn("credentials", {
       email: data.email,
       password: data.password,
-      redirectTo: "/", 
+      // 👇 MUDANÇA IMPORTANTE: Força ida para o dashboard após login
+      redirectTo: "/dashboard", 
     });
-    // O signIn geralmente faz um throw de redirecionamento, então o código abaixo raramente é alcançado se der certo
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -86,8 +86,9 @@ export async function login(prevState: any, formData: FormData) {
           return { error: "Algo deu errado no login." };
       }
     }
-    throw error; // Necessário relançar o erro para o redirecionamento funcionar
+    // O Next.js lança um erro para fazer o redirect. É obrigatório relançar esse erro.
+    throw error; 
   }
   
-  return undefined; // Retorno padrão caso passe direto
+  return undefined;
 }

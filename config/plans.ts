@@ -1,27 +1,33 @@
 export const PLANS = [
   {
     key: "monthly",
-    name: "Plano Comunidade",
-    description: "Acesso total à comunidade e cursos",
+    name: "Comunidade (Paciente)",
+    description: "Para quem quer cuidar da própria saúde",
     price: 97.00,
-    priceId: process.env.STRIPE_PRICE_ID_MONTHLY, // Lê do .env
+    priceId: process.env.STRIPE_PRICE_ID_MONTHLY, 
     features: [
-      "Acesso ilimitado à Comunidade",
-      "Novos protocolos todo mês",
-      "Aulas práticas com a Dra. Isa",
-      "Suporte exclusivo",
-      "Cancele quando quiser"
+      "Acesso à Comunidade de Alunos",
+      "Aulas de Auto-cuidado",
+      "Protocolos de Fitoterapia",
+      "Suporte em Grupo"
     ],
-    highlight: true, // Define se é o card de destaque
-    buttonText: "Assinar Agora"
+    highlight: false,
+    buttonText: "Assinar Comunidade"
   },
-  // Se no futuro tiver um plano anual, basta adicionar aqui:
-  /*
   {
-    key: "yearly",
-    name: "Plano Anual",
-    ...
-    priceId: process.env.STRIPE_PRICE_ID_YEARLY
+    key: "crm_pro",
+    name: "Fitoclin PRO (CRM)",
+    description: "Para terapeutas e profissionais de saúde",
+    price: 197.00,
+    priceId: process.env.STRIPE_PRICE_ID_CRM, // 👈 Novo ID no .env
+    features: [
+      "Tudo do plano Comunidade",
+      "Dashboard Administrativo Próprio",
+      "Gestão de Pacientes Ilimitada",
+      "Prontuário Eletrônico (PEP)",
+      "Agenda e Financeiro"
+    ],
+    highlight: true, // Destaque visual
+    buttonText: "Assinar CRM Profissional"
   }
-  */
 ];

@@ -1,17 +1,18 @@
 import { type DefaultSession } from "next-auth";
-import { type User as PrismaUser } from "@prisma/client"; // Opcional: para herdar tipos do Prisma se quiser
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { type User as PrismaUser } from "@prisma/client";
 
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: "ADMIN" | "PATIENT";
+      role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
       stripeCustomerId: string | null;
     } & DefaultSession["user"];
   }
 
   interface User {
-    role: "ADMIN" | "PATIENT";
+    role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
     stripeCustomerId: string | null;
   }
 }
@@ -19,7 +20,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: "ADMIN" | "PATIENT";
+    role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
     stripeCustomerId: string | null;
   }
 }

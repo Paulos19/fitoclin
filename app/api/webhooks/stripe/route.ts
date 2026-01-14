@@ -3,8 +3,9 @@ import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { NextResponse } from "next/server";
+import { sendEmail, getCRMWelcomeTemplate } from "@/lib/mail";
 
-// Helper robusto para extrair data (previne erros de tipagem do SDK)
+// Helper robusto para extrair data
 function getSubscriptionEndDate(subscription: Stripe.Subscription): Date {
   const sub = subscription as any;
   const periodEnd = sub.currentPeriodEnd ?? sub.current_period_end;
@@ -40,12 +41,12 @@ export async function POST(req: Request) {
 
   try {
     // ======================================================================
-    // CENÁRIO 1: Checkout Finalizado (Pode ser Assinatura OU Compra Avulsa)
+    // CENÁRIO 1: Checkout Finalizado
     // ======================================================================
     if (event.type === "checkout.session.completed") {
       
       // ------------------------------------------------------------------
-      // CASO A: ASSINATURA RECORRENTE (Plano Mensal)
+      // CASO A: ASSINATURA (Plano Mensal ou CRM)
       // ------------------------------------------------------------------
       if (session.mode === "subscription") {
         const subscription = await stripe.subscriptions.retrieve(
@@ -58,78 +59,104 @@ export async function POST(req: Request) {
 
         const userId = session.metadata.userId;
 
-        // Salva/Atualiza na tabela Subscription
+        // 1. Identificar se é o plano CRM para promover o usuário
+        const priceId = subscription.items.data[0].price.id;
+        
+        // Remove espaços extras caso existam no .env
+        const crmPriceId = process.env.STRIPE_PRICE_ID_CRM?.trim();
+        const isCRMPlan = priceId === crmPriceId;
+
+        // 2. Salva a assinatura no banco
         await db.subscription.upsert({
           where: { userId: userId },
           create: {
             userId: userId,
             stripeSubscriptionId: subscription.id,
             stripeCustomerId: subscription.customer as string,
-            stripePriceId: subscription.items.data[0].price.id,
+            stripePriceId: priceId,
             stripeCurrentPeriodEnd: getSubscriptionEndDate(subscription),
             status: subscription.status,
           },
           update: {
             stripeSubscriptionId: subscription.id,
             stripeCustomerId: subscription.customer as string,
-            stripePriceId: subscription.items.data[0].price.id,
+            stripePriceId: priceId,
             stripeCurrentPeriodEnd: getSubscriptionEndDate(subscription),
             status: subscription.status,
           },
         });
 
-        // Vincula Customer ID ao User
-        await db.user.update({
-          where: { id: userId },
-          data: { stripeCustomerId: subscription.customer as string }
-        });
+        // 3. ATUALIZA O USUÁRIO (Role + Stripe ID)
+        // Se for CRM, promove para PROFESSIONAL.
+        if (isCRMPlan) {
+           await db.user.update({
+             where: { id: userId },
+             data: { 
+               stripeCustomerId: subscription.customer as string,
+               role: "PROFESSIONAL" // 👈 AQUI ACONTECE A MÁGICA
+             }
+           });
+           console.log(`🆙 User ${userId} promovido para PROFESSIONAL (Plano CRM)`);
+           
+           // Buscar dados para enviar email
+           const user = await db.user.findUnique({ 
+              where: { id: userId },
+              select: { name: true, email: true }
+           });
 
-        console.log(`✅ Assinatura ativada para User: ${userId}`);
+           // Envia e-mail de boas-vindas específico do CRM
+           if (user?.email) {
+             await sendEmail({
+               to: user.email,
+               subject: "Bem-vindo ao Fitoclin PRO! 🚀",
+               html: getCRMWelcomeTemplate(user.name || "Profissional"),
+             });
+           }
+
+        } else {
+           // Se for plano comum, apenas atualiza o ID do cliente
+           await db.user.update({
+             where: { id: userId },
+             data: { stripeCustomerId: subscription.customer as string }
+           });
+        }
+
+        console.log(`✅ Assinatura processada para User: ${userId}`);
       }
 
       // ------------------------------------------------------------------
-      // CASO B: COMPRA AVULSA DE CURSO (Pagamento Único)
+      // CASO B: COMPRA AVULSA DE CURSO
       // ------------------------------------------------------------------
-      // Verificamos se é 'payment' E se o tipo (que passamos na action) é 'course_purchase'
       if (session.mode === "payment" && session.metadata?.type === "course_purchase") {
         const { userId, courseId } = session.metadata;
 
         if (userId && courseId) {
-          // Cria o registro de compra vitalícia
-          // Usamos upsert ou ignore para evitar erro se o webhook bater 2x
           const existingPurchase = await db.purchase.findUnique({
              where: { userId_courseId: { userId, courseId } }
           });
 
           if (!existingPurchase) {
              await db.purchase.create({
-                data: {
-                   userId: userId,
-                   courseId: courseId
-                }
+                data: { userId, courseId }
              });
              
-             // Opcional: Salvar stripeCustomerId se for a primeira compra
              if (session.customer) {
                 await db.user.update({
                    where: { id: userId },
                    data: { stripeCustomerId: session.customer as string }
                 });
              }
-             
-             console.log(`✅ Curso ${courseId} comprado com sucesso por ${userId}`);
+             console.log(`✅ Curso ${courseId} comprado por ${userId}`);
           }
         }
       }
     }
 
     // ======================================================================
-    // CENÁRIO 2: Renovação Automática de Assinatura
+    // CENÁRIO 2: Renovação
     // ======================================================================
     if (event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object as Stripe.Invoice;
-      
-      // Tratamento seguro para pegar o ID da subscription
       const subscriptionId = typeof (invoice as any).subscription === 'string'
         ? (invoice as any).subscription
         : (invoice as any).subscription?.id;
@@ -137,7 +164,6 @@ export async function POST(req: Request) {
       if (subscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-        // Atualiza apenas a data de expiração
         await db.subscription.update({
           where: { stripeSubscriptionId: subscription.id },
           data: {
@@ -146,18 +172,16 @@ export async function POST(req: Request) {
             status: subscription.status,
           },
         });
-        
         console.log(`🔄 Assinatura renovada: ${subscription.id}`);
       }
     }
 
     // ======================================================================
-    // CENÁRIO 3: Cancelamento ou Falha na Assinatura
+    // CENÁRIO 3: Cancelamento / Falha
     // ======================================================================
     if (event.type === "customer.subscription.deleted" || event.type === "customer.subscription.updated") {
        const subscription = event.data.object as Stripe.Subscription;
        
-       // Verifica se existe no banco antes de tentar atualizar (evita erros em subs antigas)
        const existingSub = await db.subscription.findUnique({
           where: { stripeSubscriptionId: subscription.id }
        });
@@ -170,13 +194,12 @@ export async function POST(req: Request) {
                stripeCurrentPeriodEnd: getSubscriptionEndDate(subscription) 
             }
           });
-          console.log(`⚠️ Status da assinatura atualizado: ${subscription.status}`);
+          console.log(`⚠️ Status atualizado: ${subscription.status}`);
        }
     }
 
   } catch (error: any) {
-    console.error("❌ Erro no processamento do Webhook:", error);
-    // Retornamos 200 para evitar loop de retentativas do Stripe se for erro lógico nosso
+    console.error("❌ Erro no Webhook:", error);
     return new NextResponse("Webhook processed with errors", { status: 200 });
   }
 

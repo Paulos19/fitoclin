@@ -7,33 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- ENUMS (Tipos fixos) ---
-
 enum Role {
-  ADMIN // Dra. Isa
-  PATIENT // Pacientes
+  ADMIN
+  PROFESSIONAL
+  PATIENT
 }
 
 enum AppointmentStatus {
-  SCHEDULED // Agendado
-  COMPLETED // Realizado
-  CANCELED // Cancelado
-  MISSED // Faltou
+  SCHEDULED
+  COMPLETED
+  CANCELED
+  MISSED
 }
 
 enum ConsultationType {
-  FIRST_VISIT // Primeira Consulta
-  FOLLOW_UP // Retorno
-  EMERGENCY // Urgência
+  FIRST_VISIT
+  FOLLOW_UP
+  EMERGENCY
 }
-
-// --- MODELOS PRINCIPAIS ---
 
 model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
-  password  String // Será hash
+  password  String
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -43,15 +40,17 @@ model User {
   subscription Subscription?
   purchases    Purchase[]
 
-  // Relacionamentos
-  image   String? // Foto de perfil
-  patient Patient? // Se for paciente, terá esse perfil
+  image   String?
+  patient Patient?
 
-  // Auditoria (Quem criou o registro, etc)
   appointments         Appointment[]
   doctorSchedules      DoctorSchedule[]
   notifications        Notification[]
   userLessonProgresses UserLessonProgress[]
+
+  myPatients     Patient[]     @relation("MyPatients")
+  myLeads        Lead[]        @relation("MyLeads")
+  myTransactions Transaction[] @relation("MyTransactions")
 }
 
 model Subscription {
@@ -59,13 +58,12 @@ model Subscription {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Campos do Stripe
-  stripeSubscriptionId   String?   @unique // O ID da assinatura (sub_xyz)
-  stripePriceId          String? // O ID do preço (price_abc) - define se é Mensal ou Anual
-  stripeCurrentPeriodEnd DateTime? // A data exata que a assinatura expira/renova
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
 
-  stripeCustomerId String? @unique // O ID do cliente (cus_xyz)
-  status           String? // active, trialing, past_due, canceled, unpaid
+  stripeCustomerId String? @unique
+  status           String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -76,35 +74,32 @@ model Patient {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Dados Pessoais
+  professionalId String?
+  professional   User?   @relation("MyPatients", fields: [professionalId], references: [id])
+
   phone      String?
   birthDate  DateTime?
   gender     String?
   occupation String?
 
-  // Endereço
   address String?
   city    String?
   state   String?
 
-  // Histórico
-  bio String? // Resumo clínico inicial
+  bio String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relacionamentos do Sistema
-  medicalRecords MedicalRecord[] // Prontuário
-  prescriptions  Prescription[] // Receitas
-  appointments   Appointment[] // Consultas
-  exams          Exam[] // Exames Anexados
+  medicalRecords MedicalRecord[]
+  prescriptions  Prescription[]
+  appointments   Appointment[]
+  exams          Exam[]
   transactions   Transaction[]
   anamnesis      Anamnesis?
   weeklyCheckins WeeklyCheckin[]
   documents      Document[]
 }
-
-// --- PRONTUÁRIO ELETRÔNICO (PEP) ---
 
 model MedicalRecord {
   id        String  @id @default(cuid())
@@ -112,46 +107,41 @@ model MedicalRecord {
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   date  DateTime @default(now())
-  title String // Ex: "Consulta de Retorno - 3 Meses"
+  title String
 
-  // 5 PILARES DO MÉTODO FITOCLIN (Armazenado como texto ou JSON estruturado)
-  pilar1_investigacao String? // Investigação Profunda
-  pilar2_fitoterapia  String? // Fitoterapia Personalizada
-  pilar3_metabolismo  String? // Modulação Metabólica
-  pilar4_estresse     String? // Gestão do Estresse
-  pilar5_evolucao     String? // Evolução
+  pilar1_investigacao String?
+  pilar2_fitoterapia  String?
+  pilar3_metabolismo  String?
+  pilar4_estresse     String?
+  pilar5_evolucao     String?
 
-  notes String? // Anotações gerais livres
+  notes String?
 
   createdAt DateTime @default(now())
 }
-
-// --- PRESCRIÇÃO FITOTERÁPICA ---
 
 model Prescription {
   id        String  @id @default(cuid())
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
 
-  title   String // Ex: "Protocolo Desinflamação"
-  content String // Conteúdo completo (HTML ou JSON da receita)
-  pdfUrl  String? // Link se gerou PDF
+  title   String
+  content String
+  pdfUrl  String?
 
   validUntil DateTime?
   createdAt  DateTime  @default(now())
 }
 
-// --- AGENDA & CONSULTAS ---
-
 model Notification {
   id     String @id @default(cuid())
-  userId String // Quem vai receber (no caso, a Dra/Admin)
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title   String
   message String
-  read    Boolean @default(false) // Para marcar como lida depois
-  link    String? // Opcional: Link para clicar e ir direto (ex: ver o agendamento)
+  read    Boolean @default(false)
+  link    String?
 
   createdAt DateTime @default(now())
 }
@@ -176,8 +166,6 @@ model Appointment {
 
   createdAt DateTime @default(now())
 
-  // 👇 TRAVA DE SEGURANÇA:
-  // Impede 2 agendamentos para o mesmo médico no mesmo horário exato.
   @@unique([doctorId, date])
 }
 
@@ -186,19 +174,17 @@ model DoctorSchedule {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  dayOfWeek Int // 0 = Domingo, 1 = Segunda... 6 = Sábado
-  startTime String // Ex: "09:00"
-  endTime   String // Ex: "18:00"
+  dayOfWeek Int
+  startTime String
+  endTime   String
 
   isEnabled Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, dayOfWeek]) // Só pode ter uma regra por dia da semana
+  @@unique([userId, dayOfWeek])
 }
-
-// --- EXAMES & ARQUIVOS ---
 
 model Exam {
   id        String  @id @default(cuid())
@@ -206,19 +192,19 @@ model Exam {
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   title    String
-  fileUrl  String // URL do upload (Blob/S3)
-  fileType String // pdf, jpg, etc
+  fileUrl  String
+  fileType String
 
   uploadedAt DateTime @default(now())
 }
 
 model Plan {
   id            String  @id @default(cuid())
-  name          String // Ex: "Plano Mensal"
+  name          String
   price         Decimal @default(0.00) @db.Decimal(10, 2)
-  period        String // Ex: "/mês"
-  features      String // Lista de benefícios separados por ponto-e-vírgula (;)
-  highlight     Boolean @default(false) // Se é o plano destaque
+  period        String
+  features      String
+  highlight     Boolean @default(false)
   buttonText    String  @default("Assinar Agora")
   buttonLink    String?
   stripePriceId String?
@@ -230,7 +216,6 @@ model Plan {
 
 model SiteInfo {
   id  String @id @default(cuid())
-  // Identificador único para garantir que só tenhamos 1 registro de config
   key String @unique @default("homepage_config")
 
   heroTitle    String?
@@ -244,17 +229,19 @@ model SiteInfo {
 
 model Transaction {
   id          String          @id @default(cuid())
-  description String // Ex: "Consulta Maria", "Conta de Luz", "Venda Curso"
-  amount      Decimal         @db.Decimal(10, 2) // Valor exato
-  type        TransactionType // INCOME (Entrada) ou EXPENSE (Saída)
-  category    String // Ex: "Consultas", "Marketing", "Infraestrutura"
+  description String
+  amount      Decimal         @db.Decimal(10, 2)
+  type        TransactionType
+  category    String
 
-  status PaymentStatus @default(PAID) // Padrão como pago para agilizar
-  date   DateTime      @default(now()) // Data da transação
+  status PaymentStatus @default(PAID)
+  date   DateTime      @default(now())
 
-  // Opcional: Vincular a um paciente (para saber quem pagou)
   patientId String?
   patient   Patient? @relation(fields: [patientId], references: [id])
+
+  userId String?
+  user   User?   @relation("MyTransactions", fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -265,10 +252,13 @@ model Lead {
   name   String
   phone  String
   email  String?
-  source String // Ex: "Instagram", "Indicação", "Google"
+  source String
 
   status LeadStatus @default(NEW)
-  notes  String? // Ex: "Quer emagrecer, prefere tarde"
+  notes  String?
+
+  professionalId String?
+  professional   User?   @relation("MyLeads", fields: [professionalId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -277,29 +267,24 @@ model Lead {
 model Anamnesis {
   id String @id @default(cuid())
 
-  // Vínculo
   patientId String  @unique
   patient   Patient @relation(fields: [patientId], references: [id])
 
-  // --- PARTE 1: INFORMAÇÕES BÁSICAS ---
   fullName          String
   age               String
   profession        String
   phone             String
-  consultationDate  DateTime? // Data informada pelo paciente
-  isFirstTime       Boolean // Já passou antes?
+  consultationDate  DateTime?
+  isFirstTime       Boolean
   diagnosedDiseases String?   @db.Text
-  mainComplaint     String    @db.Text // Principal incômodo
+  mainComplaint     String    @db.Text
 
-  // --- PARTE 2: ESCALAS (0 a 10) ---
-  // Física
-  sleepQuality  Int // 0-10
-  bowelFunction Int // Intestino
+  sleepQuality  Int
+  bowelFunction Int
   energyLevel   Int
   bodyPain      Int
   immunity      Int
 
-  // Emocional
   anxiety          Int
   sadness          Int
   mentalClarity    Int
@@ -307,18 +292,15 @@ model Anamnesis {
   lifeSatisfaction Int
   purpose          Int
 
-  // Espiritual
   spirituality Int
   selfCare     Int
   innerPeace   Int
 
-  // --- PARTE 3: HÁBITOS ---
   medications String? @db.Text
-  supplements String? @db.Text // Chás, fito
+  supplements String? @db.Text
   allergies   String? @db.Text
-  dietQuality Int // 0-10 (Como avalia alimentação)
+  dietQuality Int
 
-  // --- LGPD ---
   lgpdAuthorized Boolean @default(false)
 
   createdAt DateTime @default(now())
@@ -331,25 +313,23 @@ model WeeklyCheckin {
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
 
-  // Métricas principais (0-10)
   sleepQuality Int
   energyLevel  Int
   mood         Int
   digestion    Int
 
-  notes String? @db.Text // Alguma observação da semana (ex: "Comi glúten")
+  notes String? @db.Text
 
   createdAt DateTime @default(now())
 
-  // Índice para facilitar ordenação por data
   @@index([patientId, createdAt])
 }
 
 model Document {
   id    String @id @default(cuid())
-  title String // Ex: "Hemograma Completo"
-  url   String // Link do arquivo (Blob ou Drive)
-  type  String // "EXAM", "PRESCRIPTION", "OTHER"
+  title String
+  url   String
+  type  String
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
@@ -384,14 +364,14 @@ model Purchase {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, courseId]) // Um usuário não compra o mesmo curso 2x
+  @@unique([userId, courseId])
   @@index([courseId])
 }
 
 model Module {
   id    String @id @default(cuid())
   title String
-  order Int    @default(0) // Para ordenar 1, 2, 3...
+  order Int    @default(0)
 
   courseId String
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -402,9 +382,9 @@ model Module {
 model Lesson {
   id          String  @id @default(cuid())
   title       String
-  videoUrl    String? // Link do YouTube, Vimeo ou Vercel Blob
+  videoUrl    String?
   description String? @db.Text
-  duration    Int? // Em minutos (opcional)
+  duration    Int?
   order       Int     @default(0)
 
   moduleId String
@@ -424,24 +404,24 @@ model UserLessonProgress {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, lessonId]) // Um usuário só tem um registro de progresso por aula
+  @@unique([userId, lessonId])
 }
 
 enum LeadStatus {
-  NEW // Novo (Chegou agora)
-  CONTACTED // Já mandei oi
-  SCHEDULED // Agendou a consulta
-  WON // Virou Paciente (Sucesso!)
-  LOST // Desistiu / Sem resposta
+  NEW
+  CONTACTED
+  SCHEDULED
+  WON
+  LOST
 }
 
 enum TransactionType {
-  INCOME // Receita
-  EXPENSE // Despesa
+  INCOME
+  EXPENSE
 }
 
 enum PaymentStatus {
-  PENDING // Pendente
-  PAID // Pago
-  CANCELED // Cancelado
+  PENDING
+  PAID
+  CANCELED
 }

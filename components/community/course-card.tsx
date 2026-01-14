@@ -8,8 +8,7 @@ import { PlayCircle, BookOpen, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-// 👇 DEFINIÇÃO CORRETA DE TIPAGEM
-// Omitimos o 'price' original (Decimal) e redefinimos como 'number'
+// Interface exportada para uso no Grid e na Page
 export interface CommunityCourse extends Omit<Course, 'price'> {
   price: number;
   _count: { modules: number };
@@ -21,6 +20,9 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, isLocked = false }: CourseCardProps) {
+  // Garantir URL de imagem válida ou placeholder
+  const imageSrc = course.imageUrl || "/placeholder-course.jpg"; 
+
   return (
     <Link href={`/community/course/${course.id}`} className={cn("block h-full", isLocked && "pointer-events-none opacity-80")}>
       <motion.div
@@ -39,11 +41,12 @@ export function CourseCard({ course, isLocked = false }: CourseCardProps) {
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#F1F8F1] via-[#E2EFE3] to-[#CDE4CF] flex items-center justify-center">
-               <Image src="/logo.png" alt="Logo" width={40} height={40} className="opacity-20 grayscale" />
+               {/* Use um ícone ou path relativo válido */}
+               <BookOpen className="w-12 h-12 text-[#2A5432]/20" />
             </div>
           )}
           
-          <div className="absolute top-3 left-3 flex gap-2">
+          <div className="absolute top-3 left-3 flex gap-2 z-10">
              <Badge className={cn(
                "backdrop-blur-md border-0 px-3 py-1",
                isLocked 
@@ -61,7 +64,7 @@ export function CourseCard({ course, isLocked = false }: CourseCardProps) {
           </h3>
           
           <p className="text-sm text-gray-500 line-clamp-2 mb-6 flex-1 leading-relaxed">
-            {course.description || "Descrição breve do conteúdo e objetivos deste curso."}
+            {course.description || "Este curso oferece conhecimentos profundos sobre fitoterapia clínica."}
           </p>
 
           <div className="flex items-center justify-between pt-4 border-t border-green-50/50">
