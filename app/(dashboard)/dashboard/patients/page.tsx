@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db"; // 👈 Usar o singleton global em vez de new PrismaClient
 import { redirect } from "next/navigation";
 import { NewPatientDialog } from "@/components/dashboard/new-patient-dialog";
 import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog";
@@ -33,26 +33,37 @@ import {
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-const prisma = new PrismaClient();
-
 export default async function PatientsPage({
   searchParams,
 }: {
   searchParams?: { query?: string };
 }) {
+  // 1. Verificar Autenticação
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") redirect("/dashboard");
+  if (!session) redirect("/login");
 
-  // Parâmetros de busca (URL) - Compatível com Next.js 15+
-  // Em versões mais novas do Next, searchParams pode ser uma Promise. 
-  // Vou assumir acesso direto por enquanto, mas fique atento.
+  // 2. Definir Regras de Isolamento
+  const isProfessional = session.user.role === "PROFESSIONAL";
+  const isAdmin = session.user.role === "ADMIN";
+
+  // Se não for Admin nem Profissional (ex: Paciente curioso tentando acessar), bloqueia
+  if (!isProfessional && !isAdmin) {
+     redirect("/dashboard");
+  }
+
+  // Parâmetros de busca
   const query = searchParams?.query || "";
   
-  // Buscar Pacientes no Banco
-  const patients = await prisma.patient.findMany({
+  // 3. Buscar Pacientes no Banco (Com Filtro de Propriedade)
+  const patients = await db.patient.findMany({
     where: {
+      // 👇 FILTRO DE SEGURANÇA: 
+      // Se for Profissional, filtra pelo ID dele. Se for Admin, objeto vazio (traz tudo).
+      ...(isProfessional ? { professionalId: session.user.id } : {}),
+      
+      // Filtro de busca textual
       user: {
-        name: { contains: query, mode: 'insensitive' } // 'insensitive' requer Postgres. Se usar SQLite remova.
+        name: { contains: query, mode: 'insensitive' }
       }
     },
     include: {
@@ -71,7 +82,9 @@ export default async function PatientsPage({
       {/* --- HEADER DA PÁGINA --- */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#2A5432]/30 pb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Base de Pacientes</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            {isProfessional ? "Meus Pacientes" : "Base de Pacientes"}
+          </h1>
           <p className="text-gray-400 mt-1">
             Gerencie prontuários, históricos e dados de contato.
           </p>
@@ -115,14 +128,18 @@ export default async function PatientsPage({
                 <TableCell colSpan={4} className="h-32 text-center text-gray-500">
                   <div className="flex flex-col items-center gap-2">
                      <Search className="w-8 h-8 opacity-20" />
-                     <p>Nenhum paciente encontrado com este termo.</p>
+                     <p>
+                       {query 
+                         ? "Nenhum paciente encontrado com este termo." 
+                         : "Você ainda não possui pacientes cadastrados."}
+                     </p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
               patients.map((patient) => {
                 const lastAppointment = patient.appointments[0];
-                const hasEmail = !patient.user.email.includes("@sistema.local");
+                const hasEmail = patient.user.email && !patient.user.email.includes("@sistema.local");
 
                 return (
                   <TableRow key={patient.id} className="border-b border-[#2A5432]/20 hover:bg-[#2A5432]/10 transition-colors group">
@@ -140,7 +157,7 @@ export default async function PatientsPage({
                           </div>
                           <div className="text-xs text-gray-500 flex items-center gap-1">
                              <Mail className="w-3 h-3" /> 
-                             {hasEmail ? patient.user.email : "Cadastro presencial (sem email)"}
+                             {hasEmail ? patient.user.email : "Cadastro sem email"}
                           </div>
                         </div>
                       </div>
@@ -221,7 +238,7 @@ export default async function PatientsPage({
         </Table>
       </div>
 
-      {/* Paginação simples (se houver muitos dados futuramente) */}
+      {/* Paginação simples */}
       <div className="flex justify-center text-xs text-gray-600">
          Mostrando {patients.length} pacientes
       </div>

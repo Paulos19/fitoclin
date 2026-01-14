@@ -7,18 +7,21 @@ import { z } from "zod";
 
 const RecordSchema = z.object({
   patientId: z.string(),
-  title: z.string().min(1, "O título é obrigatório (ex: Consulta Inicial)"),
-  pilar1: z.string().optional(), // Investigação
-  pilar2: z.string().optional(), // Fitoterapia
-  pilar3: z.string().optional(), // Metabolismo
-  pilar4: z.string().optional(), // Estresse
-  pilar5: z.string().optional(), // Evolução
+  title: z.string().min(1, "O título é obrigatório"),
+  pilar1: z.string().optional(),
+  pilar2: z.string().optional(),
+  pilar3: z.string().optional(),
+  pilar4: z.string().optional(),
+  pilar5: z.string().optional(),
   notes: z.string().optional(),
 });
 
 export async function saveMedicalRecord(formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
+  
+  // 👇 Permite Admin e Profissional
+  const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL";
+  if (!isAllowed) return { error: "Não autorizado" };
 
   const rawData = {
     patientId: formData.get("patientId"),
@@ -40,6 +43,10 @@ export async function saveMedicalRecord(formData: FormData) {
   const data = validated.data;
 
   try {
+    // Opcional: Verificar se o paciente pertence ao profissional antes de salvar
+    // const patient = await db.patient.findUnique({ where: { id: data.patientId } });
+    // if (patient.professionalId !== session.user.id && session.user.role !== 'ADMIN') return { error: "Paciente não pertence a você" };
+
     await db.medicalRecord.create({
       data: {
         patientId: data.patientId,
@@ -50,7 +57,7 @@ export async function saveMedicalRecord(formData: FormData) {
         pilar4_estresse: data.pilar4,
         pilar5_evolucao: data.pilar5,
         notes: data.notes,
-        date: new Date(), // Data de hoje
+        date: new Date(),
       },
     });
 

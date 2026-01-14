@@ -1,21 +1,24 @@
 "use server";
 
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-// Schema de validação para nova transação
 const TransactionSchema = z.object({
   description: z.string().min(3, "Descrição muito curta"),
   amount: z.coerce.number().positive("O valor deve ser positivo"),
   type: z.enum(["INCOME", "EXPENSE"]),
   category: z.string().min(1, "Selecione uma categoria"),
   status: z.enum(["PENDING", "PAID", "CANCELED"]),
-  date: z.string().transform((str) => new Date(str)), // Recebe string do input date e converte
+  date: z.string().transform((str) => new Date(str)),
   patientId: z.string().optional(),
 });
 
 export async function createTransaction(formData: FormData) {
+  const session = await auth();
+  if (!session) return { success: false, message: "Não autorizado" };
+
   const rawData = {
     description: formData.get("description"),
     amount: formData.get("amount"),
@@ -32,8 +35,9 @@ export async function createTransaction(formData: FormData) {
     await db.transaction.create({
       data: {
         ...data,
-        // Se for paciente vazio, remove do objeto para não dar erro de chave estrangeira
-        patientId: data.patientId === "" ? undefined : data.patientId, 
+        patientId: data.patientId === "" ? undefined : data.patientId,
+        // 👇 VÍNCULO CRÍTICO: A transação pertence a quem criou
+        userId: session.user.id, 
       },
     });
 
@@ -46,22 +50,22 @@ export async function createTransaction(formData: FormData) {
 }
 
 export async function getFinancialSummary() {
-  // Pega transações do mês atual
+  const session = await auth();
+  if (!session) return { transactions: [], metrics: { income: 0, expense: 0, balance: 0 } };
+
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
+  // 👇 FILTRO DE SEGURANÇA: Cada um vê o seu financeiro
   const transactions = await db.transaction.findMany({
     where: {
-      date: {
-        gte: firstDay,
-        lte: lastDay,
-      },
+      date: { gte: firstDay, lte: lastDay },
+      userId: session.user.id // <--- ISOLAMENTO
     },
     orderBy: { date: 'desc' }
   });
 
-  // Cálculos
   const income = transactions
     .filter(t => t.type === "INCOME" && t.status === "PAID")
     .reduce((acc, curr) => acc + Number(curr.amount), 0);
@@ -79,6 +83,15 @@ export async function getFinancialSummary() {
 }
 
 export async function deleteTransaction(id: string) {
-    await db.transaction.delete({ where: { id } });
+    const session = await auth();
+    if (!session) return;
+    
+    // Garante que só deleta se for dono
+    await db.transaction.deleteMany({ 
+        where: { 
+            id,
+            userId: session.user.id 
+        } 
+    });
     revalidatePath("/dashboard/financial");
 }

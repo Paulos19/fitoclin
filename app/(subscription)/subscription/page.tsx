@@ -11,14 +11,15 @@ import {
   PlayCircle, 
   Users, 
   ShieldCheck, 
-  ArrowRight
+  ArrowRight,
+  CheckCircle2,
+  Star
 } from "lucide-react";
 
 export default async function SubscriptionPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  // 1. Verificar Status Atual
   const userSubscription = await db.subscription.findUnique({
     where: { userId: session.user.id },
   });
@@ -27,153 +28,168 @@ export default async function SubscriptionPage() {
     ? userSubscription.stripeCurrentPeriodEnd.getTime() + 86_400_000 > Date.now()
     : false;
 
-  // --- CENÁRIO 1: USUÁRIO JÁ É ASSINANTE (PÁGINA DE SUCESSO) ---
+  // =========================================================
+  // CENÁRIO 1: USUÁRIO JÁ É ASSINANTE (MEMBERSHIP CARD)
+  // =========================================================
   if (hasActiveSubscription) {
     return (
-      <div className="flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-500 py-20">
-        <div className="relative">
-          {/* Glow Effect usando a cor secundária (Lime Green) */}
-          <div className="absolute -inset-4 bg-secondary/20 rounded-full blur-2xl animate-pulse" />
-          <div className="relative p-6 rounded-full bg-card border border-primary/40 shadow-2xl shadow-black/50">
-            <Crown className="w-16 h-16 text-secondary" />
+      <div className="flex flex-col items-center justify-center w-full animate-in fade-in zoom-in duration-700 py-10">
+        <div className="group relative w-full aspect-[1.58/1] max-w-[500px] rounded-3xl overflow-hidden shadow-2xl transition-all hover:scale-[1.02]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0A311D] via-[#062214] to-[#04150C] border border-white/10 z-0" />
+          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-[#D4AF37]/20 to-transparent opacity-50 blur-[60px]" />
+          <div className="relative z-10 p-8 h-full flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-[#D4AF37] font-bold text-lg tracking-widest">FITOCLIN</h3>
+                <p className="text-white/40 text-[10px] uppercase tracking-[0.2em]">Membro VIP</p>
+              </div>
+              <Crown className="text-[#D4AF37] w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-white/60 text-xs uppercase tracking-wider">Titular</p>
+              <p className="text-xl md:text-2xl font-medium text-white truncate">{session.user.name}</p>
+            </div>
+            <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-[#76A771] animate-pulse" />
+                 <span className="text-[#76A771] text-xs font-bold uppercase">Ativo</span>
+            </div>
           </div>
         </div>
-        
-        <div className="space-y-4 max-w-2xl px-6">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight">
-            Você é <span className="text-secondary">VIP</span>
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Sua assinatura está ativa e você tem acesso ilimitado a todo o ecossistema Fitoclin.
-          </p>
+        <div className="mt-8">
+          <Link href="/community">
+            <Button className="h-12 px-8 rounded-full btn-gradient font-bold shadow-lg">
+              Acessar Área Exclusiva <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
         </div>
-
-        <Link href="/community">
-          <Button className="h-14 px-10 text-lg font-bold btn-gradient rounded-full shadow-[0_0_30px_-5px_rgba(118,167,113,0.3)] transition-transform hover:scale-105">
-            Entrar na Comunidade Agora
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </Button>
-        </Link>
       </div>
     );
   }
 
-  // --- CENÁRIO 2: PÁGINA DE VENDAS (NÃO ASSINANTE) ---
+  // =========================================================
+  // CENÁRIO 2: PÁGINA DE VENDAS (CARDS NO TOPO, COPY EMBAIXO)
+  // =========================================================
   return (
-    <div className="grid lg:grid-cols-2 gap-12 items-center w-full max-w-7xl mx-auto animate-in slide-in-from-bottom-10 duration-700 px-6 py-12">
+    <div className="flex flex-col items-center w-full max-w-[1200px] mx-auto animate-in slide-in-from-bottom-10 duration-700 pb-20">
       
-      {/* COLUNA DA ESQUERDA: O PRODUTO / COPY */}
-      <div className="space-y-10 order-2 lg:order-1 text-center lg:text-left">
-        <div className="space-y-6">
-          {/* Badge estilizado com as cores do tema */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-secondary text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_-3px_rgba(118,167,113,0.2)]">
-            <Sparkles className="w-3 h-3" />
-            Fitoclin Academy Premium
-          </div>
-          
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.1]">
-            Domine a <br/>
-            {/* Gradiente de texto usando Secondary (Verde Lima) e um tom dourado sutil para destaque */}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-[#D4AF37] to-secondary animate-gradient bg-300%">
-              Fitoterapia Clínica
-            </span>
-          </h1>
-          
-          <p className="text-lg text-muted-foreground lg:max-w-lg leading-relaxed mx-auto lg:mx-0">
-            Tenha acesso imediato a protocolos validados, comunidade de elite e atualizações semanais com a Dra. Isa. Evolua sua prática clínica e pessoal.
-          </p>
+      {/* 1. HEADER SIMPLES */}
+      <div className="text-center mb-12 space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#76A771] text-xs font-bold uppercase tracking-widest">
+           <Sparkles className="w-3 h-3" /> Planos Disponíveis
         </div>
-
-        {/* Lista de Benefícios Visual */}
-        <div className="space-y-4 text-left">
-          <BenefitRow 
-            icon={PlayCircle} 
-            title="Acesso Imediato aos Cursos" 
-            desc="Biblioteca completa de aulas gravadas e materiais em PDF."
-          />
-          <BenefitRow 
-            icon={Users} 
-            title="Comunidade Exclusiva" 
-            desc="Networking de alto nível e tirada de dúvidas direto com especialistas."
-          />
-          <BenefitRow 
-            icon={ShieldCheck} 
-            title="Protocolos Validados" 
-            desc="Copie e cole estratégias que funcionam no campo de batalha."
-          />
-        </div>
-
-        {/* Social Proof */}
-        <div className="flex items-center justify-center lg:justify-start gap-4 pt-6 border-t border-border">
-          <div className="flex -space-x-3">
-             {[1,2,3,4].map((i) => (
-               <div key={i} className="w-10 h-10 rounded-full border-2 border-background bg-card flex items-center justify-center text-xs font-bold text-muted-foreground overflow-hidden">
-                 <Users className="w-4 h-4 opacity-50" />
-               </div>
-             ))}
-          </div>
-          <div className="text-sm text-left">
-            <p className="text-foreground font-bold">+1.200 Membros</p>
-            <p className="text-secondary">transformando vidas agora.</p>
-          </div>
-        </div>
+        <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+           Escolha o plano ideal para sua jornada
+        </h1>
+        <p className="text-gray-400 max-w-2xl mx-auto">
+           Desbloqueie todo o potencial da Fitoterapia Clínica com acesso imediato.
+        </p>
       </div>
 
-      {/* COLUNA DA DIREITA: PRECIFICAÇÃO */}
-      <div className="order-1 lg:order-2 flex flex-col items-center justify-center w-full">
-        {/* Card Principal: bg-card com transparência e borda primary */}
-        <div className="w-full max-w-md bg-card/60 backdrop-blur-md border border-primary/30 p-8 rounded-3xl shadow-2xl shadow-black/40 relative overflow-hidden group mx-auto">
-          
-          {/* Efeito de luz ambiente */}
-          <div className="absolute top-0 right-0 w-40 h-40 bg-secondary/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-          
-          <div className="text-center mb-8 space-y-2">
-            <h3 className="text-xl font-medium text-foreground">Escolha seu plano</h3>
-            <p className="text-sm text-muted-foreground">Cancele a qualquer momento.</p>
-          </div>
+      {/* 2. CARDS (LADO A LADO E CENTRALIZADOS) */}
+      <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-6 w-full px-4">
+        {PLANS.map((plan) => {
+           if (!plan.priceId) return null; 
 
-          <div className="flex flex-col gap-4">
-            {PLANS.map((plan) => {
-               if (!plan.priceId) return null; 
+           return (
+             <div 
+               key={plan.key} 
+               className={`relative w-full max-w-md lg:max-w-[380px] flex flex-col ${plan.highlight ? 'lg:-mt-4 lg:mb-4 z-10' : ''}`}
+             >
+                {/* Glow atrás do destaque */}
+                {plan.highlight && (
+                   <div className="absolute inset-0 bg-[#D4AF37]/20 blur-[60px] -z-10 rounded-full opacity-50" />
+                )}
+                
+                <PricingCard 
+                  planId={plan.key}
+                  priceId={plan.priceId}
+                  name={plan.name}
+                  price={plan.price}
+                  features={plan.features.join(";")}
+                  isPopular={plan.highlight}
+                />
+             </div>
+           );
+        })}
+      </div>
 
-               return (
-                 <div key={plan.key} className="transform transition-all hover:scale-[1.02]">
-                    <PricingCard 
-                      planId={plan.key}
-                      priceId={plan.priceId}
-                      name={plan.name}
-                      price={plan.price}
-                      features={plan.features.join(";")}
-                      isPopular={plan.highlight}
-                    />
+      <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-500 mb-20">
+         <ShieldCheck className="w-4 h-4 text-[#76A771]" />
+         <span>Pagamento 100% seguro via Stripe. Cancele quando quiser.</span>
+      </div>
+
+      {/* 3. COPYWRITING & BENEFÍCIOS (EMBAIXO) */}
+      <div className="w-full max-w-5xl px-4 border-t border-white/5 pt-20">
+         
+         <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-6">
+              Por que assinar o <span className="text-[#D4AF37]">Fitoclin Academy?</span>
+            </h2>
+            <p className="text-gray-400 max-w-3xl mx-auto text-lg leading-relaxed">
+              Mais do que uma plataforma de cursos, somos um ecossistema completo para profissionais de saúde que desejam escalar seus resultados e pacientes que buscam autonomia.
+            </p>
+         </div>
+
+         {/* Grid de Benefícios */}
+         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <BenefitItem 
+               icon={PlayCircle}
+               title="Educação Contínua" 
+               desc="Aulas novas toda semana com materiais de apoio em PDF."
+            />
+            <BenefitItem 
+               icon={Users}
+               title="Comunidade Elite" 
+               desc="Networking estratégico com profissionais de alto nível."
+            />
+            <BenefitItem 
+               icon={ShieldCheck}
+               title="Protocolos Validados" 
+               desc="Copie e cole estratégias que funcionam no campo de batalha."
+            />
+            <BenefitItem 
+               icon={Crown}
+               title="Gestão Completa" 
+               desc="Ferramentas de CRM, Prontuário e Agenda integradas."
+            />
+         </div>
+
+         {/* Social Proof Final */}
+         <div className="mt-20 flex flex-col items-center justify-center p-8 bg-white/5 rounded-3xl border border-white/5 backdrop-blur-sm">
+            <div className="flex -space-x-4 mb-4">
+               {[1,2,3,4,5].map((i) => (
+                 <div key={i} className="w-12 h-12 rounded-full border-4 border-[#062214] bg-[#2A5432] flex items-center justify-center text-xs text-white/50 font-bold shadow-lg">
+                   <Users className="w-5 h-5" />
                  </div>
-               );
-            })}
-          </div>
-          
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <ShieldCheck className="w-3 h-3 text-secondary" />
-            Pagamento seguro via Stripe
-          </div>
-        </div>
+               ))}
+            </div>
+            <div className="flex items-center gap-1 text-[#D4AF37] mb-2">
+               <Star className="w-5 h-5 fill-current" />
+               <Star className="w-5 h-5 fill-current" />
+               <Star className="w-5 h-5 fill-current" />
+               <Star className="w-5 h-5 fill-current" />
+               <Star className="w-5 h-5 fill-current" />
+            </div>
+            <p className="text-white font-medium text-lg">
+              Junte-se a <span className="text-[#76A771] font-bold">+1.200 alunos</span> transformando vidas.
+            </p>
+         </div>
+
       </div>
       
     </div>
   );
 }
 
-// --- SUB-COMPONENTE: LINHA DE BENEFÍCIO ---
-function BenefitRow({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
+// --- SUB-COMPONENTE: BENEFIT ITEM (Estilo Card Minimalista) ---
+function BenefitItem({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
   return (
-    // Usa bg-card com hover sutil e bordas baseadas no tema
-    <div className="flex items-start gap-4 p-4 rounded-xl bg-card/40 border border-primary/10 hover:bg-card/60 hover:border-primary/30 transition-all cursor-default group">
-      <div className="p-2.5 rounded-lg bg-primary/20 text-secondary group-hover:bg-primary/30 transition-colors mt-1 shrink-0">
-        <Icon className="w-5 h-5" />
+    <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-[#0A311D]/40 border border-white/5 hover:bg-[#0A311D]/80 hover:border-[#76A771]/30 transition-all duration-300 group">
+      <div className="mb-4 p-3 rounded-full bg-[#76A771]/10 text-[#76A771] group-hover:bg-[#76A771] group-hover:text-[#062214] transition-colors">
+        <Icon className="w-6 h-6" />
       </div>
-      <div>
-        <h4 className="font-bold text-foreground text-lg group-hover:text-secondary transition-colors">{title}</h4>
-        <p className="text-muted-foreground text-sm leading-snug">{desc}</p>
-      </div>
+      <h4 className="text-white font-bold text-lg mb-2">{title}</h4>
+      <p className="text-sm text-gray-400 leading-relaxed group-hover:text-gray-300">{desc}</p>
     </div>
   );
 }

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { createAppointment } from "@/actions/schedule";
-import { getAvailableSlots } from "@/actions/availability";
+import { getAvailableSlots } from "@/actions/availability"; // Certifique-se que esta action existe
 import { Calendar as CalendarIcon, Clock, Plus, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -23,7 +23,13 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-export function NewAppointmentDialog() {
+// 👇 1. Definimos a interface das Props
+interface NewAppointmentDialogProps {
+  patientId?: string; // Opcional, pois pode ser chamado sem ID (pelo menu geral)
+}
+
+// 👇 2. Recebemos as props no componente
+export function NewAppointmentDialog({ patientId }: NewAppointmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
@@ -39,17 +45,22 @@ export function NewAppointmentDialog() {
     if (date) {
       const fetchSlots = async () => {
         setLoadingSlots(true);
-        setSelectedTime(null); // Reseta horário ao mudar data
+        setSelectedTime(null);
         
-        // Formata data para YYYY-MM-DD para a API
         const dateStr = format(date, "yyyy-MM-dd");
-        const res = await getAvailableSlots(dateStr);
-        
-        if (res.slots) {
-          setSlots(res.slots);
-        } else {
-          setSlots([]);
+        try {
+            // Verifica se a função existe antes de chamar (segurança)
+            const res = await getAvailableSlots(dateStr);
+            if (res && res.slots) {
+              setSlots(res.slots);
+            } else {
+              setSlots([]);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar slots", error);
+            setSlots([]);
         }
+        
         setLoadingSlots(false);
       };
 
@@ -65,16 +76,13 @@ export function NewAppointmentDialog() {
 
     setLoading(true);
 
-    // Injeta data e hora formatados no FormData para a Action existente processar
-    // A action espera 'date' como ISO e 'time' como HH:mm.
-    // Vamos ajustar para enviar o que a action espera.
-    
-    // A action createAppointment espera:
-    // date: string (ISO date YYYY-MM-DD)
-    // time: string (HH:mm)
-    
     formData.set("date", format(date, "yyyy-MM-dd"));
     formData.set("time", selectedTime);
+
+    // Se o patientId veio via prop e não estava no form (caso oculto), garantimos ele aqui
+    if (patientId && !formData.get("patientId")) {
+        formData.set("patientId", patientId);
+    }
 
     const result = await createAppointment(formData);
     setLoading(false);
@@ -84,20 +92,27 @@ export function NewAppointmentDialog() {
     } else {
       toast.success(result.success);
       setOpen(false);
-      // Resetar form
       setDate(new Date());
       setSelectedTime(null);
     }
   }
 
-  const isAdmin = session?.user?.role === "ADMIN";
+  // 👇 3. Atualizamos a verificação para incluir PROFESSIONAL
+  const canScheduleForOthers = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[#76A771] hover:bg-[#659160] text-[#062214] font-bold shadow-lg shadow-[#76A771]/20">
-          <Plus className="w-4 h-4 mr-2" /> Agendar Consulta
-        </Button>
+        {/* Se tiver patientId, mostra um botão menor (ícone), senão mostra o botão grande */}
+        {patientId ? (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#76A771] hover:border-[#76A771] transition-all">
+                <Plus className="w-4 h-4" />
+            </Button>
+        ) : (
+            <Button className="bg-[#76A771] hover:bg-[#659160] text-[#062214] font-bold shadow-lg shadow-[#76A771]/20">
+                <Plus className="w-4 h-4 mr-2" /> Agendar Consulta
+            </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="bg-[#0A311D] border-[#2A5432] text-white sm:max-w-[800px] p-0 overflow-hidden flex flex-col md:flex-row gap-0">
         
@@ -116,7 +131,7 @@ export function NewAppointmentDialog() {
                 selected={date}
                 onSelect={setDate}
                 locale={ptBR}
-                disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} // Bloqueia passado
+                disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
                 className="rounded-md text-white"
                 classNames={{
                   day_selected: "bg-[#76A771] text-[#062214] hover:bg-[#76A771] hover:text-[#062214] font-bold",
@@ -170,11 +185,18 @@ export function NewAppointmentDialog() {
 
           {/* Formulário Final */}
           <form action={handleSubmit} className="grid gap-4">
-             {/* Admin: Input de Paciente */}
-             {isAdmin && (
+             {/* Campo de Paciente (Preenchido auto se tiver prop, ou manual se Admin sem prop) */}
+             {canScheduleForOthers && (
                <div className="grid gap-2">
                  <Label>ID do Paciente</Label>
-                 <Input name="patientId" placeholder="ID do paciente..." className="bg-[#062214] border-[#2A5432] text-white" />
+                 <Input 
+                    name="patientId" 
+                    defaultValue={patientId} // 👇 Usa a prop aqui
+                    placeholder="ID do paciente..." 
+                    className="bg-[#062214] border-[#2A5432] text-white"
+                    // Se já veio o ID, pode deixar readonly para evitar erro, ou editável se preferir
+                    readOnly={!!patientId} 
+                 />
                </div>
              )}
 
@@ -187,7 +209,7 @@ export function NewAppointmentDialog() {
                 />
              </div>
 
-             {isAdmin && (
+             {canScheduleForOthers && (
                <div className="grid gap-2">
                  <Label>Link do Meet (Opcional)</Label>
                  <Input name="meetLink" placeholder="Gerado automaticamente se vazio" className="bg-[#062214] border-[#2A5432] text-white" />

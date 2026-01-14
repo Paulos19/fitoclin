@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db"; // Usando o singleton correto
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -15,21 +15,30 @@ import {
 import { Search, FileText, Clock, ChevronRight, Filter, FolderOpen } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-const prisma = new PrismaClient();
-
 export default async function RecordsIndexPage({
   searchParams,
 }: {
   searchParams?: { query?: string };
 }) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") redirect("/dashboard");
+  if (!session) redirect("/login");
+
+  // 1. Verificação de Role (Permite Admin e Profissional)
+  const isProfessional = session.user.role === "PROFESSIONAL";
+  const isAdmin = session.user.role === "ADMIN";
+
+  if (!isProfessional && !isAdmin) {
+     redirect("/dashboard");
+  }
 
   const query = searchParams?.query || "";
 
-  // Busca Otimizada
-  const patients = await prisma.patient.findMany({
+  // 2. Busca Otimizada e Isolada
+  const patients = await db.patient.findMany({
     where: {
+      // 👇 FILTRO DE SEGURANÇA: Se for profissional, vê só os dele
+      ...(isProfessional ? { professionalId: session.user.id } : {}),
+      
       user: {
         name: { contains: query, mode: 'insensitive' } 
       }
@@ -95,7 +104,11 @@ export default async function RecordsIndexPage({
                     <div className="p-4 rounded-full bg-[#2A5432]/10">
                        <FolderOpen className="w-8 h-8 opacity-40 text-[#76A771]" />
                     </div>
-                    <p>Nenhum prontuário encontrado.</p>
+                    <p>
+                      {query 
+                        ? "Nenhum prontuário encontrado para esta busca." 
+                        : "Nenhum paciente com histórico encontrado."}
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>

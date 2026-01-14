@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db"; // Singleton
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Clock, Globe, Info, CalendarCheck } from "lucide-react";
 import { ScheduleSettingsForm } from "@/components/dashboard/schedule-settings-form";
@@ -8,14 +8,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const prisma = new PrismaClient();
-
 export default async function SchedulePage() {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") redirect("/dashboard");
+  if (!session) redirect("/login");
 
-  // Buscar configurações atuais
-  const schedules = await prisma.doctorSchedule.findMany({
+  // 1. Verificação de Role (Permite Admin e Profissional)
+  const isAllowed = session.user.role === "ADMIN" || session.user.role === "PROFESSIONAL";
+  if (!isAllowed) {
+      redirect("/dashboard");
+  }
+
+  // 2. Buscar configurações do Usuário Logado
+  const schedules = await db.doctorSchedule.findMany({
     where: { userId: session.user.id },
     orderBy: { dayOfWeek: 'asc' }
   });
@@ -32,8 +36,8 @@ export default async function SchedulePage() {
           </p>
         </div>
         
-        {/* Botão para ver a "agenda visual" (futuro) */}
-        <Link href="/dashboard">
+        {/* Botão para ver a lista de agendamentos */}
+        <Link href="/dashboard/appointments">
            <Button variant="outline" className="border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214]">
              <CalendarCheck className="w-4 h-4 mr-2" /> Ver Meus Agendamentos
            </Button>
@@ -54,6 +58,7 @@ export default async function SchedulePage() {
                </CardDescription>
              </CardHeader>
              <CardContent className="pt-6">
+               {/* Passamos os dados iniciais. Se estiver vazio, o form lida com defaults */}
                <ScheduleSettingsForm initialData={schedules} />
              </CardContent>
            </Card>

@@ -7,6 +7,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { put } from "@vercel/blob";
 
+// --- SCHEMAS ---
 const PatientSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
@@ -23,10 +24,31 @@ const ProfileSchema = z.object({
   state: z.string().optional(),
 });
 
+// --- LEITURA (Faltava essa função para a lista carregar) ---
+export async function getPatients() {
+  const session = await auth();
+  if (!session) return [];
+
+  // 👇 ISOLAMENTO:
+  // Admin pode ver tudo (opcional) ou só os dele. 
+  // Profissional VÊ APENAS OS SEUS.
+  const whereClause = session.user.role === "ADMIN"
+    ? {} // Admin vê tudo
+    : { professionalId: session.user.id };
+
+  const patients = await db.patient.findMany({
+    where: whereClause,
+    include: { user: true },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return patients;
+}
+
+// --- CRIAÇÃO ---
 export async function createPatient(formData: FormData) {
   const session = await auth();
   
-  // 1. Permissão: Admin e Profissional podem criar
   const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL";
   if (!isAllowed) return { error: "Não autorizado" };
 
@@ -38,10 +60,8 @@ export async function createPatient(formData: FormData) {
 
   const validated = PatientSchema.safeParse(rawData);
   if (!validated.success) return { error: "Dados inválidos" };
-
   const { name, email, phone } = validated.data;
 
-  // Placeholder se não tiver email
   const finalEmail = email || `paciente.${Date.now()}@sistema.local`;
 
   try {
@@ -52,9 +72,8 @@ export async function createPatient(formData: FormData) {
 
     const hashedPassword = await bcrypt.hash("fitoclin123", 10);
 
-    // 2. Definir o Dono (Professional ID)
-    // Se quem está criando é PROFESSIONAL, ele é o dono. Se é ADMIN, fica null (ou define lógica)
-    const professionalId = session?.user?.role === "PROFESSIONAL" ? session?.user?.id : null;
+    // 👇 DEFINE O DONO CORRETAMENTE
+    const professionalId = session?.user?.role === "PROFESSIONAL" ? session.user.id : null;
 
     await db.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -70,8 +89,7 @@ export async function createPatient(formData: FormData) {
         data: {
           userId: newUser.id,
           phone: phone,
-          // 👇 Vínculo de propriedade
-          professionalId: professionalId, 
+          professionalId: professionalId, // <--- VÍNCULO
         }
       });
     });
@@ -125,6 +143,7 @@ export async function updatePatientProfile(formData: FormData) {
       : undefined;
 
     await db.$transaction(async (tx) => {
+      // Garante que só edita o PRÓPRIO perfil
       await tx.patient.update({
         where: { userId: session.user.id },
         data: {
