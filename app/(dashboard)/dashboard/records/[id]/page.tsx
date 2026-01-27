@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { 
   Calendar as CalendarIcon, 
@@ -15,16 +15,19 @@ import {
   Leaf,
   ExternalLink,
   Image as ImageIcon,
-  File
+  File,
+  Dna,
+  Pill
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { EvolutionChart } from "@/components/dashboard/evolution-chart";
-
-const prisma = new PrismaClient();
+import { EpigeneticForm } from "@/components/dashboard/epigenetic-form";
+import { PepForm } from "@/components/dashboard/pep-form"; 
+import { PrescriptionPanel } from "@/components/dashboard/prescription-panel"; 
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -34,30 +37,19 @@ export default async function RecordDetailPage({ params }: Props) {
   const resolvedParams = await params;
   const session = await auth();
   
-  if (session?.user?.role !== "ADMIN") {
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "PROFESSIONAL") {
     redirect("/dashboard");
   }
 
-  // 1. Buscar dados (INCLUINDO DOCUMENTS)
-  const patient = await prisma.patient.findUnique({
+  const patient = await db.patient.findUnique({
     where: { id: resolvedParams.id },
     include: {
       user: true,
       anamnesis: true,
-      weeklyCheckins: {
-        orderBy: { createdAt: 'asc' },
-        take: 20
-      },
-      appointments: {
-        orderBy: { date: 'desc' },
-        take: 5
-      },
-      medicalRecords: {
-        orderBy: { date: 'desc' }
-      },
-      documents: { // 👈 Novo Include
-        orderBy: { createdAt: 'desc' }
-      }
+      weeklyCheckins: { orderBy: { createdAt: 'asc' }, take: 20 },
+      appointments: { orderBy: { date: 'desc' }, take: 5 },
+      medicalRecords: { orderBy: { date: 'desc' }, take: 10 },
+      documents: { orderBy: { createdAt: 'desc' } }
     }
   });
 
@@ -67,7 +59,6 @@ export default async function RecordDetailPage({ params }: Props) {
     </div>
   );
 
-  // 2. Preparar dados
   const evolutionData = patient.weeklyCheckins.map(c => ({
     date: c.createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
     Sono: c.sleepQuality,
@@ -78,17 +69,16 @@ export default async function RecordDetailPage({ params }: Props) {
 
   const age = patient.anamnesis?.age || "N/A";
 
-  // Estilos comuns (Dark Premium)
   const cardStyle = "bg-[#0A311D]/50 border-[#2A5432]/30 backdrop-blur-sm text-white";
   const labelStyle = "text-xs font-semibold text-[#76A771] uppercase tracking-wider mb-1";
   const valueStyle = "text-sm text-gray-300";
+  const tabTriggerStyle = "data-[state=active]:bg-[#76A771] data-[state=active]:text-[#062214] text-gray-400 rounded-lg px-4 md:px-6 flex items-center gap-2";
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-10">
       
-      {/* --- CABEÇALHO DO PACIENTE (HERO) --- */}
+      {/* --- HERO --- */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A311D] to-[#062214] border border-[#2A5432]/30 p-8 shadow-2xl">
-        {/* Glow Effects */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#76A771]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -133,23 +123,23 @@ export default async function RecordDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* --- CONTEÚDO (TABS) --- */}
+      {/* --- TABS --- */}
       <Tabs defaultValue="overview" className="w-full">
-        
-        {/* Navegação das Abas */}
-        <TabsList className="bg-[#0A311D] border border-[#2A5432] p-1 rounded-xl w-full md:w-auto overflow-x-auto flex justify-start mb-6">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-[#76A771] data-[state=active]:text-[#062214] text-gray-400 rounded-lg px-6">Visão Geral</TabsTrigger>
-          <TabsTrigger value="anamnesis" className="data-[state=active]:bg-[#76A771] data-[state=active]:text-[#062214] text-gray-400 rounded-lg px-6">Anamnese</TabsTrigger>
-          <TabsTrigger value="evolution" className="data-[state=active]:bg-[#76A771] data-[state=active]:text-[#062214] text-gray-400 rounded-lg px-6">Evolução</TabsTrigger>
-          <TabsTrigger value="history" className="data-[state=active]:bg-[#76A771] data-[state=active]:text-[#062214] text-gray-400 rounded-lg px-6">Histórico</TabsTrigger>
-          <TabsTrigger value="exams" className="data-[state=active]:bg-[#76A771] data-[state=active]:text-[#062214] text-gray-400 rounded-lg px-6">Exames</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-2">
+            <TabsList className="bg-[#0A311D] border border-[#2A5432] p-1 rounded-xl w-full md:w-max flex justify-start mb-2">
+                <TabsTrigger value="overview" className={tabTriggerStyle}>Visão Geral</TabsTrigger>
+                <TabsTrigger value="evolution" className={tabTriggerStyle}>Evolução</TabsTrigger>
+                <TabsTrigger value="prescription" className={tabTriggerStyle}><Pill className="w-4 h-4" /> Prescrição</TabsTrigger>
+                <TabsTrigger value="epigenetic" className={tabTriggerStyle}><Dna className="w-4 h-4" /> Epigenética</TabsTrigger>
+                <TabsTrigger value="history" className={tabTriggerStyle}>Histórico</TabsTrigger>
+                <TabsTrigger value="exams" className={tabTriggerStyle}>Exames</TabsTrigger>
+                <TabsTrigger value="anamnesis" className={tabTriggerStyle}>Anamnese</TabsTrigger>
+            </TabsList>
+        </div>
 
         {/* 1. VISÃO GERAL */}
         <TabsContent value="overview" className="space-y-6 animate-in slide-in-from-bottom-2">
            <div className="grid md:grid-cols-2 gap-6">
-              
-              {/* Queixa Principal */}
               <Card className={`${cardStyle} h-full border-l-4 border-l-red-500/50`}>
                  <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2 text-white">
@@ -168,7 +158,6 @@ export default async function RecordDetailPage({ params }: Props) {
                  </CardContent>
               </Card>
 
-              {/* Próximos Agendamentos */}
               <Card className={cardStyle}>
                  <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2 text-white">
@@ -204,110 +193,76 @@ export default async function RecordDetailPage({ params }: Props) {
            </div>
         </TabsContent>
 
-        {/* 2. ANAMNESE */}
-        <TabsContent value="anamnesis" className="animate-in slide-in-from-bottom-2">
-           {patient.anamnesis ? (
-              <Card className={cardStyle}>
-                 <CardHeader className="border-b border-[#2A5432]/30">
-                    <div className="flex justify-between items-center">
-                        <CardTitle className="text-white">Ficha de Pré-Consulta</CardTitle>
-                        <Badge variant="outline" className="border-[#76A771] text-[#76A771]">
-                            Recebido em {patient.anamnesis.createdAt.toLocaleDateString('pt-BR')}
-                        </Badge>
-                    </div>
-                 </CardHeader>
-                 <CardContent className="space-y-8 pt-6">
-                    <div className="grid md:grid-cols-2 gap-8">
-                       <div className="space-y-4">
-                          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[#2A5432]/30">
-                             <Activity className="w-4 h-4 text-[#76A771]" />
-                             <h3 className="font-bold text-white uppercase tracking-wider text-sm">Saúde Geral</h3>
-                          </div>
-                          <div className="space-y-4">
-                            <div>
-                                <p className={labelStyle}>Diagnósticos</p>
-                                <p className={valueStyle}>{patient.anamnesis.diagnosedDiseases || "—"}</p>
-                            </div>
-                            <div>
-                                <p className={labelStyle}>Medicamentos</p>
-                                <p className={valueStyle}>{patient.anamnesis.medications || "—"}</p>
-                            </div>
-                            <div>
-                                <p className={labelStyle}>Alergias</p>
-                                <p className={valueStyle}>{patient.anamnesis.allergies || "—"}</p>
-                            </div>
-                          </div>
-                       </div>
-                       <div className="space-y-4">
-                          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[#2A5432]/30">
-                             <Sparkles className="w-4 h-4 text-yellow-500" />
-                             <h3 className="font-bold text-white uppercase tracking-wider text-sm">Auto-Avaliação (0-10)</h3>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
-                                <span className="text-gray-400 text-xs block mb-1">Sono</span>
-                                <span className="text-xl font-bold text-white">{patient.anamnesis.sleepQuality}</span>
-                             </div>
-                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
-                                <span className="text-gray-400 text-xs block mb-1">Intestino</span>
-                                <span className="text-xl font-bold text-white">{patient.anamnesis.bowelFunction}</span>
-                             </div>
-                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
-                                <span className="text-gray-400 text-xs block mb-1">Energia</span>
-                                <span className="text-xl font-bold text-white">{patient.anamnesis.energyLevel}</span>
-                             </div>
-                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
-                                <span className="text-gray-400 text-xs block mb-1">Ansiedade</span>
-                                <span className="text-xl font-bold text-white">{patient.anamnesis.anxiety}</span>
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                    <div className="bg-[#062214]/50 p-4 rounded-xl border border-[#2A5432]/30">
-                       <p className={labelStyle}>Relato Completo da Queixa</p>
-                       <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mt-2">
-                         {patient.anamnesis.mainComplaint}
-                       </p>
-                    </div>
-                 </CardContent>
-              </Card>
-           ) : (
-              <div className="text-center py-16 bg-[#0A311D]/30 rounded-xl border-2 border-dashed border-[#2A5432]/50">
-                 <div className="bg-[#2A5432]/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-8 h-8 text-[#76A771]" />
-                 </div>
-                 <p className="text-gray-400">Este paciente ainda não preencheu a Anamnese.</p>
-              </div>
-           )}
+        {/* 2. EVOLUÇÃO (PEP) */}
+        <TabsContent value="evolution" className="space-y-6 animate-in slide-in-from-bottom-2">
+            <PepForm patientId={patient.id} />
+            <EvolutionChart data={evolutionData} />
         </TabsContent>
 
-        {/* 3. EVOLUÇÃO */}
-        <TabsContent value="evolution" className="animate-in slide-in-from-bottom-2">
-           <div className="space-y-6">
-             <EvolutionChart data={evolutionData} />
-             {patient.weeklyCheckins.length > 0 && (
-                <Card className={cardStyle}>
-                    <CardHeader>
-                        <CardTitle className="text-white text-base">Diário de Observações</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {patient.weeklyCheckins.slice(0, 5).map((check) => (
-                            check.notes && (
-                                <div key={check.id} className="flex gap-4 items-start p-4 rounded-lg bg-[#062214] border border-[#2A5432]/30">
-                                    <div className="min-w-[80px] text-xs font-bold text-[#76A771] pt-1">
-                                        {check.createdAt.toLocaleDateString('pt-BR', {day:'2-digit', month:'short'})}
+        {/* 3. PRESCRIÇÃO (ATUALIZADA COM DADOS) */}
+        <TabsContent value="prescription" className="space-y-6 animate-in slide-in-from-bottom-2">
+            <div className="grid md:grid-cols-3 gap-6 h-full">
+                <div className="md:col-span-2">
+                    <PrescriptionPanel 
+                        patientId={patient.id} 
+                        patientName={patient.user.name || "Paciente"} 
+                        patientDetails={`${age} anos`}
+                        // 👇 DADOS INJETADOS DINAMICAMENTE
+                        patientEmail={patient.user.email}
+                        patientPhone={patient.anamnesis?.phone}
+                        doctorName={session?.user?.name || "Dra. Isa"} 
+                    />
+                </div>
+
+                <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Últimas Receitas</h3>
+                    {patient.documents
+                        .filter(d => d.type === 'PRESCRIPTION')
+                        .slice(0, 5)
+                        .map(doc => (
+                        <Card key={doc.id} className="bg-[#062214] border border-[#2A5432]/30 hover:border-[#76A771]/50 transition-colors group">
+                            <CardContent className="p-3 flex items-center justify-between">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <div className="bg-[#2A5432]/20 p-2 rounded text-[#76A771]">
+                                        <FileText className="w-4 h-4" />
                                     </div>
-                                    <p className="text-sm text-gray-300 italic">"{check.notes}"</p>
+                                    <div className="min-w-0">
+                                        <p className="text-sm text-white font-medium truncate" title={doc.title}>{doc.title}</p>
+                                        <p className="text-[10px] text-gray-500">{new Date(doc.createdAt).toLocaleDateString('pt-BR')}</p>
+                                    </div>
                                 </div>
-                            )
-                        ))}
-                    </CardContent>
-                </Card>
-             )}
-           </div>
+                                <a href={doc.url} target="_blank" className="text-[#76A771] group-hover:text-white text-xs font-bold px-2 py-1 rounded hover:bg-[#2A5432] transition-colors">
+                                    Ver
+                                </a>
+                            </CardContent>
+                        </Card>
+                    ))}
+                    {patient.documents.filter(d => d.type === 'PRESCRIPTION').length === 0 && (
+                        <div className="text-center py-8 bg-[#0A311D]/30 rounded-lg border border-dashed border-[#2A5432]/50">
+                            <p className="text-xs text-gray-500 italic">Nenhuma prescrição salva.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
         </TabsContent>
 
-        {/* 4. HISTÓRICO */}
+        {/* 4. EPIGENÉTICA */}
+        <TabsContent value="epigenetic" className="animate-in slide-in-from-bottom-2">
+            <div className="bg-[#0A311D]/50 border border-[#2A5432]/30 p-6 rounded-xl backdrop-blur-sm">
+                <div className="mb-6 border-b border-[#2A5432]/30 pb-4">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Dna className="w-5 h-5 text-[#76A771]" />
+                        Anamnese Epigenética
+                    </h2>
+                    <p className="text-gray-400 text-sm mt-1">
+                        Roteiro detalhado para investigação de fatores ambientais, genéticos e estilo de vida.
+                    </p>
+                </div>
+                <EpigeneticForm patientId={patient.id} />
+            </div>
+        </TabsContent>
+
+        {/* 5. HISTÓRICO */}
         <TabsContent value="history" className="animate-in slide-in-from-bottom-2">
            <div className="space-y-4">
               {patient.medicalRecords.length > 0 ? (
@@ -355,7 +310,7 @@ export default async function RecordDetailPage({ params }: Props) {
            </div>
         </TabsContent>
 
-        {/* 5. EXAMES (NOVO) */}
+        {/* 6. EXAMES */}
         <TabsContent value="exams" className="animate-in slide-in-from-bottom-2">
             <div className="grid md:grid-cols-3 gap-4">
                 {patient.documents.length > 0 ? (
@@ -390,6 +345,85 @@ export default async function RecordDetailPage({ params }: Props) {
                     </div>
                 )}
             </div>
+        </TabsContent>
+
+        {/* 7. ANAMNESE */}
+        <TabsContent value="anamnesis" className="animate-in slide-in-from-bottom-2">
+           {patient.anamnesis ? (
+              <Card className={cardStyle}>
+                 <CardHeader className="border-b border-[#2A5432]/30">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-white">Ficha de Pré-Consulta</CardTitle>
+                        <Badge variant="outline" className="border-[#76A771] text-[#76A771]">
+                            Recebido em {patient.anamnesis.createdAt.toLocaleDateString('pt-BR')}
+                        </Badge>
+                    </div>
+                 </CardHeader>
+                 <CardContent className="space-y-8 pt-6">
+                    <div className="grid md:grid-cols-2 gap-8">
+                       <div className="space-y-4">
+                          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[#2A5432]/30">
+                             <Activity className="w-4 h-4 text-[#76A771]" />
+                             <h3 className="font-bold text-white uppercase tracking-wider text-sm">Saúde Geral</h3>
+                          </div>
+                          {/* ... Detalhes da Anamnese ... */}
+                          <div className="space-y-4">
+                            <div>
+                                <p className={labelStyle}>Diagnósticos</p>
+                                <p className={valueStyle}>{patient.anamnesis.diagnosedDiseases || "—"}</p>
+                            </div>
+                            <div>
+                                <p className={labelStyle}>Medicamentos</p>
+                                <p className={valueStyle}>{patient.anamnesis.medications || "—"}</p>
+                            </div>
+                            <div>
+                                <p className={labelStyle}>Alergias</p>
+                                <p className={valueStyle}>{patient.anamnesis.allergies || "—"}</p>
+                            </div>
+                          </div>
+                       </div>
+                       <div className="space-y-4">
+                          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[#2A5432]/30">
+                             <Sparkles className="w-4 h-4 text-yellow-500" />
+                             <h3 className="font-bold text-white uppercase tracking-wider text-sm">Auto-Avaliação (0-10)</h3>
+                          </div>
+                          {/* ... Auto Avaliação ... */}
+                          <div className="grid grid-cols-2 gap-4">
+                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
+                                <span className="text-gray-400 text-xs block mb-1">Sono</span>
+                                <span className="text-xl font-bold text-white">{patient.anamnesis.sleepQuality}</span>
+                             </div>
+                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
+                                <span className="text-gray-400 text-xs block mb-1">Intestino</span>
+                                <span className="text-xl font-bold text-white">{patient.anamnesis.bowelFunction}</span>
+                             </div>
+                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
+                                <span className="text-gray-400 text-xs block mb-1">Energia</span>
+                                <span className="text-xl font-bold text-white">{patient.anamnesis.energyLevel}</span>
+                             </div>
+                             <div className="bg-[#062214] p-3 rounded-lg border border-[#2A5432]/30">
+                                <span className="text-gray-400 text-xs block mb-1">Ansiedade</span>
+                                <span className="text-xl font-bold text-white">{patient.anamnesis.anxiety}</span>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="bg-[#062214]/50 p-4 rounded-xl border border-[#2A5432]/30">
+                       <p className={labelStyle}>Relato Completo da Queixa</p>
+                       <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mt-2">
+                         {patient.anamnesis.mainComplaint}
+                       </p>
+                    </div>
+                 </CardContent>
+              </Card>
+           ) : (
+              <div className="text-center py-16 bg-[#0A311D]/30 rounded-xl border-2 border-dashed border-[#2A5432]/50">
+                 <div className="bg-[#2A5432]/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-8 h-8 text-[#76A771]" />
+                 </div>
+                 <p className="text-gray-400">Este paciente ainda não preencheu a Anamnese.</p>
+              </div>
+           )}
         </TabsContent>
 
       </Tabs>

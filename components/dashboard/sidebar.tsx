@@ -22,6 +22,7 @@ import {
   GraduationCap,
   Sparkles,
   Wallet2,
+  Library // Novo ícone para biblioteca/cursos admin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
@@ -41,13 +42,12 @@ const adminLinks = [
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
   { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
+  { name: "Gestão de Cursos", href: "/dashboard/courses", icon: Library }, // 👈 NOVO ITEM
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
-// Menu do Assinante (CRM Profissional)
-// É igual ao admin, mas sem as "Configurações" globais do sistema SaaS
 const professionalLinks = [
   { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
   { name: "Meus Pacientes", href: "/dashboard/patients", icon: Users },
@@ -55,7 +55,6 @@ const professionalLinks = [
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
   { name: "Meu CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Meu Financeiro", href: "/dashboard/financial", icon: DollarSign },
-  // Removemos Settings global, mas mantemos Profile/Subscription no lugar se quiser
 ];
 
 const patientLinks = [
@@ -69,7 +68,7 @@ const patientLinks = [
 ];
 
 interface SidebarProps {
-  role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
+  role: "ADMIN" | "PATIENT" | "PROFESSIONAL";
   isSubscribed?: boolean;
 }
 
@@ -77,14 +76,13 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  // Seleção dinâmica dos links
   let links = patientLinks;
   if (role === "ADMIN") links = adminLinks;
   if (role === "PROFESSIONAL") links = professionalLinks;
 
   const sidebarVariants = {
-    expanded: { width: "16rem" }, // w-64
-    collapsed: { width: "5rem" }, // w-20
+    expanded: { width: "16rem" },
+    collapsed: { width: "5rem" },
   };
 
   return (
@@ -99,7 +97,6 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
           "bg-[#051F12] border-[#2A5432]/40 text-white"
         )}
       >
-        {/* Toggle Button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
@@ -110,7 +107,6 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
           {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </button>
 
-        {/* Header (Logo) */}
         <div className="flex h-20 items-center px-4 overflow-hidden relative">
           <div className="flex items-center gap-3 w-full">
             <div className="relative shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#2A5432] to-[#1a3821] border border-[#2A5432] shadow-inner">
@@ -143,10 +139,8 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
           </div>
         </div>
 
-        {/* Separator */}
         <div className="h-[1px] mx-4 bg-gradient-to-r from-transparent via-[#2A5432] to-transparent mb-4 opacity-50" />
 
-        {/* Navegação Principal */}
         <nav className="flex-1 overflow-y-auto px-3 space-y-2 py-2 custom-scrollbar">
           {links.map((link) => {
             const isActive = 
@@ -206,7 +200,6 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
           })}
         </nav>
 
-        {/* Área VIP - Comunidade (Apenas Assinantes Pacientes) */}
         {role === "PATIENT" && isSubscribed && (
           <div className="px-3 mb-2 mt-2">
             {!isCollapsed ? (
@@ -246,7 +239,6 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
           </div>
         )}
 
-        {/* Footer (Logout) */}
         <div className="p-3 mt-auto">
            <div className="h-[1px] bg-[#2A5432]/30 mb-3" />
            {isCollapsed ? (

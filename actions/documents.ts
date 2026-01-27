@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { put, del } from "@vercel/blob"; // 👈 Import do Blob
+import { put, del } from "@vercel/blob"; 
 
 // Configurações de limite (ex: 4MB)
 const MAX_FILE_SIZE = 4 * 1024 * 1024; 
@@ -34,9 +34,10 @@ export async function uploadDocument(formData: FormData) {
     }
 
     // 2. Upload para o Vercel Blob
-    // 'public' significa que a URL gerada é acessível publicamente (padrão para Vercel Blob)
+    // 'addRandomSuffix: true' garante que arquivos com mesmo nome não gerem erro
     const blob = await put(file.name, file, {
       access: 'public',
+      addRandomSuffix: true, // 👈 Correção aplicada aqui
     });
 
     // 3. Salvar referência no Banco de Dados
@@ -44,7 +45,7 @@ export async function uploadDocument(formData: FormData) {
       data: {
         title,
         url: blob.url, // URL retornada pelo Vercel Blob
-        type, // 'EXAM', 'OTHER', etc
+        type, // 'EXAM', 'OTHER', 'PRESCRIPTION', etc
         patientId,
       }
     });
@@ -72,6 +73,7 @@ export async function deleteDocument(id: string) {
         if (!doc) return { error: "Documento não encontrado." };
 
         // 2. Deletar do Vercel Blob
+        // Nota: O Vercel Blob não lança erro se o arquivo já não existir, então é seguro.
         await del(doc.url);
 
         // 3. Deletar do Banco

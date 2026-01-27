@@ -91,14 +91,15 @@ model Patient {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  medicalRecords MedicalRecord[]
-  prescriptions  Prescription[]
-  appointments   Appointment[]
-  exams          Exam[]
-  transactions   Transaction[]
-  anamnesis      Anamnesis?
-  weeklyCheckins WeeklyCheckin[]
-  documents      Document[]
+  medicalRecords      MedicalRecord[]
+  prescriptions       Prescription[]
+  appointments        Appointment[]
+  exams               Exam[]
+  transactions        Transaction[]
+  anamnesis           Anamnesis?
+  weeklyCheckins      WeeklyCheckin[]
+  documents           Document[]
+  epigeneticAnamneses EpigeneticAnamnesis[]
 }
 
 model MedicalRecord {
@@ -376,7 +377,8 @@ model Module {
   courseId String
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  lessons Lesson[]
+  lessons         Lesson[]
+  materials ModuleMaterial[]
 }
 
 model Lesson {
@@ -405,6 +407,36 @@ model UserLessonProgress {
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
+}
+
+model EpigeneticAnamnesis {
+  id                    String   @id @default(cuid())
+  patientId             String
+  patient               Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  familyHistory         String?  @db.Text
+  nutrition             String?  @db.Text
+  physicalActivity      String?  @db.Text
+  environmentalExposure String?  @db.Text
+  stressAndMentalHealth String?  @db.Text
+  healthHistory         String?  @db.Text
+  substanceUse          String?  @db.Text
+  sleepQuality          String?  @db.Text
+  socialRelationships   String?  @db.Text
+  traumaHistory         String?  @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model ModuleMaterial {
+  id    String @id @default(cuid())
+  title String
+  url   String
+  type  String // "PDF", "IMAGE", "DOC", "XLS", "OTHER"
+
+  moduleId String
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 enum LeadStatus {

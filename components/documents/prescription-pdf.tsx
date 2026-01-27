@@ -5,28 +5,20 @@ import {
   View, 
   StyleSheet, 
   Image, 
-  Svg,
-  Defs,
-  LinearGradient,
-  Stop,
-  Rect
 } from "@react-pdf/renderer";
 
-// Estilos refinados para um visual "clean" e cirúrgico
 const styles = StyleSheet.create({
   page: {
     backgroundColor: "#FFFFFF",
-    fontFamily: "Helvetica", // Fonte segura e limpa
+    fontFamily: "Helvetica",
     flexDirection: "row",
-    padding: 0, // Removemos padding da página para a sidebar encostar na borda
+    padding: 0,
   },
-  // --- BARRA LATERAL SÓLIDA ---
   sidebar: {
-    width: 16, // Faixa fina e elegante
+    width: 16,
     height: "100%",
-    backgroundColor: "#062214", // Verde Profundo da marca
+    backgroundColor: "#062214",
   },
-  // --- CONTEÚDO ---
   main: {
     flex: 1,
     paddingTop: 50,
@@ -35,7 +27,6 @@ const styles = StyleSheet.create({
     paddingRight: 50,
     position: "relative",
   },
-  // --- MARCA D'ÁGUA ---
   watermarkContainer: {
     position: "absolute",
     top: "40%",
@@ -43,7 +34,7 @@ const styles = StyleSheet.create({
     right: 50,
     alignItems: "center",
     justifyContent: "center",
-    opacity: 0.03, // Quase imperceptível
+    opacity: 0.03,
     zIndex: -1,
   },
   watermarkImage: {
@@ -51,14 +42,13 @@ const styles = StyleSheet.create({
     height: 300,
     objectFit: "contain",
   },
-  // --- CABEÇALHO ---
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end", // Alinha a base do texto com a logo
+    alignItems: "flex-end",
     marginBottom: 40,
     borderBottomWidth: 1,
-    borderBottomColor: "#062214", // Linha fina preta/verde
+    borderBottomColor: "#062214",
     paddingBottom: 20,
   },
   logo: {
@@ -72,20 +62,23 @@ const styles = StyleSheet.create({
   clinicTitle: {
     fontSize: 24,
     color: "#062214",
-    fontFamily: "Times-Roman", // Serifada clássica
+    fontFamily: "Times-Roman",
     textTransform: "uppercase",
     letterSpacing: 2,
   },
   clinicSubtitle: {
     fontSize: 8,
-    color: "#76A771", // Verde Lima
+    color: "#76A771",
     marginTop: 4,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
-  // --- DADOS DO PACIENTE (Minimalista) ---
+  // --- DADOS DO PACIENTE ---
   patientSection: {
     marginBottom: 40,
+    padding: 10,
+    backgroundColor: "#F9F9F9",
+    borderRadius: 4,
   },
   patientLabel: {
     fontSize: 8,
@@ -95,26 +88,24 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   patientName: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#062214",
     fontFamily: "Times-Bold",
-    marginBottom: 6,
+    marginBottom: 4,
   },
-  patientMetaRow: {
+  patientInfoRow: {
     flexDirection: "row",
-    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 4,
   },
   patientMetaText: {
-    fontSize: 10,
-    color: "#444",
+    fontSize: 9,
+    color: "#555",
   },
-  separator: {
-    marginHorizontal: 10,
-    color: "#CCC",
-  },
-  // --- CORPO DO TEXTO ---
+  // --- CORPO ---
   bodySection: {
-    flex: 1, // Ocupa o espaço disponível empurrando o footer
+    flex: 1,
   },
   docTitle: {
     fontSize: 12,
@@ -123,7 +114,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 20,
-    backgroundColor: "#F2F2F2", // Destaque sutil
+    backgroundColor: "#F2F2F2",
     alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -152,7 +143,7 @@ const styles = StyleSheet.create({
     fontFamily: "Times-Bold",
     color: "#062214",
   },
-  doctorCrn: {
+  doctorRole: {
     fontSize: 9,
     color: "#666",
     marginTop: 2,
@@ -170,98 +161,75 @@ const styles = StyleSheet.create({
 interface PrescriptionPDFProps {
   patientName: string;
   patientDetails?: string;
+  patientEmail?: string | null;
+  patientPhone?: string | null;
   date: Date;
   content: string;
   logoBase64?: string;
   doctorName?: string;
-  crn?: string;
+  doctorRole?: string;
 }
 
 export const PrescriptionPDF = ({ 
   patientName, 
-  patientDetails = "", 
+  patientDetails, 
+  patientEmail,
+  patientPhone,
   date, 
   content, 
   logoBase64,
-  doctorName = "Dra. Isa",
-  crn = "CRN/SP 12345"
+  doctorName = "Profissional de Saúde",
+  doctorRole = "Especialista em Medicina Integrativa"
 }: PrescriptionPDFProps) => {
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        
-        {/* 1. LOMBADA LATERAL (Sólida e Fina) */}
         <View style={styles.sidebar} />
-
-        {/* 2. ÁREA PRINCIPAL */}
         <View style={styles.main}>
-
-          {/* Marca D'água */}
           {logoBase64 && (
             <View style={styles.watermarkContainer}>
               <Image src={logoBase64} style={styles.watermarkImage} />
             </View>
           )}
 
-          {/* Cabeçalho */}
           <View style={styles.headerRow}>
             {logoBase64 ? (
                <Image src={logoBase64} style={styles.logo} />
             ) : <View style={{ width: 60 }} />}
-            
             <View style={styles.headerTexts}>
               <Text style={styles.clinicTitle}>Fitoclin</Text>
-              <Text style={styles.clinicSubtitle}>Medicina Integrativa</Text>
+              <Text style={styles.clinicSubtitle}>Saúde & Longevidade</Text>
             </View>
           </View>
 
-          {/* Seção do Paciente */}
           <View style={styles.patientSection}>
             <Text style={styles.patientLabel}>Paciente</Text>
             <Text style={styles.patientName}>{patientName}</Text>
-            
-            <View style={styles.patientMetaRow}>
-              <Text style={styles.patientMetaText}>
-                Data: {date.toLocaleDateString('pt-BR')}
-              </Text>
-              {patientDetails && (
-                <>
-                  <Text style={styles.separator}>|</Text>
-                  <Text style={styles.patientMetaText}>{patientDetails}</Text>
-                </>
-              )}
+            <View style={styles.patientInfoRow}>
+              <Text style={styles.patientMetaText}>Data: {date.toLocaleDateString('pt-BR')}</Text>
+              {patientDetails && <Text style={styles.patientMetaText}>• {patientDetails}</Text>}
+              {patientPhone && <Text style={styles.patientMetaText}>• {patientPhone}</Text>}
+              {patientEmail && <Text style={styles.patientMetaText}>• {patientEmail}</Text>}
             </View>
           </View>
 
-          {/* Corpo do Documento */}
           <View style={styles.bodySection}>
             <Text style={styles.docTitle}>Prescrição Terapêutica</Text>
-            <Text style={styles.content}>
-              {content}
-            </Text>
+            <Text style={styles.content}>{content}</Text>
           </View>
 
-          {/* Rodapé Moderno */}
           <View style={styles.footer}>
-            
-            {/* Assinatura Digital / Médico */}
             <View style={styles.doctorBlock}>
-               {/* Espaço para assinatura manual se impresso */}
                <View style={{ height: 40 }} /> 
                <Text style={styles.doctorName}>{doctorName}</Text>
-               <Text style={styles.doctorCrn}>{crn}</Text>
+               <Text style={styles.doctorRole}>{doctorRole}</Text>
             </View>
-
-            {/* Contato e Info */}
             <View style={styles.contactBlock}>
-               <Text style={styles.contactText}>Fitoclin Clínica Médica</Text>
-               <Text style={styles.contactText}>Av. Paulista, 1000 - São Paulo, SP</Text>
+               <Text style={styles.contactText}>Documento gerado digitalmente pela plataforma Fitoclin</Text>
                <Text style={[styles.contactText, { color: '#76A771' }]}>www.fitoclin.com.br</Text>
             </View>
-
           </View>
-
         </View>
       </Page>
     </Document>

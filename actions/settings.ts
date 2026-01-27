@@ -285,3 +285,4 @@ export async function updateSiteInfo(formData: FormData) {
     return { error: "Erro ao atualizar informações." };
   }
 }
+
