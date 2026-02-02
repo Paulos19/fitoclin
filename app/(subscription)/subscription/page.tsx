@@ -12,8 +12,8 @@ import {
   Users, 
   ShieldCheck, 
   ArrowRight,
-  CheckCircle2,
-  Star
+  Star,
+  Leaf
 } from "lucide-react";
 
 export default async function SubscriptionPage() {
@@ -28,8 +28,11 @@ export default async function SubscriptionPage() {
     ? userSubscription.stripeCurrentPeriodEnd.getTime() + 86_400_000 > Date.now()
     : false;
 
+  // Filtrar apenas o plano de Comunidade (Paciente)
+  const patientPlans = PLANS.filter(plan => plan.key === "monthly");
+
   // =========================================================
-  // CENÁRIO 1: USUÁRIO JÁ É ASSINANTE (MEMBERSHIP CARD)
+  // CENÁRIO 1: USUÁRIO JÁ É ASSINANTE
   // =========================================================
   if (hasActiveSubscription) {
     return (
@@ -67,47 +70,43 @@ export default async function SubscriptionPage() {
   }
 
   // =========================================================
-  // CENÁRIO 2: PÁGINA DE VENDAS (CARDS NO TOPO, COPY EMBAIXO)
+  // CENÁRIO 2: PÁGINA DE VENDAS (COMUNIDADE)
   // =========================================================
   return (
     <div className="flex flex-col items-center w-full max-w-[1200px] mx-auto animate-in slide-in-from-bottom-10 duration-700 pb-20">
       
-      {/* 1. HEADER SIMPLES */}
+      {/* 1. HEADER */}
       <div className="text-center mb-12 space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#76A771] text-xs font-bold uppercase tracking-widest">
-           <Sparkles className="w-3 h-3" /> Planos Disponíveis
+           <Leaf className="w-3 h-3" /> Fitoclin Academy
         </div>
         <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-           Escolha o plano ideal para sua jornada
+           Sua jornada de saúde natural começa aqui
         </h1>
         <p className="text-gray-400 max-w-2xl mx-auto">
-           Desbloqueie todo o potencial da Fitoterapia Clínica com acesso imediato.
+           Tenha acesso a protocolos de fitoterapia, aulas exclusivas e suporte em grupo.
         </p>
       </div>
 
-      {/* 2. CARDS (LADO A LADO E CENTRALIZADOS) */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-6 w-full px-4">
-        {PLANS.map((plan) => {
+      {/* 2. CARD (ÚNICO) */}
+      <div className="flex flex-col items-center justify-center w-full px-4">
+        {patientPlans.map((plan) => {
            if (!plan.priceId) return null; 
 
            return (
              <div 
                key={plan.key} 
-               className={`relative w-full max-w-md lg:max-w-[380px] flex flex-col ${plan.highlight ? 'lg:-mt-4 lg:mb-4 z-10' : ''}`}
+               className="relative w-full max-w-md flex flex-col z-10"
              >
-                {/* Glow atrás do destaque */}
-                {plan.highlight && (
-                   <div className="absolute inset-0 bg-[#D4AF37]/20 blur-[60px] -z-10 rounded-full opacity-50" />
-                )}
-                
-                <PricingCard 
-                  planId={plan.key}
-                  priceId={plan.priceId}
-                  name={plan.name}
-                  price={plan.price}
-                  features={plan.features.join(";")}
-                  isPopular={plan.highlight}
-                />
+               <div className="absolute inset-0 bg-[#76A771]/10 blur-[60px] -z-10 rounded-full opacity-40" />
+               <PricingCard 
+                 planId={plan.key}
+                 priceId={plan.priceId}
+                 name={plan.name}
+                 price={plan.price}
+                 features={plan.features.join(";")}
+                 isPopular={true}
+               />
              </div>
            );
         })}
@@ -115,54 +114,38 @@ export default async function SubscriptionPage() {
 
       <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-500 mb-20">
          <ShieldCheck className="w-4 h-4 text-[#76A771]" />
-         <span>Pagamento 100% seguro via Stripe. Cancele quando quiser.</span>
+         <span>Pagamento 100% seguro. Acesso imediato.</span>
       </div>
 
-      {/* 3. COPYWRITING & BENEFÍCIOS (EMBAIXO) */}
+      {/* 3. BENEFÍCIOS */}
       <div className="w-full max-w-5xl px-4 border-t border-white/5 pt-20">
          
          <div className="text-center mb-16">
             <h2 className="text-2xl md:text-4xl font-bold text-white mb-6">
-              Por que assinar o <span className="text-[#D4AF37]">Fitoclin Academy?</span>
+              O que você recebe na <span className="text-[#76A771]">Comunidade?</span>
             </h2>
-            <p className="text-gray-400 max-w-3xl mx-auto text-lg leading-relaxed">
-              Mais do que uma plataforma de cursos, somos um ecossistema completo para profissionais de saúde que desejam escalar seus resultados e pacientes que buscam autonomia.
-            </p>
          </div>
 
-         {/* Grid de Benefícios */}
-         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+         <div className="grid md:grid-cols-3 gap-6">
             <BenefitItem 
                icon={PlayCircle}
-               title="Educação Contínua" 
-               desc="Aulas novas toda semana com materiais de apoio em PDF."
+               title="Aulas de Auto-cuidado" 
+               desc="Conteúdos práticos para você aplicar no seu dia a dia."
             />
             <BenefitItem 
                icon={Users}
-               title="Comunidade Elite" 
-               desc="Networking estratégico com profissionais de alto nível."
+               title="Suporte em Grupo" 
+               desc="Tire dúvidas e interaja com outras pessoas na mesma jornada."
             />
             <BenefitItem 
-               icon={ShieldCheck}
-               title="Protocolos Validados" 
-               desc="Copie e cole estratégias que funcionam no campo de batalha."
-            />
-            <BenefitItem 
-               icon={Crown}
-               title="Gestão Completa" 
-               desc="Ferramentas de CRM, Prontuário e Agenda integradas."
+               icon={Leaf}
+               title="Fitoterapia Descomplicada" 
+               desc="Aprenda a usar as plantas medicinais com segurança."
             />
          </div>
 
-         {/* Social Proof Final */}
+         {/* Social Proof */}
          <div className="mt-20 flex flex-col items-center justify-center p-8 bg-white/5 rounded-3xl border border-white/5 backdrop-blur-sm">
-            <div className="flex -space-x-4 mb-4">
-               {[1,2,3,4,5].map((i) => (
-                 <div key={i} className="w-12 h-12 rounded-full border-4 border-[#062214] bg-[#2A5432] flex items-center justify-center text-xs text-white/50 font-bold shadow-lg">
-                   <Users className="w-5 h-5" />
-                 </div>
-               ))}
-            </div>
             <div className="flex items-center gap-1 text-[#D4AF37] mb-2">
                <Star className="w-5 h-5 fill-current" />
                <Star className="w-5 h-5 fill-current" />
@@ -171,7 +154,7 @@ export default async function SubscriptionPage() {
                <Star className="w-5 h-5 fill-current" />
             </div>
             <p className="text-white font-medium text-lg">
-              Junte-se a <span className="text-[#76A771] font-bold">+1.200 alunos</span> transformando vidas.
+              Junte-se a centenas de alunos transformando sua saúde.
             </p>
          </div>
 
@@ -181,7 +164,6 @@ export default async function SubscriptionPage() {
   );
 }
 
-// --- SUB-COMPONENTE: BENEFIT ITEM (Estilo Card Minimalista) ---
 function BenefitItem({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
   return (
     <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-[#0A311D]/40 border border-white/5 hover:bg-[#0A311D]/80 hover:border-[#76A771]/30 transition-all duration-300 group">

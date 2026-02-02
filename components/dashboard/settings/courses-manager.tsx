@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,7 +37,8 @@ import {
   Upload,
   FileText
 } from "lucide-react";
-import { upsertCourse, deleteCourse, uploadCourseImage } from "@/actions/courses";
+// 👇 Importação atualizada com deleteModuleMaterial
+import { upsertCourse, deleteCourse, uploadCourseImage, deleteModuleMaterial } from "@/actions/courses";
 import { MaterialUploadForm } from "@/components/dashboard/courses/material-upload-form";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -47,19 +48,26 @@ import Image from "next/image";
 
 type Lesson = {
   id?: string;
-  tempId?: string; // Para controle de chave no frontend
+  tempId?: string;
   title: string;
   videoUrl: string;
   order: number;
 };
 
+type Material = {
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+};
+
 type Module = {
   id?: string;
-  tempId?: string; // Para controle de chave no frontend
+  tempId?: string;
   title: string;
   order: number;
   lessons: Lesson[];
-  materials?: { id: string; title: string; url: string }[];
+  materials?: Material[];
 };
 
 type CourseForm = {
@@ -103,10 +111,10 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     if (course) {
       setEditingCourse(course);
       
-      // Sanitização Profunda: Garante que nulls virem strings vazias e cria tempIds
+      // Sanitização Profunda
       const cleanModules: Module[] = (course.modules || []).map((m: any) => ({
         id: m.id,
-        tempId: m.id, // Usa o ID do banco como tempId se existir
+        tempId: m.id,
         title: m.title ?? "",
         order: m.order ?? 0,
         materials: m.materials || [],
@@ -150,7 +158,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     startTransition(async () => {
       let finalImageUrl = formData.imageUrl;
 
-      // 1. Upload da Imagem (se houver nova)
+      // 1. Upload da Imagem
       if (selectedImageFile) {
         const uploadForm = new FormData();
         uploadForm.append("file", selectedImageFile);
@@ -164,17 +172,15 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         }
       }
 
-      // 2. Preparar payload (remover tempIds se necessário, mas o backend ignora campos extras geralmente)
-      // O importante é garantir a estrutura correta
+      // 2. Preparar payload
       const dataToSave = { 
         ...formData, 
         imageUrl: finalImageUrl,
-        // Limpeza final antes de enviar
         modules: formData.modules.map(m => ({
             ...m,
             lessons: m.lessons.map(l => ({
                 ...l,
-                videoUrl: l.videoUrl || "" // Garante string
+                videoUrl: l.videoUrl || ""
             }))
         }))
       };
@@ -190,7 +196,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteCourse = async (id: string) => {
     if(!confirm("Tem certeza? Isso apagará todo o conteúdo do curso.")) return;
     startTransition(async () => {
        const res = await deleteCourse(id);
@@ -199,8 +205,15 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     });
   };
 
-  // --- GESTÃO DE ESTADO (MÓDULOS & AULAS) ---
-  // Refatorado para evitar mutação direta e uso de índices como chaves
+  // Novo Handler para Materiais
+  const handleDeleteMaterial = async (id: string, url: string) => {
+    if (!confirm("Remover este material?")) return;
+    const res = await deleteModuleMaterial(id, url);
+    if (res.success) toast.success(res.success);
+    else toast.error(res.error);
+  };
+
+  // --- GESTÃO DE ESTADO LOCAL ---
 
   const addModule = () => {
     setFormData(prev => ({
@@ -208,7 +221,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
       modules: [
         ...prev.modules, 
         { 
-          tempId: `new-mod-${crypto.randomUUID()}`, // Chave única para o React
+          tempId: `new-mod-${crypto.randomUUID()}`, 
           title: "Novo Módulo", 
           order: prev.modules.length, 
           lessons: [] 
@@ -291,7 +304,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         </Button>
       </div>
 
-      {/* --- LISTA DE CURSOS --- */}
+      {/* --- LISTA DE CURSOS (CARD VIEW) --- */}
       <div className="grid gap-6">
         {courses.map((course) => (
           <Card key={course.id} className="bg-[#0A311D]/50 border-[#2A5432]/30 overflow-hidden">
@@ -319,58 +332,26 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                 <Button size="icon" variant="ghost" className="text-gray-300 hover:text-white" onClick={() => handleOpen(course)}>
                   <Edit2 className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="text-red-400 hover:text-red-300" onClick={() => handleDelete(course.id)}>
+                <Button size="icon" variant="ghost" className="text-red-400 hover:text-red-300" onClick={() => handleDeleteCourse(course.id)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="p-6 pt-0">
-               {/* ÁREA DE MATERIAIS */}
+               {/* Visualização Rápida de Materiais no Card */}
                <div className="mt-4 border-t border-[#2A5432]/30 pt-4">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                     <FileText className="w-4 h-4" /> Materiais & Downloads
+                  <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                     <FileText className="w-3 h-3" /> Materiais (Resumo)
                   </h3>
-                  <Accordion type="single" collapsible className="w-full space-y-2">
-                    {course.modules.map((module: any) => (
-                      <AccordionItem key={module.id} value={module.id} className="border-[#2A5432]/30 bg-[#062214]/30 rounded-lg px-2">
-                        <AccordionTrigger className="hover:no-underline py-2 text-sm text-gray-300">
-                           {module.title}
-                           <Badge variant="secondary" className="ml-2 bg-[#2A5432] text-[10px] h-5">
-                              {module.materials?.length || 0} arq
-                           </Badge>
-                        </AccordionTrigger>
-                        <AccordionContent className="pt-2 pb-4 px-2 space-y-3">
-                           <div className="grid grid-cols-1 gap-2">
-                              {module.materials?.map((mat: any) => (
-                                 <div key={mat.id} className="flex items-center justify-between p-2 rounded bg-[#062214] border border-[#2A5432]/20 text-xs">
-                                    <span className="truncate text-gray-300 flex-1">{mat.title}</span>
-                                    <a href={mat.url} target="_blank" className="ml-2 text-[#76A771] hover:underline">Baixar</a>
-                                 </div>
-                              ))}
-                              {(!module.materials || module.materials.length === 0) && (
-                                <span className="text-gray-500 text-[10px]">Sem materiais.</span>
-                              )}
-                           </div>
-                           
-                           {/* Dialog de Upload de Material */}
-                           <Dialog>
-                               <DialogTrigger asChild>
-                                  <Button size="sm" variant="outline" className="w-full border-dashed border-[#2A5432] text-xs h-8">
-                                     <Upload className="w-3 h-3 mr-2" /> Adicionar Material
-                                  </Button>
-                               </DialogTrigger>
-                               <DialogContent className="bg-[#0A311D] border-[#2A5432] text-white">
-                                  <DialogHeader>
-                                    <DialogTitle>Upload de Material</DialogTitle>
-                                    <CardDescription>Adicione PDFs, documentos ou imagens a este módulo.</CardDescription>
-                                  </DialogHeader>
-                                  <MaterialUploadForm moduleId={module.id} />
-                               </DialogContent>
-                           </Dialog>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
+                  <div className="space-y-1">
+                     {course.modules.flatMap((m: any) => m.materials || []).slice(0, 3).map((mat: any) => (
+                        <div key={mat.id} className="text-xs text-gray-500 truncate flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-[#76A771]"></span>
+                            {mat.title}
+                        </div>
+                     ))}
+                     {course.modules.flatMap((m: any) => m.materials || []).length === 0 && <span className="text-[10px] text-gray-600">Nenhum material</span>}
+                  </div>
                </div>
             </CardContent>
           </Card>
@@ -388,8 +369,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
             
             {/* 1. CONFIGURAÇÕES GERAIS */}
             <div className="p-4 rounded-xl border border-[#2A5432]/50 bg-[#0A311D]/20 space-y-4">
-                <h4 className="text-sm font-bold text-[#76A771] uppercase tracking-wider">Informações Básicas</h4>
-                
                 <div className="flex gap-4 items-start">
                     <div className="relative w-32 h-20 bg-black/40 rounded-lg border border-[#2A5432] flex items-center justify-center overflow-hidden shrink-0">
                         {imagePreview ? (
@@ -413,7 +392,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                     <div className="space-y-2">
                         <Label>Título do Curso</Label>
                         <Input 
-                            value={formData.title ?? ""} // 👈 Proteção contra null
+                            value={formData.title ?? ""} 
                             onChange={(e) => setFormData({...formData, title: e.target.value})}
                             className="bg-[#0A311D] border-[#2A5432]" 
                         />
@@ -441,14 +420,14 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                         checked={!!formData.active} 
                         onCheckedChange={(c) => setFormData({...formData, active: c})} 
                     />
-                    <Label>Curso Ativo (Visível para alunos)</Label>
+                    <Label>Curso Ativo</Label>
                 </div>
             </div>
 
-            {/* 2. ESTRUTURA */}
+            {/* 2. ESTRUTURA (MÓDULOS, AULAS E MATERIAIS) */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-bold text-[#76A771] uppercase tracking-wider">Estrutura (Módulos e Aulas)</h4>
+                    <h4 className="text-sm font-bold text-[#76A771] uppercase tracking-wider">Estrutura</h4>
                     <Button size="sm" onClick={addModule} variant="secondary" className="bg-[#2A5432] text-white hover:bg-[#366b42]">
                         <Plus className="w-4 h-4 mr-2" /> Adicionar Módulo
                     </Button>
@@ -456,16 +435,20 @@ export function CoursesManager({ courses }: { courses: any[] }) {
 
                 <Accordion type="multiple" className="space-y-2">
                     {formData.modules.map((module, mIndex) => {
-                        // Usar tempId ou id como chave estável, NUNCA o index
                         const moduleKey = module.id || module.tempId || `mod-${mIndex}`;
                         
+                        // Lógica Híbrida: Busca materiais "vivos" do DB para evitar conflito com state local
+                        // Se o curso existe no DB, pegamos os materiais atualizados dele
+                        const liveModule = courses.find(c => c.id === formData.id)?.modules.find((m: any) => m.id === module.id);
+                        const materialsToShow = liveModule ? liveModule.materials : (module.materials || []);
+
                         return (
                         <AccordionItem key={moduleKey} value={moduleKey} className="border border-[#2A5432] rounded-lg bg-[#0A311D]/30 px-2">
                             <div className="flex items-center gap-2 py-2">
                                 <GripVertical className="w-4 h-4 text-gray-600 cursor-grab" />
                                 <AccordionTrigger className="hover:no-underline py-2 flex-1 data-[state=open]:text-[#76A771]">
                                     <Input 
-                                        value={module.title ?? ""} // 👈 Proteção contra null
+                                        value={module.title ?? ""}
                                         onChange={(e) => updateModule(mIndex, e.target.value)}
                                         className="h-9 bg-transparent border-transparent hover:border-[#2A5432] focus:bg-[#062214] text-white font-bold w-full max-w-sm"
                                         onClick={(e) => e.stopPropagation()} 
@@ -478,18 +461,16 @@ export function CoursesManager({ courses }: { courses: any[] }) {
 
                             <AccordionContent className="pl-4 pr-2 pb-4 border-t border-[#2A5432]/30 pt-4">
                                 <div className="space-y-3">
+                                    {/* LISTA DE AULAS */}
                                     {module.lessons.map((lesson, lIndex) => {
                                         const lessonKey = lesson.id || lesson.tempId || `lesson-${lIndex}`;
-
                                         return (
                                         <div key={lessonKey} className="flex flex-col gap-2 p-3 rounded bg-[#062214] border border-[#2A5432]/50">
                                             <div className="flex items-center gap-2">
-                                                <div className="bg-[#2A5432]/20 p-1.5 rounded text-[#76A771]">
-                                                    <Video className="w-3.5 h-3.5" />
-                                                </div>
+                                                <div className="bg-[#2A5432]/20 p-1.5 rounded text-[#76A771]"><Video className="w-3.5 h-3.5" /></div>
                                                 <Input 
                                                     placeholder="Título da Aula"
-                                                    value={lesson.title ?? ""} // 👈 Proteção contra null
+                                                    value={lesson.title ?? ""} 
                                                     onChange={(e) => updateLesson(mIndex, lIndex, "title", e.target.value)}
                                                     className="h-8 bg-[#0A311D] border-[#2A5432] text-white flex-1 font-medium"
                                                 />
@@ -500,7 +481,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                             <div className="flex items-center gap-2 pl-8">
                                                 <Input 
                                                     placeholder="Link do Vídeo (YouTube, Vimeo...)"
-                                                    value={lesson.videoUrl ?? ""} // 👈 Proteção contra null
+                                                    value={lesson.videoUrl ?? ""}
                                                     onChange={(e) => updateLesson(mIndex, lIndex, "videoUrl", e.target.value)}
                                                     className="h-7 text-xs bg-[#0A311D]/50 border-[#2A5432]/30 text-gray-400 focus:text-white"
                                                 />
@@ -510,6 +491,56 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                     <Button size="sm" variant="ghost" className="w-full border border-dashed border-[#2A5432] text-gray-400 hover:text-white" onClick={() => addLesson(mIndex)}>
                                         <Plus className="w-3 h-3 mr-2" /> Adicionar Aula
                                     </Button>
+
+                                    {/* GESTÃO DE MATERIAIS (DENTRO DO MODAL) */}
+                                    <div className="pt-4 border-t border-[#2A5432]/30 mt-4">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <Label className="text-[#76A771] text-xs uppercase font-bold flex items-center gap-2">
+                                                <FileText className="w-3 h-3" /> Materiais de Apoio
+                                            </Label>
+                                            
+                                            {/* Botão de Upload (Só aparece se o módulo já foi salvo no banco) */}
+                                            {module.id ? (
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button size="sm" variant="outline" className="h-6 text-xs border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214]">
+                                                            <Upload className="w-3 h-3 mr-1" /> Anexar
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="bg-[#0A311D] border-[#2A5432] text-white">
+                                                        <DialogHeader>
+                                                            <DialogTitle>Anexar Material</DialogTitle>
+                                                            <CardDescription>Adicione PDFs ou documentos ao módulo "{module.title}".</CardDescription>
+                                                        </DialogHeader>
+                                                        <MaterialUploadForm moduleId={module.id} />
+                                                    </DialogContent>
+                                                </Dialog>
+                                            ) : (
+                                                <span className="text-[10px] text-gray-500 italic">Salve o curso para anexar arquivos</span>
+                                            )}
+                                        </div>
+
+                                        {/* Lista de Materiais */}
+                                        <div className="space-y-2">
+                                            {materialsToShow?.map((mat: any) => (
+                                                <div key={mat.id} className="flex items-center justify-between p-2 bg-[#062214]/50 border border-[#2A5432]/30 rounded text-xs text-gray-300">
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        <FileText className="w-3 h-3 text-gray-500 shrink-0" />
+                                                        <span className="truncate">{mat.title}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <a href={mat.url} target="_blank" className="text-[#76A771] hover:underline mr-2">Ver</a>
+                                                        <Button size="icon" variant="ghost" className="h-5 w-5 text-red-400 hover:bg-red-900/20" onClick={() => handleDeleteMaterial(mat.id, mat.url)}>
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(!materialsToShow || materialsToShow.length === 0) && (
+                                                <p className="text-[10px] text-gray-600 italic text-center py-2">Nenhum material anexado.</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

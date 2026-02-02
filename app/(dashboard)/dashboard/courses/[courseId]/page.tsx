@@ -1,30 +1,25 @@
 import { auth } from "@/auth";
-import { getCourseContent } from "@/actions/courses"; // toggleLessonProgress não é usado aqui diretamente, mas via client component
+import { getCourseContent } from "@/actions/courses"; 
 import { redirect } from "next/navigation";
-import { CheckCircle2, Circle, Play, ChevronLeft } from "lucide-react";
+import { CheckCircle2, Circle, Play, ChevronLeft, FileText } from "lucide-react"; // Importado FileText
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { LessonCheckButton } from "./lesson-check-button";
 
-// 👇 CORREÇÃO: Função para transformar links comuns em links de Embed
 function getVideoEmbedUrl(url: string | null) {
   if (!url) return null;
 
-  // 1. YouTube (Suporta: watch?v=, youtu.be/, embed/)
-  // Regex captura o ID de 11 caracteres
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
   if (ytMatch && ytMatch[1]) {
-    return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`; // rel=0 evita vídeos recomendados de terceiros
+    return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
   }
 
-  // 2. Vimeo (Suporta: vimeo.com/ID, player.vimeo.com/)
   const vimeoMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/);
   if (vimeoMatch && vimeoMatch[1]) {
     return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
   }
 
-  // 3. Outros (Vercel Blob, MP4 direto, etc) - Retorna original
   return url;
 }
 
@@ -43,7 +38,6 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
   const course = await getCourseContent(resolvedParams.courseId);
   if (!course) return <div>Curso não encontrado.</div>;
 
-  // Determinar qual aula exibir
   const activeLessonId = resolvedSearchParams.lessonId;
   let activeLesson = null;
   
@@ -56,13 +50,11 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
       activeLesson = course.modules[0].lessons[0];
   }
 
-  // 👇 Prepara a URL correta para o iframe
   const embedUrl = activeLesson ? getVideoEmbedUrl(activeLesson.videoUrl) : null;
 
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] animate-in fade-in">
       
-      {/* Topo: Voltar */}
       <div className="mb-4">
         <Link href="/dashboard/courses" className="inline-flex items-center text-sm text-gray-400 hover:text-[#76A771] transition-colors">
             <ChevronLeft className="w-4 h-4 mr-1" /> Voltar para Cursos
@@ -75,7 +67,6 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
         <div className="flex-1 flex flex-col min-h-0">
             {activeLesson ? (
                 <div className="space-y-4">
-                    {/* Player Wrapper (16:9) */}
                     <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-[#2A5432] shadow-2xl">
                         {embedUrl ? (
                             <iframe 
@@ -124,8 +115,9 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
                             <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-[#2A5432]/30 text-white text-sm font-medium">
                                 {module.title}
                             </AccordionTrigger>
-                            <AccordionContent className="pt-0 pb-0">
+                            <AccordionContent className="pt-0 pb-2">
                                 <div className="flex flex-col">
+                                    {/* Lista de Aulas */}
                                     {module.lessons.map((lesson) => {
                                         const isActive = lesson.id === activeLesson?.id;
                                         const isCompleted = lesson.progress.length > 0 && lesson.progress[0].completed;
@@ -152,6 +144,27 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
                                             </Link>
                                         );
                                     })}
+
+                                    {/* --- NOVA SEÇÃO: Materiais de Apoio do Módulo --- */}
+                                    {module.materials && module.materials.length > 0 && (
+                                        <div className="mt-2 pt-2 border-t border-[#2A5432]/30 px-4">
+                                            <p className="text-[10px] uppercase font-bold text-gray-500 mb-2">Materiais de Apoio</p>
+                                            <div className="space-y-1">
+                                                {module.materials.map((material) => (
+                                                    <a 
+                                                        key={material.id}
+                                                        href={material.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-2 py-1.5 text-xs text-[#76A771] hover:text-white transition-colors"
+                                                    >
+                                                        <FileText className="w-3.5 h-3.5" />
+                                                        <span className="line-clamp-1">{material.title}</span>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

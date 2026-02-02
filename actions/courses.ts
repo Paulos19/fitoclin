@@ -1,31 +1,33 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@/lib/db"; // 👈 Importamos o Singleton para evitar o erro de cache
+import { db } from "@/lib/db";
 import { del, put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 
-// NÃO instanciar mais: const prisma = new PrismaClient();
-
-// 1. Listar Cursos Disponíveis
+// 1. Listar Cursos (Agora com módulos e materiais para edição no Dashboard)
 export async function getCourses() {
-  // Aqui poderíamos filtrar por "cursos comprados", mas por enquanto mostraremos todos os ativos
   const courses = await db.course.findMany({
-    where: { active: true },
     include: {
-      _count: { select: { modules: true } } // Contagem de módulos
+      modules: {
+        orderBy: { order: 'asc' },
+        include: {
+          lessons: { orderBy: { order: 'asc' } },
+          materials: true // 👈 ESSENCIAL: Carrega os materiais para o Modal de Edição
+        }
+      },
+      _count: { select: { modules: true } }
     },
     orderBy: { createdAt: 'desc' }
   });
 
-  // 👇 Serialização: Converte Decimal para Number para o Frontend aceitar
   return courses.map((course) => ({
     ...course,
     price: course.price ? Number(course.price) : 0,
   }));
 }
 
-// 2. Buscar Detalhes do Curso (Módulos e Aulas) + Progresso do Usuário
+// 2. Buscar Detalhes do Curso (Para o Player do Aluno)
 export async function getCourseContent(courseId: string) {
   const session = await auth();
   if (!session?.user) return null;
@@ -43,7 +45,8 @@ export async function getCourseContent(courseId: string) {
                 where: { userId: session.user.id }
               }
             }
-          }
+          },
+          materials: true // Carrega materiais para o aluno baixar
         }
       }
     }
@@ -51,7 +54,6 @@ export async function getCourseContent(courseId: string) {
 
   if (!course) return null;
 
-  // 👇 Serialização: Converte Decimal para Number
   return {
     ...course,
     price: course.price ? Number(course.price) : 0,
@@ -66,30 +68,21 @@ export async function toggleLessonProgress(lessonId: string, completed: boolean)
   try {
     await db.userLessonProgress.upsert({
       where: {
-        userId_lessonId: {
-          userId: session.user.id,
-          lessonId: lessonId
-        }
+        userId_lessonId: { userId: session.user.id, lessonId: lessonId }
       },
       update: { completed },
-      create: {
-        userId: session.user.id,
-        lessonId,
-        completed
-      }
+      create: { userId: session.user.id, lessonId, completed }
     });
 
-    // Revalidar a página da aula e a lista de cursos para atualizar progresso
     revalidatePath(`/dashboard/courses`);
     revalidatePath(`/dashboard/courses/[courseId]`, 'page'); 
-    
     return { success: true };
   } catch (error) {
-    console.error("Erro ao salvar progresso:", error);
     return { error: "Erro ao salvar progresso" };
   }
 }
 
+// 4. Gestão de Materiais (Upload e Delete)
 export async function addModuleMaterial(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
@@ -101,29 +94,21 @@ export async function addModuleMaterial(formData: FormData) {
   if (!moduleId || !file || !title) return { error: "Dados incompletos" };
 
   try {
-    // 1. Upload para Vercel Blob
     const blob = await put(`courses/materials/${Date.now()}-${file.name}`, file, {
       access: "public",
     });
 
-    // 2. Determinar tipo
     let type = "OTHER";
     if (file.type.includes("pdf")) type = "PDF";
     else if (file.type.includes("image")) type = "IMAGE";
     else if (file.type.includes("spreadsheet") || file.type.includes("excel")) type = "XLS";
     else if (file.type.includes("document") || file.type.includes("word")) type = "DOC";
 
-    // 3. Salvar no Banco
     await db.moduleMaterial.create({
-      data: {
-        moduleId,
-        title,
-        url: blob.url,
-        type,
-      },
+      data: { moduleId, title, url: blob.url, type },
     });
 
-    revalidatePath(`/dashboard/courses`);
+    revalidatePath(`/dashboard/courses`); // Atualiza a lista para aparecer no modal
     return { success: "Material adicionado com sucesso!" };
 
   } catch (error) {
@@ -137,14 +122,9 @@ export async function deleteModuleMaterial(materialId: string, url: string) {
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
   try {
-    // 1. Deletar do Blob (Opcional, mas boa prática para limpar lixo)
-    if (url) await del(url);
-
-    // 2. Deletar do Banco
-    await db.moduleMaterial.delete({
-      where: { id: materialId },
-    });
-
+    if (url) await del(url); // Remove do Vercel Blob
+    await db.moduleMaterial.delete({ where: { id: materialId } }); // Remove do Banco
+    
     revalidatePath(`/dashboard/courses`);
     return { success: "Material removido!" };
   } catch (error) {
@@ -152,6 +132,7 @@ export async function deleteModuleMaterial(materialId: string, url: string) {
   }
 }
 
+// 5. Gestão de Cursos (Capa e Upsert Geral)
 export async function uploadCourseImage(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
@@ -182,7 +163,6 @@ export async function deleteCourse(courseId: string) {
   }
 }
 
-// Lógica complexa para salvar estrutura aninhada sem perder Materiais
 export async function upsertCourse(data: any) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
@@ -190,24 +170,17 @@ export async function upsertCourse(data: any) {
   const { id, title, description, imageUrl, active, price, modules } = data;
 
   try {
-    // 1. Criar ou Atualizar o Curso Base
+    // 1. Curso Base
     const course = await db.course.upsert({
       where: { id: id || "new" },
-      create: {
-        title, description, imageUrl, active, price,
-      },
-      update: {
-        title, description, imageUrl, active, price,
-      },
+      create: { title, description, imageUrl, active, price },
+      update: { title, description, imageUrl, active, price },
     });
 
-    // 2. Sincronizar Módulos (Difícil: Preservar IDs para não perder Materiais)
-    // Estratégia: Iterar sobre os módulos enviados.
-    
-    // IDs dos módulos que vieram no formulário
+    // 2. Sincronizar Módulos
     const moduleIdsInForm = modules.filter((m: any) => m.id).map((m: any) => m.id);
 
-    // Deletar módulos que NÃO estão no formulário (foram removidos na UI)
+    // Deleta módulos removidos da UI
     await db.module.deleteMany({
       where: {
         courseId: course.id,
@@ -215,34 +188,21 @@ export async function upsertCourse(data: any) {
       }
     });
 
-    // Atualizar ou Criar Módulos e Aulas
     for (const [mIndex, mod] of modules.entries()) {
       const currentModule = await db.module.upsert({
         where: { id: mod.id || "new-mod" },
-        create: {
-          title: mod.title,
-          order: mIndex,
-          courseId: course.id
-        },
-        update: {
-          title: mod.title,
-          order: mIndex
-        }
+        create: { title: mod.title, order: mIndex, courseId: course.id },
+        update: { title: mod.title, order: mIndex }
       });
 
-      // Lidar com as Aulas do Módulo (Aqui podemos deletar e recriar pois aula não tem material anexo ainda)
-      // Mas para ser seguro, vamos usar deleteMany + createMany para limpar e refazer as aulas deste módulo
-      // Isso é mais simples que fazer upsert em cada aula.
-      
-      // Remove aulas antigas desse módulo
+      // Refazer aulas (Delete + Create é mais seguro para garantir ordem e limpeza)
       await db.lesson.deleteMany({ where: { moduleId: currentModule.id } });
 
-      // Cria as novas (se houver)
       if (mod.lessons && mod.lessons.length > 0) {
         await db.lesson.createMany({
             data: mod.lessons.map((l: any, lIndex: number) => ({
                 title: l.title,
-                videoUrl: l.videoUrl,
+                videoUrl: l.videoUrl || "",
                 order: lIndex,
                 moduleId: currentModule.id
             }))

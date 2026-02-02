@@ -12,7 +12,7 @@ export default async function AnamnesisPage() {
   return (
     <div className="container max-w-4xl py-6">
       <div className="mb-6 text-center md:text-left">
-        <h1 className="text-3xl font-bold text-white mb-2">Formulário Pré-Consulta</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Formulário Pré-Atendimento</h1>
         <p className="text-gray-400">
             Suas respostas ajudam a Dra. Isa a preparar a planta medicinal ideal para o seu momento.
         </p>
