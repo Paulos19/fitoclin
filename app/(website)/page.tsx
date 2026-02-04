@@ -69,8 +69,6 @@ export default async function Home() {
       <MaterialsSection />
 
       <ContactSection />
-
-      <Footer />
       
     </main>
   );
