@@ -36,13 +36,25 @@ import {
 
 // --- Definição dos Menus ---
 
-// Menu Completo da Dra. Isa
+// Menu Completo da Dra. Isa (Admin)
 const adminLinks = [
   { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
   { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
-  { name: "Gestão de Cursos", href: "/dashboard/courses", icon: Library }, // 👈 NOVO ITEM
+  { name: "Gestão de Cursos", href: "/dashboard/courses", icon: Library },
+  { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
+  { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
+  { name: "Configurações", href: "/dashboard/settings", icon: Settings },
+];
+
+// 👇 NOVO MENU: Secretária (Igual ao Admin, exceto Cursos)
+const secretaryLinks = [
+  { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Pacientes", href: "/dashboard/patients", icon: Users },
+  { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
+  { name: "Prontuários", href: "/dashboard/records", icon: FileText },
+  // Sem acesso a Gestão de Cursos
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
@@ -68,7 +80,8 @@ const patientLinks = [
 ];
 
 interface SidebarProps {
-  role: "ADMIN" | "PATIENT" | "PROFESSIONAL";
+  // 👇 Adicionado SECRETARY ao tipo
+  role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY";
   isSubscribed?: boolean;
 }
 
@@ -76,13 +89,25 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
+  // 👇 Lógica de seleção do menu atualizada
   let links = patientLinks;
   if (role === "ADMIN") links = adminLinks;
   if (role === "PROFESSIONAL") links = professionalLinks;
+  if (role === "SECRETARY") links = secretaryLinks;
 
   const sidebarVariants = {
     expanded: { width: "16rem" },
     collapsed: { width: "5rem" },
+  };
+
+  // Helper para exibir o nome da role na UI
+  const getRoleLabel = () => {
+    switch (role) {
+      case "ADMIN": return "Admin";
+      case "PROFESSIONAL": return "Profissional";
+      case "SECRETARY": return "Secretária";
+      default: return "Paciente";
+    }
   };
 
   return (
@@ -131,7 +156,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                     Fitoclin
                   </span>
                   <span className="text-[10px] uppercase font-bold text-[#76A771] tracking-widest">
-                    {role === "ADMIN" ? "Admin" : role === "PROFESSIONAL" ? "Profissional" : "Paciente"}
+                    {getRoleLabel()}
                   </span>
                 </motion.div>
               )}

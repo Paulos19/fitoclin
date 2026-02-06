@@ -24,17 +24,23 @@ const ProfileSchema = z.object({
   state: z.string().optional(),
 });
 
-// --- LEITURA (Faltava essa função para a lista carregar) ---
+// --- LEITURA ---
 export async function getPatients() {
   const session = await auth();
   if (!session) return [];
 
-  // 👇 ISOLAMENTO:
-  // Admin pode ver tudo (opcional) ou só os dele. 
+  const role = session.user.role;
+
+  // 👇 ISOLAMENTO ATUALIZADO:
+  // Admin e Secretária podem ver todos os pacientes da clínica.
   // Profissional VÊ APENAS OS SEUS.
-  const whereClause = session.user.role === "ADMIN"
-    ? {} // Admin vê tudo
-    : { professionalId: session.user.id };
+  
+  // @ts-ignore: Caso o TypeScript reclame que SECRETARY não existe no tipo ainda
+  const canViewAll = role === "ADMIN" || role === "SECRETARY";
+
+  const whereClause = canViewAll
+    ? {} // Admin e Secretária veem tudo
+    : { professionalId: session.user.id }; // Profissional vê apenas os dele
 
   const patients = await db.patient.findMany({
     where: whereClause,
@@ -49,7 +55,10 @@ export async function getPatients() {
 export async function createPatient(formData: FormData) {
   const session = await auth();
   
-  const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL";
+  // 👇 PERMISSÃO ATUALIZADA: Adicionado SECRETARY
+  // @ts-ignore
+  const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL" || session?.user?.role === "SECRETARY";
+  
   if (!isAllowed) return { error: "Não autorizado" };
 
   const rawData = {
@@ -73,6 +82,8 @@ export async function createPatient(formData: FormData) {
     const hashedPassword = await bcrypt.hash("fitoclin123", 10);
 
     // 👇 DEFINE O DONO CORRETAMENTE
+    // Se for profissional, o paciente é dele.
+    // Se for Admin ou Secretária, o professionalId fica null (paciente da clínica).
     const professionalId = session?.user?.role === "PROFESSIONAL" ? session.user.id : null;
 
     await db.$transaction(async (tx) => {
@@ -103,6 +114,7 @@ export async function createPatient(formData: FormData) {
   }
 }
 
+// --- ATUALIZAÇÃO DE PERFIL (Para o próprio usuário logado) ---
 export async function updatePatientProfile(formData: FormData) {
   const session = await auth();
   if (!session) return { error: "Não autorizado" };

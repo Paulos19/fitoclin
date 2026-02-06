@@ -1,26 +1,21 @@
-import { type DefaultSession } from "next-auth";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { type User as PrismaUser } from "@prisma/client";
+import { UserRole } from "@prisma/client";
+import NextAuth, { DefaultSession } from "next-auth";
+
+export type ExtendedUser = DefaultSession["user"] & {
+  id: string;
+  role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY"; // Adicione SECRETARY aqui
+  stripeCustomerId: string | null;
+};
 
 declare module "next-auth" {
   interface Session {
-    user: {
-      id: string;
-      role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
-      stripeCustomerId: string | null;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
-    role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
-    stripeCustomerId: string | null;
+    user: ExtendedUser;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    id: string;
-    role: "ADMIN" | "PATIENT" | "PROFESSIONAL"; // 👈 Atualizado
+    role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY"; // E aqui também
     stripeCustomerId: string | null;
   }
 }

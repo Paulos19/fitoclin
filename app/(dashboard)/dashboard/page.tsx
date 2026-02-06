@@ -46,9 +46,10 @@ export default async function DashboardPage() {
   // Verde Escuro: #062214 | Verde Médio: #0A311D | Musgo: #2A5432 | Lima: #76A771
 
   // ==========================================
-  // 🟢 VISÃO DA DRA. ISA (ADMIN)
+  // 🟢 VISÃO DA DRA. ISA (ADMIN) E SECRETÁRIA
   // ==========================================
-  if (user?.role === "ADMIN") {
+  // 👇 Verificação atualizada para incluir SECRETARY
+  if (user?.role === "ADMIN" || user?.role === "SECRETARY") {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -75,7 +76,7 @@ export default async function DashboardPage() {
     return (
       <div className="space-y-8 animate-in fade-in duration-700">
         
-        {/* --- HERO BANNER ADMIN --- */}
+        {/* --- HERO BANNER ADMIN/SECRETARY --- */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A311D] to-[#062214] border border-[#2A5432]/30 p-8 shadow-2xl">
           {/* Grafismos de Fundo */}
           <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-[#76A771]/10 blur-3xl" />
@@ -85,11 +86,12 @@ export default async function DashboardPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="text-[#76A771] border-[#76A771] bg-[#76A771]/10">
-                   Admin Mode
+                   {user?.role === "ADMIN" ? "Admin Mode" : "Gestão"}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                {greeting}, <span className="text-[#76A771]">Dra. Isa</span>.
+                {/* 👇 Nome dinâmico para aparecer o nome da Secretária ou da Dra. */}
+                {greeting}, <span className="text-[#76A771]">{user?.name || "Doutora"}</span>.
               </h1>
               <p className="text-gray-400 max-w-md">
                 Aqui está o resumo da sua clínica hoje. Você tem <span className="text-white font-bold">{appointmentsTodayCount} atendimentos</span> agendados.
@@ -207,7 +209,7 @@ export default async function DashboardPage() {
   }
 
   // ==========================================
-  // 🟢 VISÃO DO PACIENTE
+  // 🟢 VISÃO DO PACIENTE (Fallback)
   // ==========================================
   
   // Buscar dados do Paciente logado

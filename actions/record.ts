@@ -19,8 +19,10 @@ const RecordSchema = z.object({
 export async function saveMedicalRecord(formData: FormData) {
   const session = await auth();
   
-  // 👇 Permite Admin e Profissional
-  const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL";
+  // 👇 Permite Admin, Profissional e Secretária
+  // @ts-ignore
+  const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL" || session?.user?.role === "SECRETARY";
+  
   if (!isAllowed) return { error: "Não autorizado" };
 
   const rawData = {
@@ -43,9 +45,14 @@ export async function saveMedicalRecord(formData: FormData) {
   const data = validated.data;
 
   try {
-    // Opcional: Verificar se o paciente pertence ao profissional antes de salvar
-    // const patient = await db.patient.findUnique({ where: { id: data.patientId } });
-    // if (patient.professionalId !== session.user.id && session.user.role !== 'ADMIN') return { error: "Paciente não pertence a você" };
+    // Opcional: Se quiser restringir que Profissional só edite seus próprios pacientes, 
+    // descomente e ajuste a lógica abaixo (adicionando SECRETARY na exceção também).
+    /*
+    const patient = await db.patient.findUnique({ where: { id: data.patientId } });
+    if (patient?.professionalId !== session.user.id && session.user.role !== 'ADMIN' && session.user.role !== 'SECRETARY') {
+       return { error: "Paciente não pertence a você" };
+    }
+    */
 
     await db.medicalRecord.create({
       data: {

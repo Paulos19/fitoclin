@@ -34,8 +34,8 @@ export const authConfig = {
     session({ session, token }) {
       if (session.user && token) {
         session.user.id = token.id as string;
-        // 👇 Atualizado para incluir PROFESSIONAL
-        session.user.role = token.role as "ADMIN" | "PATIENT" | "PROFESSIONAL"; 
+        // 👇 Atualizado para incluir SECRETARY
+        session.user.role = token.role as "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY"; 
         session.user.stripeCustomerId = token.stripeCustomerId as string | null;
       }
       return session;

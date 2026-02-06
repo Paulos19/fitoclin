@@ -38,8 +38,14 @@ export async function register(prevState: any, formData: FormData) {
     // 3. Criptografar senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Definir Role (Lógica do Admin Mestre baseada em variável de ambiente)
-    const role = email === process.env.EMAIL_ADMIN ? "ADMIN" : "PATIENT";
+    // 4. Definir Role (Lógica de Admin e Secretária via variáveis de ambiente)
+    let role = "PATIENT"; // O padrão é paciente
+
+    if (process.env.EMAIL_ADMIN && email === process.env.EMAIL_ADMIN) {
+      role = "ADMIN";
+    } else if (process.env.ASSISTENT_EMAIL && email === process.env.ASSISTENT_EMAIL) {
+      role = "SECRETARY"; // 👈 Atribui a role de Secretária se o email bater com o .env
+    }
 
     // 5. Criar usuário no Banco
     await db.user.create({
@@ -47,8 +53,10 @@ export async function register(prevState: any, formData: FormData) {
         name,
         email,
         password: hashedPassword,
-        role,
-        // Se for paciente, já cria o perfil vazio para evitar erro de relacionamento depois
+        // @ts-ignore: O TypeScript pode reclamar se você ainda não rodou 'prisma generate' após adicionar SECRETARY ao enum
+        role: role, 
+        // Se for paciente, já cria o perfil vazio para evitar erro de relacionamento depois.
+        // Secretárias e Admins não precisam necessariamente de um perfil 'Patient' atrelado agora.
         patient: role === "PATIENT" ? { create: {} } : undefined
       },
     });
@@ -74,7 +82,7 @@ export async function login(prevState: any, formData: FormData) {
     await signIn("credentials", {
       email: data.email,
       password: data.password,
-      // 👇 MUDANÇA IMPORTANTE: Força ida para o dashboard após login
+      // 👇 Força ida para o dashboard após login
       redirectTo: "/dashboard", 
     });
   } catch (error) {
