@@ -22,7 +22,8 @@ import {
   GraduationCap,
   Sparkles,
   Wallet2,
-  Library // Novo ícone para biblioteca/cursos admin
+  Library,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
@@ -34,9 +35,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// --- Definição dos Menus ---
-
-// Menu Completo da Dra. Isa (Admin)
+// ... (Outros menus Admin, Secretary, Professional mantidos) ...
 const adminLinks = [
   { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
@@ -48,13 +47,11 @@ const adminLinks = [
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
-// 👇 NOVO MENU: Secretária (Igual ao Admin, exceto Cursos)
 const secretaryLinks = [
   { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
   { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
-  // Sem acesso a Gestão de Cursos
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
@@ -79,33 +76,41 @@ const patientLinks = [
   { name: "Meu Plano", href: "/subscription", icon: Wallet2 },
 ];
 
+// 👇 NOVO MENU: User (Aluno)
+const userLinks = [
+  { name: "Meu Painel", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Meus Cursos", href: "/dashboard/courses", icon: GraduationCap },
+  // Se tiver acesso à comunidade, o link direto pode ser útil aqui ou no card abaixo
+  { name: "Certificados", href: "/dashboard/certificates", icon: FileText }, 
+  { name: "Meu Perfil", href: "/dashboard/profile", icon: UserCircle },
+];
+
 interface SidebarProps {
-  // 👇 Adicionado SECRETARY ao tipo
-  role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY";
-  isSubscribed?: boolean;
+  role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
+  isSubscribed?: boolean; // Usado para checar acesso à comunidade
 }
 
 export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  // 👇 Lógica de seleção do menu atualizada
   let links = patientLinks;
   if (role === "ADMIN") links = adminLinks;
   if (role === "PROFESSIONAL") links = professionalLinks;
   if (role === "SECRETARY") links = secretaryLinks;
+  if (role === "USER") links = userLinks;
 
   const sidebarVariants = {
     expanded: { width: "16rem" },
     collapsed: { width: "5rem" },
   };
 
-  // Helper para exibir o nome da role na UI
   const getRoleLabel = () => {
     switch (role) {
       case "ADMIN": return "Admin";
       case "PROFESSIONAL": return "Profissional";
       case "SECRETARY": return "Secretária";
+      case "USER": return "Aluno";
       default: return "Paciente";
     }
   };
@@ -135,15 +140,8 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
         <div className="flex h-20 items-center px-4 overflow-hidden relative">
           <div className="flex items-center gap-3 w-full">
             <div className="relative shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#2A5432] to-[#1a3821] border border-[#2A5432] shadow-inner">
-               <Image 
-                 src="/logo.png" 
-                 alt="Fitoclin Logo" 
-                 width={28} 
-                 height={28} 
-                 className="object-contain"
-               />
+               <Image src="/logo.png" alt="Fitoclin Logo" width={28} height={28} className="object-contain"/>
             </div>
-
             <AnimatePresence>
               {!isCollapsed && (
                 <motion.div
@@ -152,9 +150,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                   exit={{ opacity: 0, x: -10 }}
                   className="flex flex-col whitespace-nowrap"
                 >
-                  <span className="font-bold text-lg tracking-tight text-[#F1F1F1]">
-                    Fitoclin
-                  </span>
+                  <span className="font-bold text-lg tracking-tight text-[#F1F1F1]">Fitoclin</span>
                   <span className="text-[10px] uppercase font-bold text-[#76A771] tracking-widest">
                     {getRoleLabel()}
                   </span>
@@ -168,8 +164,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
 
         <nav className="flex-1 overflow-y-auto px-3 space-y-2 py-2 custom-scrollbar">
           {links.map((link) => {
-            const isActive = 
-              link.href === "/dashboard" 
+            const isActive = link.href === "/dashboard" 
                 ? pathname === "/dashboard"
                 : pathname === link.href || pathname.startsWith(`${link.href}/`);
 
@@ -178,32 +173,15 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                 href={link.href}
                 className={cn(
                   "relative flex items-center gap-3 rounded-xl px-3 py-3 transition-all duration-300 group overflow-hidden",
-                  isActive
-                    ? "bg-[#2A5432] text-white shadow-[0_4px_20px_-5px_rgba(118,167,113,0.3)]"
-                    : "text-[#F1F1F1]/70 hover:bg-[#2A5432]/30 hover:text-white"
+                  isActive ? "bg-[#2A5432] text-white shadow-[0_4px_20px_-5px_rgba(118,167,113,0.3)]" : "text-[#F1F1F1]/70 hover:bg-[#2A5432]/30 hover:text-white"
                 )}
               >
                 {isActive && (
-                  <motion.div
-                    layoutId="active-pill"
-                    className="absolute left-0 top-2 bottom-2 w-1 bg-[#76A771] rounded-r-full"
-                  />
+                  <motion.div layoutId="active-pill" className="absolute left-0 top-2 bottom-2 w-1 bg-[#76A771] rounded-r-full"/>
                 )}
-
-                <link.icon
-                  className={cn(
-                    "w-5 h-5 shrink-0 transition-colors duration-300",
-                    isActive ? "text-[#76A771]" : "text-[#76A771]/60 group-hover:text-[#76A771]"
-                  )}
-                />
-
+                <link.icon className={cn("w-5 h-5 shrink-0 transition-colors duration-300", isActive ? "text-[#76A771]" : "text-[#76A771]/60 group-hover:text-[#76A771]")} />
                 {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="font-medium text-sm whitespace-nowrap truncate"
-                  >
+                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="font-medium text-sm whitespace-nowrap truncate">
                     {link.name}
                   </motion.span>
                 )}
@@ -220,44 +198,62 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                 </Tooltip>
               );
             }
-
             return <div key={link.href}>{LinkContent}</div>;
           })}
         </nav>
 
-        {role === "PATIENT" && isSubscribed && (
+        {/* --- CARD DE COMUNIDADE (Para Pacientes e Alunos) --- */}
+        {(role === "PATIENT" || role === "USER") && (
           <div className="px-3 mb-2 mt-2">
             {!isCollapsed ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Link href="/community">
-                  <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37]">
-                    <div className="relative flex items-center gap-3 bg-[#051F12] group-hover:bg-gradient-to-r group-hover:from-[#D4AF37]/20 group-hover:to-[#051F12] rounded-[11px] px-3 py-3 transition-all duration-300">
-                      <div className="p-1.5 rounded-lg bg-[#D4AF37]/20 text-[#D4AF37]">
-                        <Sparkles className="w-5 h-5" />
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                {isSubscribed ? (
+                   // COM ACESSO: Card Verde
+                   <Link href="/community">
+                      <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37]">
+                        <div className="relative flex items-center gap-3 bg-[#051F12] group-hover:bg-gradient-to-r group-hover:from-[#D4AF37]/20 group-hover:to-[#051F12] rounded-[11px] px-3 py-3 transition-all duration-300">
+                          <div className="p-1.5 rounded-lg bg-[#D4AF37]/20 text-[#D4AF37]">
+                            <Sparkles className="w-5 h-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-[#D4AF37] leading-none">Comunidade</span>
+                            <span className="text-[10px] text-[#F3E5AB]/80 uppercase tracking-wider">Acesso VIP</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-[#D4AF37] leading-none">Comunidade</span>
-                        <span className="text-[10px] text-[#F3E5AB]/80 uppercase tracking-wider">Acesso VIP</span>
+                   </Link>
+                ) : (
+                   // SEM ACESSO: Card Bloqueado/Cinza
+                   <Link href="/subscription">
+                      <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-gray-700 to-gray-600 hover:from-[#76A771] hover:to-[#2A5432] transition-colors">
+                         <div className="bg-[#051F12] p-3 rounded-[11px] flex items-center gap-3">
+                            <div className="p-1.5 rounded-lg bg-gray-800 text-gray-400 group-hover:text-[#76A771] transition-colors">
+                               <Lock className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col">
+                               <span className="text-sm font-bold text-gray-300 group-hover:text-white">Comunidade</span>
+                               <span className="text-[10px] text-gray-500 group-hover:text-[#76A771]">Adquira seu acesso</span>
+                            </div>
+                         </div>
                       </div>
-                    </div>
-                  </div>
-                </Link>
+                   </Link>
+                )}
               </motion.div>
             ) : (
+              // Versão Colapsada
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link href="/community" className="flex justify-center w-full">
-                    <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#8C7321] text-[#051F12] shadow-lg hover:scale-105 transition-transform">
-                      <Sparkles className="w-5 h-5" />
+                  <Link href={isSubscribed ? "/community" : "/subscription"} className="flex justify-center w-full">
+                    <div className={cn(
+                        "h-10 w-10 flex items-center justify-center rounded-xl shadow-lg hover:scale-105 transition-transform",
+                        isSubscribed ? "bg-gradient-to-br from-[#D4AF37] to-[#8C7321] text-[#051F12]" : "bg-gray-800 text-gray-400 border border-gray-700"
+                    )}>
+                      {isSubscribed ? <Sparkles className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                     </div>
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-[#D4AF37] text-[#051F12] font-bold border-none ml-2">
-                  Acessar Comunidade VIP
+                  {isSubscribed ? "Acessar Comunidade VIP" : "Desbloquear Comunidade"}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -269,23 +265,14 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
            {isCollapsed ? (
              <Tooltip>
                <TooltipTrigger asChild>
-                 <Button
-                   variant="ghost"
-                   size="icon"
-                   className="w-full h-10 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/50 hover:border hover:border-red-900/30 transition-all"
-                   onClick={() => signOut({ callbackUrl: "/login" })}
-                 >
+                 <Button variant="ghost" size="icon" className="w-full h-10 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/50 hover:border hover:border-red-900/30 transition-all" onClick={() => signOut({ callbackUrl: "/login" })}>
                    <LogOut className="w-5 h-5" />
                  </Button>
                </TooltipTrigger>
                <TooltipContent side="right" className="bg-red-950 border-red-900 text-red-100 ml-2">Sair</TooltipContent>
              </Tooltip>
            ) : (
-             <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/60 transition-all group"
-                onClick={() => signOut({ callbackUrl: "/login" })}
-             >
+             <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/60 transition-all group" onClick={() => signOut({ callbackUrl: "/login" })}>
                <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                <span className="font-medium">Sair do Sistema</span>
              </Button>

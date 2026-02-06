@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { db } from "@/lib/db"; // 👈 Usar o singleton global em vez de new PrismaClient
+import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { NewPatientDialog } from "@/components/dashboard/new-patient-dialog";
 import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog";
@@ -38,30 +38,28 @@ export default async function PatientsPage({
 }: {
   searchParams?: { query?: string };
 }) {
-  // 1. Verificar Autenticação
   const session = await auth();
   if (!session) redirect("/login");
 
-  // 2. Definir Regras de Isolamento
+  // 1. Definir Regras de Isolamento
+  // 👇 ATUALIZADO: Adicionada a verificação da role SECRETARY
   const isProfessional = session.user.role === "PROFESSIONAL";
   const isAdmin = session.user.role === "ADMIN";
+  const isSecretary = session.user.role === "SECRETARY";
 
-  // Se não for Admin nem Profissional (ex: Paciente curioso tentando acessar), bloqueia
-  if (!isProfessional && !isAdmin) {
+  // Se não for Admin, Profissional nem Secretária, bloqueia
+  if (!isProfessional && !isAdmin && !isSecretary) {
      redirect("/dashboard");
   }
 
-  // Parâmetros de busca
   const query = searchParams?.query || "";
   
-  // 3. Buscar Pacientes no Banco (Com Filtro de Propriedade)
+  // 2. Buscar Pacientes
   const patients = await db.patient.findMany({
     where: {
-      // 👇 FILTRO DE SEGURANÇA: 
-      // Se for Profissional, filtra pelo ID dele. Se for Admin, objeto vazio (traz tudo).
+      // 👇 FILTRO: Secretária e Admin veem tudo (objeto vazio). Profissional vê só os dele.
       ...(isProfessional ? { professionalId: session.user.id } : {}),
       
-      // Filtro de busca textual
       user: {
         name: { contains: query, mode: 'insensitive' }
       }
@@ -70,7 +68,7 @@ export default async function PatientsPage({
       user: true,
       appointments: {
         orderBy: { date: 'desc' },
-        take: 1, // Última consulta para mostrar status
+        take: 1,
       }
     },
     orderBy: { createdAt: 'desc' }
@@ -78,8 +76,6 @@ export default async function PatientsPage({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
-      {/* --- HEADER DA PÁGINA --- */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#2A5432]/30 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
@@ -92,9 +88,7 @@ export default async function PatientsPage({
         <NewPatientDialog />
       </div>
 
-      {/* --- BARRA DE FERRAMENTAS --- */}
       <div className="flex flex-col md:flex-row gap-4 items-center bg-[#0A311D]/50 p-4 rounded-xl border border-[#2A5432]/30 backdrop-blur-sm">
-        {/* Input de Busca */}
         <form className="flex-1 w-full relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-[#76A771] transition-colors" />
           <Input
@@ -105,13 +99,11 @@ export default async function PatientsPage({
           />
         </form>
         
-        {/* Botão de Filtro (Visual por enquanto) */}
         <Button variant="outline" className="border-[#2A5432] text-gray-300 hover:text-white hover:bg-[#2A5432]/30 gap-2 h-11">
           <Filter className="w-4 h-4" /> Filtros Avançados
         </Button>
       </div>
 
-      {/* --- TABELA DE DADOS --- */}
       <div className="rounded-xl border border-[#2A5432]/30 overflow-hidden shadow-2xl bg-[#062214]/50 backdrop-blur-md">
         <Table>
           <TableHeader className="bg-[#0A311D] border-b border-[#2A5432]/50">
@@ -143,7 +135,6 @@ export default async function PatientsPage({
 
                 return (
                   <TableRow key={patient.id} className="border-b border-[#2A5432]/20 hover:bg-[#2A5432]/10 transition-colors group">
-                    {/* Coluna 1: Nome e Avatar */}
                     <TableCell className="py-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 border border-[#2A5432]">
@@ -163,7 +154,6 @@ export default async function PatientsPage({
                       </div>
                     </TableCell>
                     
-                    {/* Coluna 2: Contato */}
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         {patient.phone ? (
@@ -180,7 +170,6 @@ export default async function PatientsPage({
                       </div>
                     </TableCell>
                     
-                    {/* Coluna 3: Status */}
                     <TableCell>
                       {lastAppointment ? (
                         <div className="flex items-center gap-2">
@@ -196,15 +185,12 @@ export default async function PatientsPage({
                       )}
                     </TableCell>
                     
-                    {/* Coluna 4: Ações */}
                     <TableCell className="text-right pr-6">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Botão de Agendar (Ícone visível para acesso rápido) */}
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                            <NewAppointmentDialog patientId={patient.id} />
                         </div>
 
-                        {/* Dropdown */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#2A5432]/50">
@@ -238,7 +224,6 @@ export default async function PatientsPage({
         </Table>
       </div>
 
-      {/* Paginação simples */}
       <div className="flex justify-center text-xs text-gray-600">
          Mostrando {patients.length} pacientes
       </div>

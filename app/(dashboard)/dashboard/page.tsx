@@ -4,26 +4,28 @@ import {
   Calendar, 
   Users, 
   Activity, 
-  Video, 
-  FileText, 
-  ArrowRight, 
   Clock, 
   TrendingUp,
   Leaf,
-  Sparkles
+  Sparkles,
+  GraduationCap,
+  Library,
+  Lock,
+  Video,
+  FileText,
+  ArrowRight
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getPatientEvolution } from "@/actions/tracking"; // 👈 Import da Action
-import { EvolutionChart } from "@/components/dashboard/evolution-chart"; // 👈 Import do Gráfico
-import { CheckinDialog } from "@/components/dashboard/checkin-dialog"; // 👈 Import do Modal
+import { getPatientEvolution } from "@/actions/tracking";
+import { EvolutionChart } from "@/components/dashboard/evolution-chart";
+import { CheckinDialog } from "@/components/dashboard/checkin-dialog";
+import { CourseCard } from "@/components/community/course-card"; 
 
-// Instância do Prisma (Idealmente, mova para um arquivo lib/db.ts singleton em produção)
 const prisma = new PrismaClient();
 
-// Função auxiliar para saudação temporal
 function getGreeting() {
   const hour = new Date().toLocaleTimeString("pt-BR", { 
     hour: "2-digit", 
@@ -31,7 +33,6 @@ function getGreeting() {
     timeZone: "America/Sao_Paulo" 
   });
   const h = parseInt(hour);
-  
   if (h >= 5 && h < 12) return "Bom dia";
   if (h >= 12 && h < 18) return "Boa tarde";
   return "Boa noite";
@@ -42,25 +43,126 @@ export default async function DashboardPage() {
   const user = session?.user;
   const greeting = getGreeting();
 
-  // Cores da Marca (para referência inline se precisar, mas usaremos Tailwind)
-  // Verde Escuro: #062214 | Verde Médio: #0A311D | Musgo: #2A5432 | Lima: #76A771
+  // ==========================================
+  // 🔵 VISÃO DO ALUNO (USER)
+  // ==========================================
+  // O cast (as string) evita erro se o next-auth.d.ts ainda não tiver propagado
+  if ((user?.role as string) === "USER") {
+    // 1. Cursos Comprados
+    const purchases = await prisma.purchase.findMany({
+      where: { userId: user!.id },
+      include: { 
+         course: { 
+            include: { 
+               modules: { include: { lessons: true } },
+               _count: { select: { modules: true } } // Necessário para o card
+            } 
+         } 
+      }
+    });
+
+    // 2. Todos os Cursos Ativos (Vitrine)
+    const allCourses = await prisma.course.findMany({
+      where: { active: true }, // CORRIGIDO: active em vez de isPublished
+      include: { 
+         modules: { include: { lessons: true } },
+         _count: { select: { modules: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const purchasedIds = purchases.map(p => p.courseId);
+    const availableCourses = allCourses.filter(c => !purchasedIds.includes(c.id));
+
+    return (
+      <div className="space-y-10 animate-in fade-in duration-700">
+         {/* Hero Aluno */}
+         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A311D] to-[#062214] border border-[#2A5432]/30 p-8 shadow-2xl">
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-[#76A771]/10 blur-3xl" />
+            <div className="relative z-10">
+               <h1 className="text-3xl font-bold text-white mb-2">
+                  {greeting}, <span className="text-[#76A771]">{user?.name}</span>.
+               </h1>
+               <p className="text-gray-400">
+                  Continue sua jornada de aprendizado. Você tem <span className="text-white font-bold">{purchases.length} cursos</span> ativos.
+               </p>
+            </div>
+         </div>
+
+         {/* Meus Cursos */}
+         <div>
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+               <GraduationCap className="w-6 h-6 text-[#76A771]" /> Meus Cursos
+            </h2>
+            {purchases.length > 0 ? (
+               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {purchases.map((purchase) => (
+                     // Mapeamento correto para evitar erro de Decimal e Props
+                     <div key={purchase.id} className="h-full">
+                       <CourseCard 
+                          course={{
+                            ...purchase.course,
+                            price: Number(purchase.course.price),
+                            _count: purchase.course._count
+                          }}
+                       />
+                     </div>
+                  ))}
+               </div>
+            ) : (
+               <div className="text-center py-12 bg-[#0A311D]/20 rounded-xl border border-dashed border-[#2A5432]/50">
+                  <p className="text-gray-500">Você ainda não está inscrito em nenhum curso.</p>
+               </div>
+            )}
+         </div>
+
+         {/* Vitrine */}
+         {availableCourses.length > 0 && (
+            <div>
+               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-yellow-500" /> Explore Novos Conhecimentos
+               </h2>
+               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {availableCourses.map((course) => (
+                     <div key={course.id} className="relative">
+                        <CourseCard 
+                           course={{
+                             ...course,
+                             price: Number(course.price),
+                             _count: course._count
+                           }}
+                           isLocked={true}
+                        />
+                        {/* Overlay visual extra para reforçar o bloqueio */}
+                        <div className="absolute top-4 right-4 z-20">
+                           <div className="bg-black/60 p-1.5 rounded-full backdrop-blur-sm">
+                              <Lock className="w-4 h-4 text-white/90" />
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         )}
+      </div>
+    );
+  }
 
   // ==========================================
-  // 🟢 VISÃO DA DRA. ISA (ADMIN) E SECRETÁRIA
+  // 🟢 VISÃO ADMIN / SECRETÁRIA
   // ==========================================
-  // 👇 Verificação atualizada para incluir SECRETARY
-  if (user?.role === "ADMIN" || user?.role === "SECRETARY") {
+  // Cast para string para evitar erro se USER não estiver no tipo ainda
+  const userRole = user?.role as string;
+  if (userRole === "ADMIN" || userRole === "SECRETARY") {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    // Consultas de Hoje
     const appointmentsTodayCount = await prisma.appointment.count({
       where: { date: { gte: today, lt: tomorrow }, status: { not: 'CANCELED' } }
     });
 
-    // Próximas 3 consultas detalhadas (para a lista rápida)
     const nextAppointments = await prisma.appointment.findMany({
       where: { date: { gte: new Date() }, status: { not: 'CANCELED' } },
       orderBy: { date: 'asc' },
@@ -69,16 +171,13 @@ export default async function DashboardPage() {
     });
     
     const totalPatients = await prisma.patient.count();
-
-    // Mock de Faturamento (pode ser implementado via query depois)
     const revenueMonth = "R$ 12.450"; 
 
     return (
       <div className="space-y-8 animate-in fade-in duration-700">
         
-        {/* --- HERO BANNER ADMIN/SECRETARY --- */}
+        {/* HERO BANNER ADMIN */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A311D] to-[#062214] border border-[#2A5432]/30 p-8 shadow-2xl">
-          {/* Grafismos de Fundo */}
           <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-[#76A771]/10 blur-3xl" />
           <div className="absolute bottom-0 left-20 h-40 w-40 rounded-full bg-[#2A5432]/20 blur-2xl" />
 
@@ -86,11 +185,10 @@ export default async function DashboardPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="text-[#76A771] border-[#76A771] bg-[#76A771]/10">
-                   {user?.role === "ADMIN" ? "Admin Mode" : "Gestão"}
+                   {userRole === "ADMIN" ? "Admin Mode" : "Gestão"}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                {/* 👇 Nome dinâmico para aparecer o nome da Secretária ou da Dra. */}
                 {greeting}, <span className="text-[#76A771]">{user?.name || "Doutora"}</span>.
               </h1>
               <p className="text-gray-400 max-w-md">
@@ -98,7 +196,6 @@ export default async function DashboardPage() {
               </p>
             </div>
             
-            {/* Botão de Ação Rápida */}
             <div className="flex gap-3">
               <Link href="/dashboard/schedule">
                 <Button className="bg-[#76A771] hover:bg-[#5e8a5a] text-[#062214] font-semibold shadow-lg shadow-[#76A771]/20">
@@ -109,7 +206,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* --- METRICS GRID --- */}
+        {/* METRICS GRID */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="bg-[#0A311D]/50 border-[#2A5432]/30 backdrop-blur-sm hover:border-[#76A771]/50 transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -147,7 +244,7 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* --- PRÓXIMOS ATENDIMENTOS (LISTA RÁPIDA) --- */}
+        {/* PRÓXIMOS ATENDIMENTOS */}
         <div className="grid md:grid-cols-3 gap-6">
            <Card className="col-span-2 bg-[#062214] border-[#2A5432]/30">
              <CardHeader>
@@ -212,7 +309,6 @@ export default async function DashboardPage() {
   // 🟢 VISÃO DO PACIENTE (Fallback)
   // ==========================================
   
-  // Buscar dados do Paciente logado
   const patient = await prisma.patient.findUnique({
     where: { userId: user?.id },
     include: {
@@ -230,16 +326,13 @@ export default async function DashboardPage() {
 
   const nextAppointment = patient?.appointments[0];
   const lastRecord = patient?.medicalRecords[0];
-  
-  // 👇 BUSCAR DADOS DE EVOLUÇÃO
   const evolutionData = await getPatientEvolution();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       
-      {/* --- HERO BANNER PACIENTE --- */}
+      {/* HERO BANNER PACIENTE */}
       <div className="relative overflow-hidden rounded-3xl bg-[#0A311D] border border-[#2A5432]/30 p-8 shadow-xl">
-         {/* Efeitos de Luz Premium */}
          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-br from-[#76A771]/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
          
          <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
@@ -271,7 +364,6 @@ export default async function DashboardPage() {
                </div>
             </div>
 
-            {/* Ilustração ou Card Flutuante Decorativo */}
             <div className="hidden md:flex justify-end relative">
                <div className="absolute inset-0 bg-[#76A771] blur-[80px] opacity-10 rounded-full" />
                <Card className="w-64 bg-[#062214]/90 backdrop-blur border-[#2A5432] rotate-3 hover:rotate-0 transition-transform duration-500 shadow-2xl">
@@ -291,7 +383,7 @@ export default async function DashboardPage() {
          </div>
       </div>
 
-      {/* --- SECÇÃO DE EVOLUÇÃO (NOVO) --- */}
+      {/* SECÇÃO DE EVOLUÇÃO */}
       <div className="space-y-4">
          <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -303,10 +395,10 @@ export default async function DashboardPage() {
          <EvolutionChart data={evolutionData} />
       </div>
 
-      {/* --- GRID DE STATUS --- */}
+      {/* GRID DE STATUS */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         
-        {/* CARD 1: PRÓXIMA CONSULTA (Destaque) */}
+        {/* CARD 1: PRÓXIMA CONSULTA */}
         <Card className="lg:col-span-2 bg-[#062214] border-[#2A5432]/50 shadow-lg relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2A5432]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           
@@ -403,7 +495,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* --- ATALHOS RÁPIDOS (ICONS) --- */}
+      {/* ATALHOS RÁPIDOS (ICONS) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
         {[
           { label: "Histórico", icon: Calendar, href: "/dashboard/appointments", color: "text-blue-400", bg: "bg-blue-400/10" },

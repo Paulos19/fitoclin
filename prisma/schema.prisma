@@ -12,6 +12,7 @@ enum Role {
   PROFESSIONAL
   PATIENT
   SECRETARY
+  USER
 }
 
 enum AppointmentStatus {
@@ -359,6 +360,7 @@ model Purchase {
   id       String @id @default(cuid())
   userId   String
   courseId String
+  isManualGrant Boolean @default(false)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)

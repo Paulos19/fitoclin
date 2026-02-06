@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { db } from "@/lib/db"; // Usando o singleton correto
+import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,13 @@ export default async function RecordsIndexPage({
   const session = await auth();
   if (!session) redirect("/login");
 
-  // 1. Verificação de Role (Permite Admin e Profissional)
+  // 1. Verificação de Role
+  // 👇 ATUALIZADO: Inclui SECRETARY
   const isProfessional = session.user.role === "PROFESSIONAL";
   const isAdmin = session.user.role === "ADMIN";
+  const isSecretary = session.user.role === "SECRETARY";
 
-  if (!isProfessional && !isAdmin) {
+  if (!isProfessional && !isAdmin && !isSecretary) {
      redirect("/dashboard");
   }
 
@@ -36,7 +38,7 @@ export default async function RecordsIndexPage({
   // 2. Busca Otimizada e Isolada
   const patients = await db.patient.findMany({
     where: {
-      // 👇 FILTRO DE SEGURANÇA: Se for profissional, vê só os dele
+      // Secretária e Admin veem todos. Profissional vê apenas os seus.
       ...(isProfessional ? { professionalId: session.user.id } : {}),
       
       user: {
@@ -58,8 +60,6 @@ export default async function RecordsIndexPage({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
-      {/* --- HEADER --- */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4 border-b border-[#2A5432]/30 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Prontuários Eletrônicos</h1>
@@ -69,7 +69,6 @@ export default async function RecordsIndexPage({
         </div>
       </div>
 
-      {/* --- BARRA DE BUSCA --- */}
       <div className="flex flex-col md:flex-row gap-4 items-center bg-[#0A311D]/50 p-4 rounded-xl border border-[#2A5432]/30 backdrop-blur-sm">
         <form className="flex-1 w-full relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-[#76A771] transition-colors" />
@@ -85,7 +84,6 @@ export default async function RecordsIndexPage({
         </Button>
       </div>
 
-      {/* --- LISTA (TABLE) --- */}
       <div className="rounded-xl border border-[#2A5432]/30 overflow-hidden shadow-2xl bg-[#062214]/50 backdrop-blur-md">
         <Table>
           <TableHeader className="bg-[#0A311D] border-b border-[#2A5432]/50">
@@ -118,7 +116,6 @@ export default async function RecordsIndexPage({
                 
                 return (
                   <TableRow key={patient.id} className="border-b border-[#2A5432]/20 hover:bg-[#2A5432]/10 transition-colors group cursor-pointer">
-                    {/* Coluna Paciente */}
                     <TableCell className="pl-6 py-4">
                       <div className="flex items-center gap-4">
                         <Avatar className="h-10 w-10 border border-[#2A5432]">
@@ -135,7 +132,6 @@ export default async function RecordsIndexPage({
                       </div>
                     </TableCell>
                     
-                    {/* Coluna Última Evolução */}
                     <TableCell>
                       {lastRecord ? (
                         <div className="flex flex-col gap-1">
@@ -152,7 +148,6 @@ export default async function RecordsIndexPage({
                       )}
                     </TableCell>
                     
-                    {/* Coluna Quantidade */}
                     <TableCell className="text-center">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0A311D] border border-[#2A5432]/50">
                         <FileText className="w-3 h-3 text-[#76A771]" />
@@ -160,7 +155,6 @@ export default async function RecordsIndexPage({
                       </div>
                     </TableCell>
                     
-                    {/* Coluna Ação */}
                     <TableCell className="text-right pr-6">
                       <Link href={`/dashboard/records/${patient.id}`}>
                         <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-[#76A771] hover:border-[#76A771] transition-all gap-1">

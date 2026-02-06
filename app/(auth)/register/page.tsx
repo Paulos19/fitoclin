@@ -1,13 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { register } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch"; 
+import { Label } from "@/components/ui/label"; 
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, User, HeartPulse } from "lucide-react";
 
 export default function RegisterPage() {
   const [state, action, isPending] = useActionState(register, undefined);
+  const [isPatient, setIsPatient] = useState(true); // Padrão como paciente
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -16,11 +19,14 @@ export default function RegisterPage() {
           Crie sua conta
         </h1>
         <p className="text-sm text-muted-foreground">
-          Preencha seus dados para iniciar o tratamento
+          Junte-se à plataforma Fitoclin
         </p>
       </div>
 
       <form action={action} className="space-y-4">
+        {/* Campo Oculto para enviar o tipo de role */}
+        <input type="hidden" name="roleType" value={isPatient ? "PATIENT" : "USER"} />
+
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="name">Nome Completo</label>
           <input 
@@ -46,6 +52,33 @@ export default function RegisterPage() {
             className="flex h-11 w-full rounded-lg border border-input px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A5432]/20 focus-visible:border-[#2A5432]"
           />
           <p className="text-[0.8rem] text-muted-foreground">Mínimo de 6 caracteres</p>
+        </div>
+
+        {/* --- SELETOR DE PERFIL --- */}
+        <div className="bg-[#0A311D]/5 p-4 rounded-xl border border-[#2A5432]/10 space-y-3">
+           <p className="text-sm font-medium text-[#062214] mb-2">Qual seu objetivo?</p>
+           
+           <div className="flex items-center space-x-3">
+              <Switch 
+                id="role-mode" 
+                checked={isPatient} 
+                onCheckedChange={setIsPatient} 
+                className="data-[state=checked]:bg-[#76A771]"
+              />
+              <Label htmlFor="role-mode" className="text-sm cursor-pointer flex items-center gap-2">
+                 {isPatient ? (
+                    <>
+                      <HeartPulse className="w-4 h-4 text-[#76A771]" />
+                      <span>Quero ser <strong>Paciente</strong> (Agendar consultas)</span>
+                    </>
+                 ) : (
+                    <>
+                      <User className="w-4 h-4 text-blue-600" />
+                      <span>Quero apenas <strong>Cursos/Comunidade</strong></span>
+                    </>
+                 )}
+              </Label>
+           </div>
         </div>
 
         {state?.error && (

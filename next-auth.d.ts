@@ -1,20 +1,19 @@
 import { type DefaultSession } from "next-auth";
-import { type User as PrismaUser } from "@prisma/client";
+import { type UserRole } from "@prisma/client";
 
 // Estende os tipos do NextAuth
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      // 👇 Adicionado SECRETARY para evitar erros na lógica do dashboard
-      role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY"; 
+      // 👇 Adicionado USER explicitamente
+      role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER"; 
       stripeCustomerId: string | null;
     } & DefaultSession["user"];
   }
 
   interface User {
-    // 👇 Essas propriedades precisam estar aqui para que o 'user' no callback jwt não dê erro
-    role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY";
+    role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
     stripeCustomerId: string | null;
   }
 }
@@ -22,7 +21,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY";
+    role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
     stripeCustomerId: string | null;
   }
 }

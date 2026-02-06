@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db"; // Singleton
+import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Clock, Globe, Info, CalendarCheck } from "lucide-react";
 import { ScheduleSettingsForm } from "@/components/dashboard/schedule-settings-form";
@@ -12,15 +12,31 @@ export default async function SchedulePage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  // 1. Verificação de Role (Permite Admin e Profissional)
-  const isAllowed = session.user.role === "ADMIN" || session.user.role === "PROFESSIONAL";
+  // 1. Verificação de Role
+  // 👇 ATUALIZADO: Inclui SECRETARY
+  const isAllowed = session.user.role === "ADMIN" || session.user.role === "PROFESSIONAL" || session.user.role === "SECRETARY";
+  
   if (!isAllowed) {
       redirect("/dashboard");
   }
 
-  // 2. Buscar configurações do Usuário Logado
+  // 2. Buscar configurações do Usuário
+  // Se for Secretária, a Server Action "saveScheduleSettings" já cuida de salvar para o Admin correto.
+  // Aqui buscamos a configuração "visual" que ela vai editar.
+  // Nota: Se a secretária tiver que ver a agenda do ADMIN, talvez precise buscar pelo ID do admin aqui.
+  // Por enquanto, vou manter 'session.user.id' para consistência, mas se ela for editar a do Admin,
+  // o form vai salvar corretamente, mas ela pode ver "vazio" inicialmente se não for o mesmo ID.
+  // *Recomendação*: Se a secretária edita a agenda da Dra, precisamos buscar o ID da Dra aqui.
+  
+  let targetUserId = session.user.id;
+  
+  if (session.user.role === "SECRETARY") {
+      const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
+      if (admin) targetUserId = admin.id;
+  }
+
   const schedules = await db.doctorSchedule.findMany({
-    where: { userId: session.user.id },
+    where: { userId: targetUserId },
     orderBy: { dayOfWeek: 'asc' }
   });
 
@@ -36,7 +52,6 @@ export default async function SchedulePage() {
           </p>
         </div>
         
-        {/* Botão para ver a lista de agendamentos */}
         <Link href="/dashboard/appointments">
            <Button variant="outline" className="border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214]">
              <CalendarCheck className="w-4 h-4 mr-2" /> Ver Meus Agendamentos
@@ -46,7 +61,6 @@ export default async function SchedulePage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         
-        {/* --- COLUNA PRINCIPAL: FORMULÁRIO --- */}
         <div className="lg:col-span-2 space-y-6">
            <Card className="bg-[#062214]/50 border-[#2A5432]/50 backdrop-blur-sm shadow-xl">
              <CardHeader className="border-b border-[#2A5432]/30 pb-4">
@@ -58,16 +72,12 @@ export default async function SchedulePage() {
                </CardDescription>
              </CardHeader>
              <CardContent className="pt-6">
-               {/* Passamos os dados iniciais. Se estiver vazio, o form lida com defaults */}
                <ScheduleSettingsForm initialData={schedules} />
              </CardContent>
            </Card>
         </div>
         
-        {/* --- COLUNA LATERAL: INFORMAÇÕES --- */}
         <div className="space-y-6">
-          
-          {/* Card de Fuso Horário */}
           <Card className="bg-[#0A311D] border-[#2A5432]">
             <CardHeader>
                <CardTitle className="flex items-center gap-2 text-white text-base">
@@ -84,7 +94,6 @@ export default async function SchedulePage() {
             </CardContent>
           </Card>
 
-          {/* Dicas Rápidas */}
           <Alert className="bg-[#76A771]/10 border-[#76A771]/30 text-[#76A771]">
             <Info className="h-4 w-4 stroke-[#76A771]" />
             <AlertTitle>Dica de Produtividade</AlertTitle>
