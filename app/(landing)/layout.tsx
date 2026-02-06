@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://fitoclin.com.br",
+    url: "https://institutoisa.com.br",
     title: "Fitoclin - Transforme sua Saúde",
     description: "Tratamentos naturais e personalizados para sua melhor versão.",
     images: [
