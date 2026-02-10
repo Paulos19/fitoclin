@@ -53,6 +53,7 @@ model User {
   myPatients     Patient[]     @relation("MyPatients")
   myLeads        Lead[]        @relation("MyLeads")
   myTransactions Transaction[] @relation("MyTransactions")
+  certificates   Certificate[]
 }
 
 model Subscription {
@@ -66,6 +67,9 @@ model Subscription {
 
   stripeCustomerId String? @unique
   status           String?
+
+  // [NOVO] Campo para controlar o nível de acesso
+  plan SubscriptionPlan @default(COMMUNITY)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -221,11 +225,12 @@ model SiteInfo {
   id  String @id @default(cuid())
   key String @unique @default("homepage_config")
 
-  heroTitle    String?
-  heroSubtitle String?
-  aboutText    String?
-  whatsapp     String?
-  instagram    String?
+  heroTitle               String?
+  heroSubtitle            String?
+  aboutText               String?
+  whatsapp                String?
+  instagram               String?
+  defaultCertificateBgUrl String?
 
   updatedAt DateTime @updatedAt
 }
@@ -341,25 +346,30 @@ model Document {
 }
 
 model Course {
-  id          String     @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
-  description String?    @db.Text
+  description String?  @db.Text
   imageUrl    String?
-  active      Boolean    @default(false)
-  price       Decimal?   @default(0.00) @db.Decimal(10, 2)
+  active      Boolean  @default(false)
+  price       Decimal? @default(0.00) @db.Decimal(10, 2)
   linkUrl     String?
-  purchases   Purchase[]
 
-  modules Module[]
+  // [NOVO] Define onde esse curso vai aparecer
+  category         CourseCategory @default(COMMUNITY)
+  certificateBgUrl String?
+  certificates     Certificate[]
+
+  purchases Purchase[]
+  modules   Module[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Purchase {
-  id       String @id @default(cuid())
-  userId   String
-  courseId String
+  id            String  @id @default(cuid())
+  userId        String
+  courseId      String
   isManualGrant Boolean @default(false)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -380,7 +390,7 @@ model Module {
   courseId String
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  lessons         Lesson[]
+  lessons   Lesson[]
   materials ModuleMaterial[]
 }
 
@@ -442,6 +452,33 @@ model ModuleMaterial {
   createdAt DateTime @default(now())
 }
 
+model Mentorship {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  videoUrl    String // Pode ser URL do Blob ou Youtube
+  sourceType  String // "YOUTUBE" ou "UPLOAD"
+  date        DateTime @default(now()) // Data que a mentoria ocorreu
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Certificate {
+  id   String @id @default(cuid())
+  code String @unique // Código de validação (ex: FITO-XP92-...)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  issuedAt DateTime @default(now())
+
+  @@unique([userId, courseId]) // Um certificado por curso por usuário
+}
+
 enum LeadStatus {
   NEW
   CONTACTED
@@ -459,4 +496,14 @@ enum PaymentStatus {
   PENDING
   PAID
   CANCELED
+}
+
+enum CourseCategory {
+  COMMUNITY
+  SPECIALIZATION
+}
+
+enum SubscriptionPlan {
+  COMMUNITY
+  SPECIALIZATION
 }

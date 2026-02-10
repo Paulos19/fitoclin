@@ -4,16 +4,20 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { del, put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
+import { CourseCategory } from "@prisma/client"; // Certifique-se de ter rodado o prisma generate
 
-// 1. Listar Cursos (Agora com módulos e materiais para edição no Dashboard)
-export async function getCourses() {
+// 1. Listar Cursos (Com filtro de Categoria)
+export async function getCourses(category?: CourseCategory) {
+  const whereClause = category ? { category } : {};
+
   const courses = await db.course.findMany({
+    where: whereClause,
     include: {
       modules: {
         orderBy: { order: 'asc' },
         include: {
           lessons: { orderBy: { order: 'asc' } },
-          materials: true // 👈 ESSENCIAL: Carrega os materiais para o Modal de Edição
+          materials: true
         }
       },
       _count: { select: { modules: true } }
@@ -46,7 +50,7 @@ export async function getCourseContent(courseId: string) {
               }
             }
           },
-          materials: true // Carrega materiais para o aluno baixar
+          materials: true
         }
       }
     }
@@ -108,7 +112,7 @@ export async function addModuleMaterial(formData: FormData) {
       data: { moduleId, title, url: blob.url, type },
     });
 
-    revalidatePath(`/dashboard/courses`); // Atualiza a lista para aparecer no modal
+    revalidatePath(`/dashboard/courses`);
     return { success: "Material adicionado com sucesso!" };
 
   } catch (error) {
@@ -122,8 +126,8 @@ export async function deleteModuleMaterial(materialId: string, url: string) {
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
   try {
-    if (url) await del(url); // Remove do Vercel Blob
-    await db.moduleMaterial.delete({ where: { id: materialId } }); // Remove do Banco
+    if (url) await del(url);
+    await db.moduleMaterial.delete({ where: { id: materialId } });
     
     revalidatePath(`/dashboard/courses`);
     return { success: "Material removido!" };
@@ -167,20 +171,34 @@ export async function upsertCourse(data: any) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
-  const { id, title, description, imageUrl, active, price, modules } = data;
+  // Adicionado o campo category na desestruturação
+  const { id, title, description, imageUrl, active, price, modules, category } = data;
 
   try {
-    // 1. Curso Base
+    // 1. Curso Base (incluindo category)
     const course = await db.course.upsert({
       where: { id: id || "new" },
-      create: { title, description, imageUrl, active, price },
-      update: { title, description, imageUrl, active, price },
+      create: { 
+        title, 
+        description, 
+        imageUrl, 
+        active, 
+        price,
+        category: category || "COMMUNITY" // Default caso venha vazio
+      },
+      update: { 
+        title, 
+        description, 
+        imageUrl, 
+        active, 
+        price,
+        category 
+      },
     });
 
     // 2. Sincronizar Módulos
     const moduleIdsInForm = modules.filter((m: any) => m.id).map((m: any) => m.id);
 
-    // Deleta módulos removidos da UI
     await db.module.deleteMany({
       where: {
         courseId: course.id,
@@ -195,7 +213,6 @@ export async function upsertCourse(data: any) {
         update: { title: mod.title, order: mIndex }
       });
 
-      // Refazer aulas (Delete + Create é mais seguro para garantir ordem e limpeza)
       await db.lesson.deleteMany({ where: { moduleId: currentModule.id } });
 
       if (mod.lessons && mod.lessons.length > 0) {
@@ -211,6 +228,7 @@ export async function upsertCourse(data: any) {
     }
 
     revalidatePath("/dashboard/courses");
+    revalidatePath("/specialization"); // Revalida a nova página também
     return { success: "Curso salvo com sucesso!" };
 
   } catch (error) {

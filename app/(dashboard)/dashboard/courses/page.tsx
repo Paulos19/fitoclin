@@ -16,7 +16,7 @@ export default async function CoursesPage() {
   // 🔴 VISÃO DE ADMIN (Gestão)
   // ==========================================
   if (user.role === "ADMIN") {
-    // 1. Busca os dados completos para gestão
+    // 1. Busca TUDO para gestão (Comunidade e Especialização)
     const rawCourses = await db.course.findMany({
         include: {
         modules: {
@@ -30,7 +30,6 @@ export default async function CoursesPage() {
         orderBy: { createdAt: 'desc' }
     });
 
-    // 2. Serialização para evitar erros de Decimal
     const courses = rawCourses.map((course) => ({
         ...course,
         price: Number(course.price),
@@ -43,10 +42,11 @@ export default async function CoursesPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Gestão de Cursos</h1>
-                    <p className="text-gray-400">Crie, edite e gerencie o acesso aos seus conteúdos.</p>
+                    <p className="text-gray-400">Crie, edite e gerencie cursos da Comunidade e Especialização.</p>
                 </div>
                 <GrantAccessDialog courses={simpleCourses} />
             </div>
+            {/* O CoursesManager deve ter um select para 'category' agora */}
             <CoursesManager courses={courses} />
         </div>
     );
@@ -55,43 +55,46 @@ export default async function CoursesPage() {
   // ==========================================
   // 🔵 VISÃO DE ALUNO / PACIENTE (Área de Membros)
   // ==========================================
-  // Verifica se é USER ou PATIENT (ambos podem consumir cursos)
   if (user.role === "USER" || user.role === "PATIENT") {
-      // 1. Buscar Cursos Comprados
+      // 1. Buscar Cursos Comprados (Mostra TODOS que eu tenho, independente da categoria)
       const purchases = await db.purchase.findMany({
         where: { userId: user.id },
         include: { 
            course: { 
               include: { 
-                 _count: { select: { modules: true } } // Necessário para o card
+                 _count: { select: { modules: true } }
               } 
            } 
         }
       });
   
-      // 2. Buscar Todos os Cursos Ativos (Vitrine)
-      const allCourses = await db.course.findMany({
-        where: { active: true },
+      // 2. Buscar Vitrine: APENAS COMUNIDADE (Active + Category=COMMUNITY)
+      // Os de Especialização ficam na página /specialization
+      const allCommunityCourses = await db.course.findMany({
+        where: { 
+            active: true,
+            category: "COMMUNITY" // 👈 Filtro Importante
+        },
         include: { 
            _count: { select: { modules: true } } 
         },
         orderBy: { createdAt: 'desc' }
       });
   
-      // 3. Filtrar para saber quais estão disponíveis para compra
+      // 3. Filtrar para não mostrar o que já comprei
       const purchasedIds = purchases.map(p => p.courseId);
-      const availableCourses = allCourses.filter(c => !purchasedIds.includes(c.id));
+      const availableCourses = allCommunityCourses.filter(c => !purchasedIds.includes(c.id));
   
       return (
         <div className="space-y-10 animate-in fade-in duration-700">
-           
+            
            {/* Header da Página */}
            <div className="flex flex-col gap-2 border-b border-[#2A5432]/30 pb-6">
-                <h1 className="text-3xl font-bold text-white tracking-tight">Centro de Aprendizado</h1>
-                <p className="text-gray-400">Gerencie seus estudos e descubra novos conteúdos.</p>
+                <h1 className="text-3xl font-bold text-white tracking-tight">Comunidade Fitoclin</h1>
+                <p className="text-gray-400">Seus cursos e conteúdos da comunidade.</p>
            </div>
   
-           {/* Seção 1: Meus Cursos (Já comprados) */}
+           {/* Seção 1: Meus Cursos */}
            <div>
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                  <GraduationCap className="w-6 h-6 text-[#76A771]" /> Meus Cursos
@@ -100,13 +103,13 @@ export default async function CoursesPage() {
                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {purchases.map((purchase) => (
                        <div key={purchase.id} className="h-full">
-                         <CourseCard 
-                            course={{
-                              ...purchase.course,
-                              price: Number(purchase.course.price),
-                              _count: purchase.course._count
-                            }}
-                         />
+                          <CourseCard 
+                             course={{
+                               ...purchase.course,
+                               price: Number(purchase.course.price),
+                               _count: purchase.course._count
+                             }}
+                          />
                        </div>
                     ))}
                  </div>
@@ -120,16 +123,15 @@ export default async function CoursesPage() {
               )}
            </div>
   
-           {/* Seção 2: Vitrine (Disponíveis para compra) */}
+           {/* Seção 2: Vitrine da Comunidade */}
            {availableCourses.length > 0 && (
               <div>
                  <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <Sparkles className="w-6 h-6 text-yellow-500" /> Explore Novos Conhecimentos
+                    <Sparkles className="w-6 h-6 text-yellow-500" /> Disponível na Comunidade
                  </h2>
                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {availableCourses.map((course) => (
                        <div key={course.id} className="relative">
-                          {/* Card Bloqueado Visualmente */}
                           <CourseCard 
                              course={{
                                ...course,
@@ -138,8 +140,6 @@ export default async function CoursesPage() {
                              }}
                              isLocked={true}
                           />
-                          
-                          {/* Overlay de Cadeado Extra */}
                           <div className="absolute top-4 right-4 z-20 pointer-events-none">
                              <div className="bg-black/60 p-1.5 rounded-full backdrop-blur-sm border border-white/10">
                                 <Lock className="w-4 h-4 text-white/90" />
@@ -154,6 +154,5 @@ export default async function CoursesPage() {
       );
   }
 
-  // Fallback para outras roles (ex: Secretária não tem acesso aqui)
   return redirect("/dashboard");
 }

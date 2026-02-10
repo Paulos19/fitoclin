@@ -23,7 +23,9 @@ import {
   Sparkles,
   Wallet2,
   Library,
-  Lock
+  Lock,
+  Video, // Novo ícone para mentorias
+  Crown  // Novo ícone para área de especialização
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
@@ -35,16 +37,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// ... (Outros menus Admin, Secretary, Professional mantidos) ...
+// === ATUALIZAÇÃO NO MENU ADMIN ===
 const adminLinks = [
   { name: "Visão Geral", href: "/dashboard", icon: LayoutDashboard },
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
   { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
+  
+  // Seção Acadêmica
   { name: "Gestão de Cursos", href: "/dashboard/courses", icon: Library },
+  { name: "Gestão de Mentorias", href: "/dashboard/mentorships", icon: Video }, // [NOVO]
+  
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
+  
+  // Acesso Direto às Áreas (Opcional, mas útil para ver como está ficando)
+  { name: "Ver Especialização", href: "/specialization", icon: Crown }, // [NOVO]
 ];
 
 const secretaryLinks = [
@@ -76,18 +85,16 @@ const patientLinks = [
   { name: "Meu Plano", href: "/subscription", icon: Wallet2 },
 ];
 
-// 👇 NOVO MENU: User (Aluno)
 const userLinks = [
   { name: "Meu Painel", href: "/dashboard", icon: LayoutDashboard },
   { name: "Meus Cursos", href: "/dashboard/courses", icon: GraduationCap },
-  // Se tiver acesso à comunidade, o link direto pode ser útil aqui ou no card abaixo
   { name: "Certificados", href: "/dashboard/certificates", icon: FileText }, 
   { name: "Meu Perfil", href: "/dashboard/profile", icon: UserCircle },
 ];
 
 interface SidebarProps {
   role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
-  isSubscribed?: boolean; // Usado para checar acesso à comunidade
+  isSubscribed?: boolean; 
 }
 
 export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
@@ -226,7 +233,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                    // SEM ACESSO: Card Bloqueado/Cinza
                    <Link href="/subscription">
                       <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-gray-700 to-gray-600 hover:from-[#76A771] hover:to-[#2A5432] transition-colors">
-                         <div className="bg-[#051F12] p-3 rounded-[11px] flex items-center gap-3">
+                          <div className="bg-[#051F12] p-3 rounded-[11px] flex items-center gap-3">
                             <div className="p-1.5 rounded-lg bg-gray-800 text-gray-400 group-hover:text-[#76A771] transition-colors">
                                <Lock className="w-5 h-5" />
                             </div>
@@ -234,7 +241,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                                <span className="text-sm font-bold text-gray-300 group-hover:text-white">Comunidade</span>
                                <span className="text-[10px] text-gray-500 group-hover:text-[#76A771]">Adquira seu acesso</span>
                             </div>
-                         </div>
+                          </div>
                       </div>
                    </Link>
                 )}
@@ -258,6 +265,42 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
               </Tooltip>
             )}
           </div>
+        )}
+
+        {/* --- CARD DE ESPECIALIZAÇÃO (PARA ADMIN) --- */}
+        {role === "ADMIN" && (
+            <div className="px-3 mb-2 mt-2">
+                {!isCollapsed ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <Link href="/specialization">
+                            <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-purple-500 via-purple-300 to-purple-600">
+                                <div className="relative flex items-center gap-3 bg-[#051F12] group-hover:bg-purple-900/20 rounded-[11px] px-3 py-3 transition-all">
+                                    <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                                        <Crown className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-purple-200">Especialização</span>
+                                        <span className="text-[10px] text-purple-400/80 uppercase">Área VIP</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+                    </motion.div>
+                ) : (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Link href="/specialization" className="flex justify-center w-full">
+                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-purple-900/50 border border-purple-500 text-purple-300 hover:bg-purple-500 hover:text-white transition-all">
+                                    <Crown className="w-5 h-5" />
+                                </div>
+                            </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="bg-purple-900 border-purple-500 text-white ml-2">
+                            Acessar Especialização
+                        </TooltipContent>
+                    </Tooltip>
+                )}
+            </div>
         )}
 
         <div className="p-3 mt-auto">

@@ -1,13 +1,26 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
-import { updateLeadStatus } from "@/actions/crm";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { 
+  Phone, 
+  CalendarCheck, 
+  UserPlus, 
+  XCircle, 
+  MessageCircle, 
+  Loader2, 
+  ArrowRight,
+  RefreshCw,
+  MoreHorizontal
+} from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { Phone, CalendarCheck, UserPlus, XCircle } from "lucide-react";
-import Link from "next/link"; // Importante para o botão de agendar
+import { updateLeadStatus, getLeadsPaginated } from "@/actions/crm";
+import { cn } from "@/lib/utils";
 
-// Tipagem básica do Lead vinda do Prisma
+// --- TIPOS ---
 type Lead = {
   id: string;
   name: string;
@@ -19,95 +32,296 @@ type Lead = {
   createdAt: Date;
 };
 
-// Mapa de Cores e Ícones por Status
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  NEW: { label: "Novos", color: "bg-blue-100 text-blue-800", icon: UserPlus },
-  CONTACTED: { label: "Em Contato", color: "bg-yellow-100 text-yellow-800", icon: Phone },
-  SCHEDULED: { label: "Agendados", color: "bg-purple-100 text-purple-800", icon: CalendarCheck },
-  WON: { label: "Virou Paciente", color: "bg-green-100 text-green-800", icon: UserPlus },
-  LOST: { label: "Perdido", color: "bg-gray-100 text-gray-800", icon: XCircle },
+// Configuração de cores adaptada para o Tema Escuro (Fitoclin)
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgHeader: string; border: string; icon: any }> = {
+  NEW: { 
+    label: "Novos", 
+    color: "text-blue-400", 
+    bgHeader: "bg-blue-950/40", 
+    border: "border-blue-800/50",
+    icon: UserPlus 
+  },
+  CONTACTED: { 
+    label: "Em Contato", 
+    color: "text-yellow-400", 
+    bgHeader: "bg-yellow-950/40", 
+    border: "border-yellow-800/50",
+    icon: Phone 
+  },
+  SCHEDULED: { 
+    label: "Agendados", 
+    color: "text-purple-400", 
+    bgHeader: "bg-purple-950/40", 
+    border: "border-purple-800/50",
+    icon: CalendarCheck 
+  },
+  WON: { 
+    label: "Virou Paciente", 
+    color: "text-[#76A771]", // Secondary Brand Color
+    bgHeader: "bg-[#2A5432]/40", // Primary Brand Color
+    border: "border-[#76A771]/50",
+    icon: UserPlus 
+  },
+  LOST: { 
+    label: "Perdido", 
+    color: "text-red-400", 
+    bgHeader: "bg-red-950/40", 
+    border: "border-red-900/50",
+    icon: XCircle 
+  },
 };
 
-export function KanbanBoard({ leads }: { leads: Lead[] }) {
+// --- 1. COMPONENTE DO CARD (LeadCard) ---
+const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, onMove: (id: string, newStatus: string) => void }) => {
   
-  async function handleMove(id: string, newStatus: string) {
-    const res = await updateLeadStatus(id, newStatus);
-    if (res.success) toast.success("Lead movido!");
-    else toast.error("Erro ao mover.");
-  }
-
-  // Colunas visíveis
-  const COLUMNS = ["NEW", "CONTACTED", "SCHEDULED", "WON"];
+  const openWhatsApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const cleanPhone = lead.phone.replace(/\D/g, '');
+    const fullPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
+    const message = encodeURIComponent(`Olá ${lead.name}, tudo bem? Sou da Clínica Fitoclin.`);
+    window.open(`https://wa.me/${fullPhone}?text=${message}`, '_blank');
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[calc(100vh-200px)] overflow-x-auto pb-4">
-      {COLUMNS.map((statusKey) => {
-        const config = STATUS_CONFIG[statusKey];
-        const columnLeads = leads.filter((l) => l.status === statusKey);
-
-        return (
-          <div key={statusKey} className="flex flex-col gap-4 bg-muted/30 p-4 rounded-xl min-w-[280px]">
-            {/* Cabeçalho da Coluna */}
-            <div className={`flex items-center justify-between border-b pb-2 mb-2 ${config.color.split(' ')[1]} border-opacity-20`}>
-                <div className="flex items-center gap-2 font-bold text-sm uppercase">
-                    <config.icon className="w-4 h-4" />
-                    {config.label}
-                </div>
-                <Badge variant="secondary">{columnLeads.length}</Badge>
-            </div>
-
-            {/* Lista de Cards */}
-            <div className="flex flex-col gap-3 overflow-y-auto pr-1 custom-scrollbar">
-              {columnLeads.map((lead) => (
-                <Card key={lead.id} className="shadow-sm hover:shadow-md transition-shadow cursor-default">
-                  <CardContent className="p-3 space-y-2">
-                    <div className="flex justify-between items-start">
-                        <span className="font-semibold truncate text-sm" title={lead.name}>{lead.name}</span>
-                        <Badge variant="outline" className="text-[10px] h-5">{lead.source}</Badge>
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground flex flex-col gap-1">
-                        <span className="flex items-center gap-1"><Phone className="w-3 h-3"/> {lead.phone}</span>
-                        {lead.email && <span className="truncate" title={lead.email}>{lead.email}</span>}
-                        {lead.notes && <div className="bg-yellow-50 p-1 rounded text-yellow-800 mt-1 italic">"{lead.notes}"</div>}
-                    </div>
-
-                    {/* Área de Ações (Botões) */}
-                    <div className="pt-3 mt-1 border-t flex flex-wrap gap-2 justify-end">
-                        
-                        {/* Botão de Agendar (Aparece em Scheduled ou Won) */}
-                        {(statusKey === 'SCHEDULED' || statusKey === 'WON') && (
-                          <Link 
-                            href={`/dashboard/schedule?newPatientName=${encodeURIComponent(lead.name)}`}
-                            className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700 flex items-center gap-1 shadow-sm transition-colors"
-                          >
-                            <CalendarCheck className="w-3 h-3" /> Agendar
-                          </Link>
-                        )}
-
-                        {/* Botões de Mover Status */}
-                        {statusKey === 'NEW' && (
-                             <button onClick={() => handleMove(lead.id, 'CONTACTED')} className="text-xs border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors">Contatado →</button>
-                        )}
-                        {statusKey === 'CONTACTED' && (
-                             <button onClick={() => handleMove(lead.id, 'SCHEDULED')} className="text-xs border border-purple-200 bg-purple-50 text-purple-700 px-2 py-1 rounded hover:bg-purple-100 transition-colors">Agendou →</button>
-                        )}
-                        {statusKey === 'SCHEDULED' && (
-                             <button onClick={() => handleMove(lead.id, 'WON')} className="text-xs border border-green-200 bg-green-50 text-green-700 px-2 py-1 rounded hover:bg-green-100 transition-colors">Virou Paciente</button>
-                        )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {columnLeads.length === 0 && (
-                <div className="text-center py-8 text-xs text-muted-foreground border-2 border-dashed rounded-lg opacity-50">
-                    Vazio
-                </div>
-              )}
+    <div className="group relative bg-[#0A311D] rounded-xl border border-[#2A5432]/50 hover:border-[#76A771] shadow-sm hover:shadow-[0_0_15px_-5px_rgba(118,167,113,0.3)] transition-all duration-300 p-4 flex flex-col gap-3">
+      {/* Header do Card */}
+      <div className="flex justify-between items-start gap-3">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <Avatar className="h-9 w-9 border border-[#2A5432]">
+            <AvatarFallback className="bg-[#051F12] text-[#76A771] text-xs font-bold">
+              {lead.name.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col truncate">
+            <span className="font-semibold text-sm text-[#F1F1F1] truncate" title={lead.name}>
+              {lead.name}
+            </span>
+            <div className="flex items-center gap-2 text-[10px] text-[#F1F1F1]/60">
+              <span>{new Date(lead.createdAt).toLocaleDateString()}</span>
+              <span className="w-1 h-1 rounded-full bg-[#2A5432]" />
+              <span className="uppercase tracking-wider">{lead.source}</span>
             </div>
           </div>
-        );
-      })}
+        </div>
+        <Button 
+          size="icon" 
+          variant="ghost" 
+          className="h-7 w-7 text-[#76A771] hover:bg-[#76A771]/20 hover:text-white transition-all"
+          onClick={openWhatsApp}
+          title="Chamar no WhatsApp"
+        >
+          <MessageCircle className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Infos */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-xs text-[#F1F1F1]/80 bg-[#062214] px-2 py-1.5 rounded-md border border-[#2A5432]/30">
+          <Phone className="w-3 h-3 text-[#76A771]" />
+          {lead.phone}
+        </div>
+        {lead.notes && (
+          <div className="text-[11px] text-[#F1F1F1]/70 bg-[#2A5432]/10 p-2 rounded-md border border-[#2A5432]/30 italic line-clamp-2">
+            "{lead.notes}"
+          </div>
+        )}
+      </div>
+
+      {/* Ações (Aparecem suaves) */}
+      <div className="pt-3 mt-1 border-t border-[#2A5432]/30 flex items-center justify-between gap-2">
+        {/* Botão de Agendar */}
+        {(['CONTACTED', 'SCHEDULED', 'WON'].includes(statusKey)) ? (
+           <Link 
+             href={`/dashboard/schedule?newPatientName=${encodeURIComponent(lead.name)}`}
+             className="flex-1 text-xs flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-[#2A5432]/40 text-[#76A771] hover:bg-[#76A771] hover:text-[#062214] border border-[#2A5432] transition-all font-medium"
+           >
+             <CalendarCheck className="w-3.5 h-3.5" /> Agendar
+           </Link>
+        ) : (
+           <div className="flex-1"></div>
+        )}
+
+        {/* Botão de Mover Próximo Passo */}
+        <div className="ml-auto">
+            {statusKey === 'NEW' && (
+            <Button size="sm" variant="ghost" className="text-xs h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30" onClick={() => onMove(lead.id, 'CONTACTED')}>
+                Contatar <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+            )}
+            {statusKey === 'CONTACTED' && (
+            <Button size="sm" variant="ghost" className="text-xs h-7 text-purple-400 hover:text-purple-300 hover:bg-purple-900/30" onClick={() => onMove(lead.id, 'SCHEDULED')}>
+                Agendou <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+            )}
+            {statusKey === 'SCHEDULED' && (
+            <Button size="sm" variant="ghost" className="text-xs h-7 text-[#76A771] hover:text-[#A4D49E] hover:bg-[#2A5432]/30" onClick={() => onMove(lead.id, 'WON')}>
+                Virou Paciente <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- 2. COMPONENTE DA COLUNA (KanbanColumn) ---
+const KanbanColumn = ({ 
+  statusKey, 
+  refreshTrigger,
+  onLeadMoved 
+}: { 
+  statusKey: string, 
+  refreshTrigger: number,
+  onLeadMoved: (id: string, from: string, to: string) => void 
+}) => {
+  const config = STATUS_CONFIG[statusKey];
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const fetchLeads = useCallback(async (pageNum: number, shouldReset = false) => {
+    if (loading) return;
+    setLoading(true);
+
+    const res = await getLeadsPaginated(statusKey, pageNum);
+
+    if (res.success && res.data) {
+      setLeads(prev => shouldReset ? res.data : [...prev, ...res.data]);
+      setHasMore(res.data.length === 10); 
+    } else {
+      setHasMore(false);
+    }
+    setLoading(false);
+  }, [statusKey]); 
+
+  // Carga inicial
+  useEffect(() => {
+    fetchLeads(1, true);
+  }, []);
+
+  // Recarregar quando necessário
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      setPage(1);
+      setHasMore(true);
+      fetchLeads(1, true);
+    }
+  }, [refreshTrigger, fetchLeads]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchLeads(nextPage);
+    }
+  };
+
+  const handleMove = async (id: string, newStatus: string) => {
+    // UI Otimista
+    setLeads(prev => prev.filter(l => l.id !== id));
+    
+    const res = await updateLeadStatus(id, newStatus);
+
+    if (res.success) {
+      toast.success("Lead atualizado");
+      onLeadMoved(id, statusKey, newStatus);
+    } else {
+      toast.error("Erro ao mover");
+      fetchLeads(1, true);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full min-w-[300px] max-w-[300px] rounded-xl bg-[#062214] border border-[#2A5432]/30 shadow-lg overflow-hidden">
+      
+      {/* Header Fixo da Coluna */}
+      <div className={cn("p-3 border-b border-[#2A5432]/30 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md", config.bgHeader)}>
+        <div className="flex items-center gap-2">
+          <div className={cn("p-1.5 rounded-md bg-[#062214]/50 border border-white/5", config.color)}>
+            <config.icon className="w-4 h-4" />
+          </div>
+          <span className={cn("font-bold text-xs uppercase tracking-widest", config.color)}>
+            {config.label}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 text-[#F1F1F1]/50 hover:text-[#F1F1F1]" 
+                onClick={() => fetchLeads(1, true)}
+            >
+                <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
+            </Button>
+            <Badge variant="outline" className="bg-[#062214] text-[#F1F1F1]/70 border-[#2A5432]/50 text-[10px] h-5">
+               {leads.length}{hasMore ? '+' : ''}
+            </Badge>
+        </div>
+      </div>
+
+      {/* Corpo com Scroll Individual e Custom Scrollbar */}
+      <div 
+        className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar"
+        onScroll={handleScroll}
+        ref={scrollRef}
+      >
+        {leads.map((lead) => (
+          <LeadCard 
+            key={lead.id} 
+            lead={lead} 
+            statusKey={statusKey} 
+            onMove={handleMove} 
+          />
+        ))}
+
+        {leads.length === 0 && !loading && (
+          <div className="h-32 flex flex-col items-center justify-center text-[#F1F1F1]/20 border-2 border-dashed border-[#2A5432]/30 rounded-xl">
+            <UserPlus className="w-8 h-8 mb-2 opacity-20" />
+            <span className="text-xs">Vazio</span>
+          </div>
+        )}
+
+        {loading && (
+          <div className="py-4 flex justify-center">
+            <Loader2 className="w-5 h-5 animate-spin text-[#76A771]" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- 3. COMPONENTE PAI (KanbanBoard) ---
+export function KanbanBoard() {
+  const COLUMNS = ["NEW", "CONTACTED", "SCHEDULED", "WON"];
+  const [refreshTriggers, setRefreshTriggers] = useState<Record<string, number>>({
+    NEW: 0, CONTACTED: 0, SCHEDULED: 0, WON: 0, LOST: 0
+  });
+
+  const handleLeadMoved = (id: string, from: string, to: string) => {
+    setRefreshTriggers(prev => ({
+      ...prev,
+      [to]: (prev[to] || 0) + 1
+    }));
+  };
+
+  return (
+    // Altura calculada para caber exatamente na tela (100vh - Header ~100px - Padding)
+    <div className="h-[calc(100vh-140px)] w-full overflow-x-auto pb-2 custom-scrollbar">
+      <div className="flex h-full gap-4 px-1 min-w-max">
+        {COLUMNS.map((status) => (
+          <KanbanColumn
+            key={status}
+            statusKey={status}
+            refreshTrigger={refreshTriggers[status]}
+            onLeadMoved={handleLeadMoved}
+          />
+        ))}
+      </div>
     </div>
   );
 }

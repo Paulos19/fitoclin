@@ -35,9 +35,18 @@ import {
   GripVertical, 
   Image as ImageIcon,
   Upload,
-  FileText
+  FileText,
+  Crown // [NOVO] Ícone para Especialização
 } from "lucide-react";
-// 👇 Importação atualizada com deleteModuleMaterial
+// [NOVO] Imports do Select
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { upsertCourse, deleteCourse, uploadCourseImage, deleteModuleMaterial } from "@/actions/courses";
 import { MaterialUploadForm } from "@/components/dashboard/courses/material-upload-form";
 import { toast } from "sonner";
@@ -77,6 +86,7 @@ type CourseForm = {
   imageUrl: string;
   active: boolean;
   price: number;
+  category: "COMMUNITY" | "SPECIALIZATION"; // [NOVO] Campo de Categoria
   modules: Module[];
 };
 
@@ -98,6 +108,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     imageUrl: "",
     active: true,
     price: 0,
+    category: "COMMUNITY", // [NOVO] Padrão
     modules: []
   };
 
@@ -134,6 +145,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         imageUrl: course.imageUrl ?? "",
         active: !!course.active,
         price: Number(course.price) || 0,
+        category: course.category || "COMMUNITY", // [NOVO] Carrega a categoria
         modules: cleanModules
       });
       setImagePreview(course.imageUrl || null);
@@ -307,7 +319,16 @@ export function CoursesManager({ courses }: { courses: any[] }) {
       {/* --- LISTA DE CURSOS (CARD VIEW) --- */}
       <div className="grid gap-6">
         {courses.map((course) => (
-          <Card key={course.id} className="bg-[#0A311D]/50 border-[#2A5432]/30 overflow-hidden">
+          <Card key={course.id} className="bg-[#0A311D]/50 border-[#2A5432]/30 overflow-hidden relative">
+            {/* [NOVO] Badge de Especialização na Lista */}
+            {course.category === "SPECIALIZATION" && (
+                <div className="absolute top-2 right-2 z-10">
+                    <Badge className="bg-purple-600 hover:bg-purple-700 text-white border-none flex gap-1 items-center shadow-lg">
+                        <Crown className="w-3 h-3 text-yellow-300" /> Especialização
+                    </Badge>
+                </div>
+            )}
+
             {course.imageUrl && (
                 <div className="relative h-40 w-full bg-black/20">
                     <Image src={course.imageUrl} alt={course.title} fill className="object-cover opacity-80" />
@@ -344,13 +365,13 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                      <FileText className="w-3 h-3" /> Materiais (Resumo)
                   </h3>
                   <div className="space-y-1">
-                     {course.modules.flatMap((m: any) => m.materials || []).slice(0, 3).map((mat: any) => (
-                        <div key={mat.id} className="text-xs text-gray-500 truncate flex items-center gap-1">
+                      {course.modules.flatMap((m: any) => m.materials || []).slice(0, 3).map((mat: any) => (
+                         <div key={mat.id} className="text-xs text-gray-500 truncate flex items-center gap-1">
                             <span className="w-1 h-1 rounded-full bg-[#76A771]"></span>
                             {mat.title}
-                        </div>
-                     ))}
-                     {course.modules.flatMap((m: any) => m.materials || []).length === 0 && <span className="text-[10px] text-gray-600">Nenhum material</span>}
+                         </div>
+                      ))}
+                      {course.modules.flatMap((m: any) => m.materials || []).length === 0 && <span className="text-[10px] text-gray-600">Nenhum material</span>}
                   </div>
                </div>
             </CardContent>
@@ -397,6 +418,25 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                             className="bg-[#0A311D] border-[#2A5432]" 
                         />
                     </div>
+                    {/* [NOVO] SELETOR DE CATEGORIA */}
+                    <div className="space-y-2">
+                        <Label>Categoria</Label>
+                        <Select
+                            value={formData.category}
+                            onValueChange={(value: "COMMUNITY" | "SPECIALIZATION") => setFormData({ ...formData, category: value })}
+                        >
+                            <SelectTrigger className="bg-[#0A311D] border-[#2A5432] text-white">
+                                <SelectValue placeholder="Selecione a categoria" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#0A311D] border-[#2A5432] text-white">
+                                <SelectItem value="COMMUNITY">Comunidade (Padrão)</SelectItem>
+                                <SelectItem value="SPECIALIZATION">Especialização (Premium)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label>Preço (R$)</Label>
                         <Input 
@@ -406,7 +446,15 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                             className="bg-[#0A311D] border-[#2A5432]" 
                         />
                     </div>
+                    <div className="flex items-center space-x-2 pt-8">
+                        <Switch 
+                            checked={!!formData.active} 
+                            onCheckedChange={(c) => setFormData({...formData, active: c})} 
+                        />
+                        <Label>Curso Ativo</Label>
+                    </div>
                 </div>
+
                 <div className="space-y-2">
                     <Label>Descrição</Label>
                     <Textarea 
@@ -414,13 +462,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                         onChange={(e) => setFormData({...formData, description: e.target.value})}
                         className="bg-[#0A311D] border-[#2A5432] h-20" 
                     />
-                </div>
-                <div className="flex items-center space-x-2">
-                    <Switch 
-                        checked={!!formData.active} 
-                        onCheckedChange={(c) => setFormData({...formData, active: c})} 
-                    />
-                    <Label>Curso Ativo</Label>
                 </div>
             </div>
 
@@ -438,7 +479,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                         const moduleKey = module.id || module.tempId || `mod-${mIndex}`;
                         
                         // Lógica Híbrida: Busca materiais "vivos" do DB para evitar conflito com state local
-                        // Se o curso existe no DB, pegamos os materiais atualizados dele
                         const liveModule = courses.find(c => c.id === formData.id)?.modules.find((m: any) => m.id === module.id);
                         const materialsToShow = liveModule ? liveModule.materials : (module.materials || []);
 
@@ -448,10 +488,10 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                 <GripVertical className="w-4 h-4 text-gray-600 cursor-grab" />
                                 <AccordionTrigger className="hover:no-underline py-2 flex-1 data-[state=open]:text-[#76A771]">
                                     <Input 
-                                        value={module.title ?? ""}
-                                        onChange={(e) => updateModule(mIndex, e.target.value)}
-                                        className="h-9 bg-transparent border-transparent hover:border-[#2A5432] focus:bg-[#062214] text-white font-bold w-full max-w-sm"
-                                        onClick={(e) => e.stopPropagation()} 
+                                            value={module.title ?? ""}
+                                            onChange={(e) => updateModule(mIndex, e.target.value)}
+                                            className="h-9 bg-transparent border-transparent hover:border-[#2A5432] focus:bg-[#062214] text-white font-bold w-full max-w-sm"
+                                            onClick={(e) => e.stopPropagation()} 
                                     />
                                 </AccordionTrigger>
                                 <Button size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:bg-red-900/20" onClick={() => removeModule(mIndex)}>
@@ -492,14 +532,13 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                         <Plus className="w-3 h-3 mr-2" /> Adicionar Aula
                                     </Button>
 
-                                    {/* GESTÃO DE MATERIAIS (DENTRO DO MODAL) */}
+                                    {/* GESTÃO DE MATERIAIS */}
                                     <div className="pt-4 border-t border-[#2A5432]/30 mt-4">
                                         <div className="flex justify-between items-center mb-2">
                                             <Label className="text-[#76A771] text-xs uppercase font-bold flex items-center gap-2">
                                                 <FileText className="w-3 h-3" /> Materiais de Apoio
                                             </Label>
                                             
-                                            {/* Botão de Upload (Só aparece se o módulo já foi salvo no banco) */}
                                             {module.id ? (
                                                 <Dialog>
                                                     <DialogTrigger asChild>
@@ -520,7 +559,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                             )}
                                         </div>
 
-                                        {/* Lista de Materiais */}
                                         <div className="space-y-2">
                                             {materialsToShow?.map((mat: any) => (
                                                 <div key={mat.id} className="flex items-center justify-between p-2 bg-[#062214]/50 border border-[#2A5432]/30 rounded text-xs text-gray-300">

@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
       
       // ------------------------------------------------------------------
-      // CASO A: ASSINATURA (Plano Mensal ou CRM)
+      // CASO A: ASSINATURA (Plano Mensal, CRM ou Especialização)
       // ------------------------------------------------------------------
       if (session.mode === "subscription") {
         const subscription = await stripe.subscriptions.retrieve(
@@ -58,15 +58,22 @@ export async function POST(req: Request) {
         }
 
         const userId = session.metadata.userId;
-
-        // 1. Identificar se é o plano CRM para promover o usuário
         const priceId = subscription.items.data[0].price.id;
-        
-        // Remove espaços extras caso existam no .env
-        const crmPriceId = process.env.STRIPE_PRICE_ID_CRM?.trim();
-        const isCRMPlan = priceId === crmPriceId;
 
-        // 2. Salva a assinatura no banco
+        // --- LÓGICA DE IDENTIFICAÇÃO DO PLANO ---
+        const crmPriceId = process.env.STRIPE_PRICE_ID_CRM?.trim();
+        const specializationPriceId = process.env.STRIPE_SPECIALIZATION_PRICE_ID?.trim(); // Adicione ao .env
+
+        const isCRMPlan = priceId === crmPriceId;
+        const isSpecializationPlan = priceId === specializationPriceId;
+
+        // Define o Enum do Prisma baseado no preço
+        let planType: "COMMUNITY" | "SPECIALIZATION" = "COMMUNITY";
+        if (isSpecializationPlan) {
+            planType = "SPECIALIZATION";
+        }
+
+        // 1. Salva a assinatura no banco com o PLAN correto
         await db.subscription.upsert({
           where: { userId: userId },
           create: {
@@ -76,6 +83,7 @@ export async function POST(req: Request) {
             stripePriceId: priceId,
             stripeCurrentPeriodEnd: getSubscriptionEndDate(subscription),
             status: subscription.status,
+            plan: planType, // 👈 Salva o nível da assinatura
           },
           update: {
             stripeSubscriptionId: subscription.id,
@@ -83,28 +91,27 @@ export async function POST(req: Request) {
             stripePriceId: priceId,
             stripeCurrentPeriodEnd: getSubscriptionEndDate(subscription),
             status: subscription.status,
+            plan: planType, // 👈 Atualiza caso mude de plano
           },
         });
 
-        // 3. ATUALIZA O USUÁRIO (Role + Stripe ID)
+        // 2. ATUALIZA O USUÁRIO (Role + Stripe ID)
         // Se for CRM, promove para PROFESSIONAL.
         if (isCRMPlan) {
            await db.user.update({
              where: { id: userId },
              data: { 
                stripeCustomerId: subscription.customer as string,
-               role: "PROFESSIONAL" // 👈 AQUI ACONTECE A MÁGICA
+               role: "PROFESSIONAL" 
              }
            });
            console.log(`🆙 User ${userId} promovido para PROFESSIONAL (Plano CRM)`);
            
-           // Buscar dados para enviar email
            const user = await db.user.findUnique({ 
-              where: { id: userId },
-              select: { name: true, email: true }
+             where: { id: userId },
+             select: { name: true, email: true }
            });
 
-           // Envia e-mail de boas-vindas específico do CRM
            if (user?.email) {
              await sendEmail({
                to: user.email,
@@ -112,16 +119,15 @@ export async function POST(req: Request) {
                html: getCRMWelcomeTemplate(user.name || "Profissional"),
              });
            }
-
         } else {
-           // Se for plano comum, apenas atualiza o ID do cliente
+           // Se for Community ou Specialization, apenas garante o ID do cliente
            await db.user.update({
              where: { id: userId },
              data: { stripeCustomerId: subscription.customer as string }
            });
         }
 
-        console.log(`✅ Assinatura processada para User: ${userId}`);
+        console.log(`✅ Assinatura processada para User: ${userId} | Plano: ${planType}`);
       }
 
       // ------------------------------------------------------------------
@@ -163,16 +169,22 @@ export async function POST(req: Request) {
 
       if (subscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        
+        // Verifica o plano novamente na renovação (caso tenha feito upgrade/downgrade)
+        const priceId = subscription.items.data[0].price.id;
+        const specializationPriceId = process.env.STRIPE_SPECIALIZATION_PRICE_ID?.trim();
+        const planType = priceId === specializationPriceId ? "SPECIALIZATION" : "COMMUNITY";
 
         await db.subscription.update({
           where: { stripeSubscriptionId: subscription.id },
           data: {
-            stripePriceId: subscription.items.data[0].price.id,
+            stripePriceId: priceId,
             stripeCurrentPeriodEnd: getSubscriptionEndDate(subscription),
             status: subscription.status,
+            plan: planType, // Atualiza o plano
           },
         });
-        console.log(`🔄 Assinatura renovada: ${subscription.id}`);
+        console.log(`🔄 Assinatura renovada: ${subscription.id} | Plano: ${planType}`);
       }
     }
 
@@ -183,18 +195,18 @@ export async function POST(req: Request) {
        const subscription = event.data.object as Stripe.Subscription;
        
        const existingSub = await db.subscription.findUnique({
-          where: { stripeSubscriptionId: subscription.id }
+         where: { stripeSubscriptionId: subscription.id }
        });
 
        if (existingSub) {
-          await db.subscription.update({
-            where: { stripeSubscriptionId: subscription.id },
-            data: { 
+         await db.subscription.update({
+           where: { stripeSubscriptionId: subscription.id },
+           data: { 
                status: subscription.status,
                stripeCurrentPeriodEnd: getSubscriptionEndDate(subscription) 
-            }
-          });
-          console.log(`⚠️ Status atualizado: ${subscription.status}`);
+           }
+         });
+         console.log(`⚠️ Status atualizado: ${subscription.status}`);
        }
     }
 

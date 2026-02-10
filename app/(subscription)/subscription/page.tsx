@@ -1,177 +1,104 @@
+// app/(subscription)/subscription/page.tsx
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { PricingCard } from "@/components/subscription/pricing-card";
 import { redirect } from "next/navigation";
-import { PLANS } from "@/config/plans";
+import { db } from "@/lib/db";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { 
-  Sparkles, 
-  Crown, 
-  PlayCircle, 
-  Users, 
-  ShieldCheck, 
-  ArrowRight,
-  Star,
-  Leaf
-} from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+// Importe sua função de checkout do Stripe aqui (ex: createCheckoutSession)
+// import { createCheckoutSession } from "@/actions/stripe";
 
 export default async function SubscriptionPage() {
   const session = await auth();
-  if (!session) redirect("/login");
+  if (!session) return redirect("/login");
 
-  const userSubscription = await db.subscription.findUnique({
-    where: { userId: session.user.id },
+  const subscription = await db.subscription.findUnique({
+    where: { userId: session.user.id }
   });
 
-  const hasActiveSubscription = userSubscription?.stripeCurrentPeriodEnd
-    ? userSubscription.stripeCurrentPeriodEnd.getTime() + 86_400_000 > Date.now()
-    : false;
+  const isCommunity = subscription?.plan === "COMMUNITY" && subscription?.status === "active";
+  const isSpecialization = subscription?.plan === "SPECIALIZATION" && subscription?.status === "active";
 
-  // Filtrar apenas o plano de Comunidade (Paciente)
-  const patientPlans = PLANS.filter(plan => plan.key === "monthly");
-
-  // =========================================================
-  // CENÁRIO 1: USUÁRIO JÁ É ASSINANTE
-  // =========================================================
-  if (hasActiveSubscription) {
-    return (
-      <div className="flex flex-col items-center justify-center w-full animate-in fade-in zoom-in duration-700 py-10">
-        <div className="group relative w-full aspect-[1.58/1] max-w-[500px] rounded-3xl overflow-hidden shadow-2xl transition-all hover:scale-[1.02]">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0A311D] via-[#062214] to-[#04150C] border border-white/10 z-0" />
-          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-[#D4AF37]/20 to-transparent opacity-50 blur-[60px]" />
-          <div className="relative z-10 p-8 h-full flex flex-col justify-between">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-[#D4AF37] font-bold text-lg tracking-widest">FITOCLIN</h3>
-                <p className="text-white/40 text-[10px] uppercase tracking-[0.2em]">Membro VIP</p>
-              </div>
-              <Crown className="text-[#D4AF37] w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-white/60 text-xs uppercase tracking-wider">Titular</p>
-              <p className="text-xl md:text-2xl font-medium text-white truncate">{session.user.name}</p>
-            </div>
-            <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-[#76A771] animate-pulse" />
-                 <span className="text-[#76A771] text-xs font-bold uppercase">Ativo</span>
-            </div>
-          </div>
-        </div>
-        <div className="mt-8">
-          <Link href="/community">
-            <Button className="h-12 px-8 rounded-full btn-gradient font-bold shadow-lg">
-              Acessar Área Exclusiva <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // =========================================================
-  // CENÁRIO 2: PÁGINA DE VENDAS (COMUNIDADE)
-  // =========================================================
   return (
-    <div className="flex flex-col items-center w-full max-w-[1200px] mx-auto animate-in slide-in-from-bottom-10 duration-700 pb-20">
-      
-      {/* 1. HEADER */}
-      <div className="text-center mb-12 space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#76A771] text-xs font-bold uppercase tracking-widest">
-           <Leaf className="w-3 h-3" /> Fitoclin Academy
-        </div>
-        <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-           Sua jornada de saúde natural começa aqui
-        </h1>
-        <p className="text-gray-400 max-w-2xl mx-auto">
-           Tenha acesso a protocolos de fitoterapia, aulas exclusivas e suporte em grupo.
+    <div className="container mx-auto py-10 px-4">
+      <div className="text-center mb-10 space-y-4">
+        <h1 className="text-4xl font-bold">Escolha seu Plano</h1>
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          Tenha acesso ao melhor conteúdo de fitoterapia e saúde integrativa.
         </p>
       </div>
 
-      {/* 2. CARD (ÚNICO) */}
-      <div className="flex flex-col items-center justify-center w-full px-4">
-        {patientPlans.map((plan) => {
-           if (!plan.priceId) return null; 
-
-           return (
-             <div 
-               key={plan.key} 
-               className="relative w-full max-w-md flex flex-col z-10"
-             >
-               <div className="absolute inset-0 bg-[#76A771]/10 blur-[60px] -z-10 rounded-full opacity-40" />
-               <PricingCard 
-                 planId={plan.key}
-                 priceId={plan.priceId}
-                 name={plan.name}
-                 price={plan.price}
-                 features={plan.features.join(";")}
-                 isPopular={true}
-               />
-             </div>
-           );
-        })}
-      </div>
-
-      <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-500 mb-20">
-         <ShieldCheck className="w-4 h-4 text-[#76A771]" />
-         <span>Pagamento 100% seguro. Acesso imediato.</span>
-      </div>
-
-      {/* 3. BENEFÍCIOS */}
-      <div className="w-full max-w-5xl px-4 border-t border-white/5 pt-20">
-         
-         <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-6">
-              O que você recebe na <span className="text-[#76A771]">Comunidade?</span>
-            </h2>
-         </div>
-
-         <div className="grid md:grid-cols-3 gap-6">
-            <BenefitItem 
-               icon={PlayCircle}
-               title="Aulas de Auto-cuidado" 
-               desc="Conteúdos práticos para você aplicar no seu dia a dia."
-            />
-            <BenefitItem 
-               icon={Users}
-               title="Suporte em Grupo" 
-               desc="Tire dúvidas e interaja com outras pessoas na mesma jornada."
-            />
-            <BenefitItem 
-               icon={Leaf}
-               title="Fitoterapia Descomplicada" 
-               desc="Aprenda a usar as plantas medicinais com segurança."
-            />
-         </div>
-
-         {/* Social Proof */}
-         <div className="mt-20 flex flex-col items-center justify-center p-8 bg-white/5 rounded-3xl border border-white/5 backdrop-blur-sm">
-            <div className="flex items-center gap-1 text-[#D4AF37] mb-2">
-               <Star className="w-5 h-5 fill-current" />
-               <Star className="w-5 h-5 fill-current" />
-               <Star className="w-5 h-5 fill-current" />
-               <Star className="w-5 h-5 fill-current" />
-               <Star className="w-5 h-5 fill-current" />
+      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        
+        {/* PLANO COMUNIDADE */}
+        <Card className={`flex flex-col ${isCommunity ? 'border-primary shadow-lg' : ''}`}>
+          <CardHeader>
+            <CardTitle className="text-2xl">Comunidade Fitoclin</CardTitle>
+            <CardDescription>Para quem está começando</CardDescription>
+            <div className="mt-4">
+              <span className="text-4xl font-bold">R$ 49,90</span>
+              <span className="text-muted-foreground">/mês</span>
             </div>
-            <p className="text-white font-medium text-lg">
-              Junte-se a centenas de alunos transformando sua saúde.
-            </p>
-         </div>
+          </CardHeader>
+          <CardContent className="flex-1">
+            <ul className="space-y-3">
+              <FeatureItem text="Acesso aos cursos da Comunidade" />
+              <FeatureItem text="Materiais de apoio básicos" />
+              <FeatureItem text="Participação no fórum" />
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <form action={/* action para criar checkout stripe COMUNIDADE */ "..."}>
+               <Button className="w-full" variant={isCommunity ? "outline" : "default"} disabled={isCommunity}>
+                 {isCommunity ? "Plano Atual" : "Assinar Comunidade"}
+               </Button>
+            </form>
+          </CardFooter>
+        </Card>
+
+        {/* PLANO ESPECIALIZAÇÃO */}
+        <Card className={`flex flex-col relative ${isSpecialization ? 'border-primary shadow-lg' : 'border-purple-200 bg-purple-50/10'}`}>
+          <div className="absolute -top-3 right-4">
+             <Badge className="bg-purple-600 hover:bg-purple-700">Recomendado</Badge>
+          </div>
+          <CardHeader>
+            <CardTitle className="text-2xl text-purple-700 dark:text-purple-400">Especialização</CardTitle>
+            <CardDescription>Para profissionais da saúde</CardDescription>
+            <div className="mt-4">
+              <span className="text-4xl font-bold">R$ 99,90</span>
+              <span className="text-muted-foreground">/mês</span>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1">
+            <ul className="space-y-3">
+              <FeatureItem text="Tudo do plano Comunidade" />
+              <FeatureItem text="Acesso à Área de Especialização" />
+              <FeatureItem text="Cursos técnicos aprofundados" />
+              <FeatureItem text="Certificados de conclusão" />
+              <FeatureItem text="Mentorias gravadas com Dra. Isa" />
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <form action={/* action para criar checkout stripe ESPECIALIZAÇÃO */ "..."}>
+                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white" disabled={isSpecialization}>
+                  {isSpecialization ? "Plano Atual" : "Assinar Especialização"}
+                </Button>
+            </form>
+          </CardFooter>
+        </Card>
 
       </div>
-      
     </div>
   );
 }
 
-function BenefitItem({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
+function FeatureItem({ text }: { text: string }) {
   return (
-    <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-[#0A311D]/40 border border-white/5 hover:bg-[#0A311D]/80 hover:border-[#76A771]/30 transition-all duration-300 group">
-      <div className="mb-4 p-3 rounded-full bg-[#76A771]/10 text-[#76A771] group-hover:bg-[#76A771] group-hover:text-[#062214] transition-colors">
-        <Icon className="w-6 h-6" />
-      </div>
-      <h4 className="text-white font-bold text-lg mb-2">{title}</h4>
-      <p className="text-sm text-gray-400 leading-relaxed group-hover:text-gray-300">{desc}</p>
-    </div>
+    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Check className="h-4 w-4 text-primary" />
+      {text}
+    </li>
   );
 }
