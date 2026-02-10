@@ -15,7 +15,9 @@ const LeadSchema = z.object({
   notes: z.string().optional(),
 });
 
-// === FUNÇÃO INTERNA PARA N8N ===
+// === FUNÇÕES INTERNAS PARA N8N ===
+
+// Fluxo Antigo (Gatilho Automático ao Mover Card)
 async function triggerN8nPostConsultation(patientData: { name: string; phone: string; patientId?: string }) {
   const webhookUrl = process.env.N8N_WORKFLOW_START_URL;
   if (!webhookUrl) return;
@@ -27,11 +29,29 @@ async function triggerN8nPostConsultation(patientData: { name: string; phone: st
       body: JSON.stringify(patientData),
     });
   } catch (error) {
-    console.error("Erro ao chamar n8n:", error);
+    console.error("Erro ao chamar n8n (Auto):", error);
   }
 }
 
+// Fluxo Novo (Botão Manual: Apenas muda Status)
+async function triggerN8nSetStatus(leadId: string) {
+  const webhookUrl = process.env.N8N_SET_STATUS_WEBHOOK;
+  if (!webhookUrl) return;
+
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leadId }),
+    });
+  } catch (error) {
+    console.error("Erro ao chamar n8n (SetStatus):", error);
+  }
+}
+
+// ==========================================================
 // 1. CRIAR LEAD
+// ==========================================================
 export async function createLead(formData: FormData) {
   const session = await auth();
   
@@ -46,6 +66,7 @@ export async function createLead(formData: FormData) {
   try {
     const data = LeadSchema.parse(rawData);
     
+    // Vincula ao profissional se quem criou for um
     const professionalId = session?.user?.role === "PROFESSIONAL" ? session.user.id : null;
 
     const newLead = await db.lead.create({ 
@@ -60,77 +81,82 @@ export async function createLead(formData: FormData) {
       } 
     });
 
+    // Envio de Email
     if (newLead.email) {
       sendEmail({
         to: newLead.email,
         subject: "Recebemos o seu contacto! - FitoClin",
         html: getWelcomeTemplate(newLead.name)
-      }).catch(err => console.error("Erro ao enviar email de boas-vindas:", err));
+      }).catch(err => console.error("Erro email:", err));
     }
     
     revalidatePath("/dashboard/crm");
     return { success: true, message: "Lead cadastrado com sucesso!" };
 
   } catch (error) {
-    console.error("❌ ERRO AO CRIAR LEAD:", error);
+    console.error("❌ ERRO CRIAR LEAD:", error);
     if (error instanceof z.ZodError) {
         return { success: false, message: `Erro de validação: ${error.message}` };
     }
-    return { success: false, message: "Erro interno ao criar lead." };
+    return { success: false, message: "Erro interno." };
   }
 }
 
-// 2. ATUALIZAR STATUS (Mover Card)
+// ==========================================================
+// 2. ATUALIZAR STATUS (Drag & Drop)
+// ==========================================================
 export async function updateLeadStatus(id: string, newStatus: string) {
   try {
     if (!Object.values(LeadStatus).includes(newStatus as LeadStatus)) {
         return { success: false, message: "Status inválido." };
     }
 
-    const lead = await db.lead.update({
+    await db.lead.update({
       where: { id },
       data: { status: newStatus as LeadStatus },
     });
     
     // GATILHO AUTOMÁTICO: Se virou Paciente (WON)
+    // Nota: Mantemos o gatilho automático aqui caso o usuário apenas mova o card
+    // sem clicar no botão de pós-consulta depois.
     if (newStatus === "WON") {
-       const cleanPhone = lead.phone.replace(/\D/g, "");
-       const patient = await db.patient.findFirst({
-         where: { phone: { contains: cleanPhone.slice(-8) } }
-       });
+       const lead = await db.lead.findUnique({ where: { id } });
+       if (lead) {
+           const cleanPhone = lead.phone.replace(/\D/g, "");
+           const patient = await db.patient.findFirst({
+             where: { phone: { contains: cleanPhone.slice(-8) } }
+           });
 
-       triggerN8nPostConsultation({
-          name: lead.name,
-          phone: cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`,
-          patientId: patient?.id
-       });
+           // Opcional: Se quiser que o drag-and-drop já inicie a automação antiga
+           /* triggerN8nPostConsultation({
+              name: lead.name,
+              phone: cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`,
+              patientId: patient?.id
+           }); 
+           */
+       }
     }
     
     revalidatePath("/dashboard/crm");
     return { success: true, message: "Status atualizado" };
   } catch (error) {
-    console.error("Erro ao atualizar status:", error);
+    console.error("Erro updateLeadStatus:", error);
     return { success: false, message: "Erro ao mover lead" };
   }
 }
 
-// 3. DISPARO MANUAL DE PÓS-CONSULTA
+// ==========================================================
+// 3. DISPARO MANUAL (Botão "Iniciar Pós-Consulta")
+// ==========================================================
 export async function triggerPostConsultationManual(leadId: string) {
   try {
     const lead = await db.lead.findUnique({ where: { id: leadId } });
     if (!lead) return { success: false, message: "Lead não encontrado" };
 
-    const cleanPhone = lead.phone.replace(/\D/g, "");
-    
-    const patient = await db.patient.findFirst({
-        where: { phone: { contains: cleanPhone.slice(-8) } }
-    });
+    // 1. Chama o N8N para mudar status para POS_CONSULTA
+    await triggerN8nSetStatus(lead.id);
 
-    await triggerN8nPostConsultation({
-        name: lead.name,
-        phone: cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`,
-        patientId: patient?.id
-    });
+    // O Scheduler do N8N pegará esse lead depois para enviar a mensagem
 
     return { success: true };
   } catch (error) {
@@ -139,7 +165,9 @@ export async function triggerPostConsultationManual(leadId: string) {
   }
 }
 
-// 4. BUSCAR LEADS (Legado)
+// ==========================================================
+// 4. BUSCAR LEADS (Lista Completa)
+// ==========================================================
 export async function getLeads() {
   const session = await auth();
   if (!session) return [];
@@ -154,7 +182,9 @@ export async function getLeads() {
   });
 }
 
-// 5. BUSCAR LEADS PAGINADOS
+// ==========================================================
+// 5. BUSCAR LEADS PAGINADOS (Kanban Otimizado)
+// ==========================================================
 export async function getLeadsPaginated(status: string, page: number) {
   const session = await auth();
   if (!session) return { success: false, data: [] };
@@ -162,6 +192,8 @@ export async function getLeadsPaginated(status: string, page: number) {
   const PAGE_SIZE = 10;
 
   try {
+    // Validação de Status
+    // Se o status não for válido, retorna vazio
     if (!Object.values(LeadStatus).includes(status as LeadStatus)) {
         return { success: false, data: [] };
     }
@@ -170,6 +202,7 @@ export async function getLeadsPaginated(status: string, page: number) {
         status: status as LeadStatus
     };
 
+    // Filtro de Permissão
     if (session.user.role !== "ADMIN" && session.user.role !== "SECRETARY") {
         whereClause.professionalId = session.user.id;
     }
@@ -183,7 +216,7 @@ export async function getLeadsPaginated(status: string, page: number) {
     
     return { success: true, data: leads };
   } catch (error) {
-    console.error("Erro na paginação de leads:", error);
+    console.error("Erro getLeadsPaginated:", error);
     return { success: false, data: [] };
   }
 }
