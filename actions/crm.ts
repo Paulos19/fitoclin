@@ -17,23 +17,7 @@ const LeadSchema = z.object({
 
 // === FUNÇÕES INTERNAS PARA N8N ===
 
-// Fluxo Antigo (Gatilho Automático ao Mover Card)
-async function triggerN8nPostConsultation(patientData: { name: string; phone: string; patientId?: string }) {
-  const webhookUrl = process.env.N8N_WORKFLOW_START_URL;
-  if (!webhookUrl) return;
-
-  try {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patientData),
-    });
-  } catch (error) {
-    console.error("Erro ao chamar n8n (Auto):", error);
-  }
-}
-
-// Fluxo Novo (Botão Manual: Apenas muda Status)
+// Fluxo Novo (Botão Manual: Apenas muda Status para POS_CONSULTA)
 async function triggerN8nSetStatus(leadId: string) {
   const webhookUrl = process.env.N8N_SET_STATUS_WEBHOOK;
   if (!webhookUrl) return;
@@ -116,26 +100,14 @@ export async function updateLeadStatus(id: string, newStatus: string) {
       data: { status: newStatus as LeadStatus },
     });
     
-    // GATILHO AUTOMÁTICO: Se virou Paciente (WON)
-    // Nota: Mantemos o gatilho automático aqui caso o usuário apenas mova o card
-    // sem clicar no botão de pós-consulta depois.
+    // NOTA: O gatilho automático via drag-and-drop foi removido propositalmente 
+    // para priorizar o acionamento manual via botão, dando mais controle ao usuário.
+    // Se desejar reativar, descomente o bloco abaixo.
+    /*
     if (newStatus === "WON") {
-       const lead = await db.lead.findUnique({ where: { id } });
-       if (lead) {
-           const cleanPhone = lead.phone.replace(/\D/g, "");
-           const patient = await db.patient.findFirst({
-             where: { phone: { contains: cleanPhone.slice(-8) } }
-           });
-
-           // Opcional: Se quiser que o drag-and-drop já inicie a automação antiga
-           /* triggerN8nPostConsultation({
-              name: lead.name,
-              phone: cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`,
-              patientId: patient?.id
-           }); 
-           */
-       }
+       // lógica de automação automática...
     }
+    */
     
     revalidatePath("/dashboard/crm");
     return { success: true, message: "Status atualizado" };
@@ -153,7 +125,7 @@ export async function triggerPostConsultationManual(leadId: string) {
     const lead = await db.lead.findUnique({ where: { id: leadId } });
     if (!lead) return { success: false, message: "Lead não encontrado" };
 
-    // 1. Chama o N8N para mudar status para POS_CONSULTA
+    // 1. Chama o N8N para mudar status para POS_CONSULTA no banco (via webhook)
     await triggerN8nSetStatus(lead.id);
 
     // O Scheduler do N8N pegará esse lead depois para enviar a mensagem
@@ -192,19 +164,27 @@ export async function getLeadsPaginated(status: string, page: number) {
   const PAGE_SIZE = 10;
 
   try {
-    // Validação de Status
-    // Se o status não for válido, retorna vazio
-    if (!Object.values(LeadStatus).includes(status as LeadStatus)) {
-        return { success: false, data: [] };
-    }
-
-    const whereClause: any = {
-        status: status as LeadStatus
-    };
+    const whereClause: any = {};
 
     // Filtro de Permissão
     if (session.user.role !== "ADMIN" && session.user.role !== "SECRETARY") {
         whereClause.professionalId = session.user.id;
+    }
+
+    // LÓGICA ESPECIAL PARA COLUNA "WON"
+    // Se o frontend pedir "WON", trazemos também os status subsequentes (POS_CONSULTA...)
+    // Isso garante que o card não suma da tela após clicar no botão
+    if (status === "WON") {
+        whereClause.status = {
+            in: ["WON", "POS_CONSULTA", "POS_CONSULTA_ENVIADO"]
+        };
+    } else {
+        // Validação padrão para outras colunas
+        if (Object.values(LeadStatus).includes(status as LeadStatus)) {
+            whereClause.status = status as LeadStatus;
+        } else {
+            return { success: false, data: [] };
+        }
     }
 
     const leads = await db.lead.findMany({

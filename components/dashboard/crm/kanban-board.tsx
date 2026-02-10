@@ -13,7 +13,9 @@ import {
   Loader2, 
   ArrowRight,
   RefreshCw,
-  Send // Ícone para o botão de envio
+  Send,
+  FileText,
+  CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -30,9 +32,12 @@ type Lead = {
   source: string;
   notes: string | null;
   createdAt: Date;
+  // Precisamos saber se o paciente já foi criado para gerar o link do prontuário.
+  // Assumindo que o backend retorna patientId se existir, ou faremos uma busca.
+  // Para simplificar, o link irá para a busca de pacientes com o nome.
 };
 
-// Configuração de cores adaptada para o Tema Escuro (Fitoclin)
+// Configuração de cores
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgHeader: string; border: string; icon: any }> = {
   NEW: { 
     label: "Novos", 
@@ -62,6 +67,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgHeader: st
     border: "border-[#76A771]/50",
     icon: UserPlus 
   },
+  // Estados de Pós-Consulta (Visualmente ficam na coluna WON ou numa separada, aqui trataremos dentro de WON)
+  POS_CONSULTA: { label: "Pós-Consulta", color: "text-emerald-400", bgHeader: "", border: "", icon: MessageCircle },
+  POS_CONSULTA_ENVIADO: { label: "Enviado", color: "text-emerald-400", bgHeader: "", border: "", icon: MessageCircle },
   LOST: { 
     label: "Perdido", 
     color: "text-red-400", 
@@ -72,8 +80,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgHeader: st
 };
 
 // --- 1. COMPONENTE DO CARD (LeadCard) ---
-const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, onMove: (id: string, newStatus: string) => void }) => {
+const LeadCard = ({ lead, statusKey, onMove, onRefresh }: { lead: Lead, statusKey: string, onMove: (id: string, newStatus: string) => void, onRefresh: () => void }) => {
   const [isSending, setIsSending] = useState(false);
+
+  // Verifica se está em fase de pós-consulta
+  const isPostConsultationStarted = lead.status === 'POS_CONSULTA' || lead.status === 'POS_CONSULTA_ENVIADO';
 
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,8 +98,12 @@ const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, 
     setIsSending(true);
     try {
         const res = await triggerPostConsultationManual(lead.id);
-        if (res.success) toast.success("Fluxo de Pós-Consulta iniciado!");
-        else toast.error("Erro ao iniciar fluxo.");
+        if (res.success) {
+            toast.success("Pós-Consulta iniciada!");
+            onRefresh(); // Atualiza a lista para refletir a mudança de status
+        } else {
+            toast.error("Erro ao iniciar.");
+        }
     } catch (error) {
         toast.error("Erro de conexão.");
     } finally {
@@ -112,8 +127,13 @@ const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, 
             </span>
             <div className="flex items-center gap-2 text-[10px] text-[#F1F1F1]/60">
               <span>{new Date(lead.createdAt).toLocaleDateString()}</span>
-              <span className="w-1 h-1 rounded-full bg-[#2A5432]" />
-              <span className="uppercase tracking-wider">{lead.source}</span>
+              
+              {/* Badge extra se já iniciou pós consulta */}
+              {isPostConsultationStarted && (
+                  <span className="flex items-center gap-1 text-emerald-400 bg-emerald-950/50 px-1.5 rounded border border-emerald-900">
+                      <CheckCircle2 className="w-3 h-3" /> Pós-Consulta
+                  </span>
+              )}
             </div>
           </div>
         </div>
@@ -141,27 +161,43 @@ const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, 
         )}
       </div>
 
-      {/* Ações (Aparecem suaves) */}
+      {/* Ações */}
       <div className="pt-3 mt-1 border-t border-[#2A5432]/30 flex items-center justify-between gap-2">
         
-        {/* Lógica Específica para Coluna WON (Virou Paciente) */}
-        {statusKey === 'WON' ? (
-            <Button 
-                size="sm" 
-                className="w-full text-xs h-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-0 shadow-lg shadow-emerald-900/20 transition-all"
-                onClick={handlePostConsultation}
-                disabled={isSending}
-            >
-                {isSending ? (
-                    <Loader2 className="w-3 h-3 animate-spin mr-2" />
-                ) : (
-                    <Send className="w-3 h-3 mr-2" />
+        {/* === LÓGICA DA COLUNA WON E PÓS-CONSULTA === */}
+        {(statusKey === 'WON' || isPostConsultationStarted) ? (
+            <div className="w-full space-y-2">
+                
+                {/* Se ainda NÃO iniciou (Status WON puro) */}
+                {!isPostConsultationStarted && (
+                    <Button 
+                        size="sm" 
+                        className="w-full text-xs h-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-0 shadow-lg shadow-emerald-900/20 transition-all"
+                        onClick={handlePostConsultation}
+                        disabled={isSending}
+                    >
+                        {isSending ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Send className="w-3 h-3 mr-2" />}
+                        {isSending ? "Iniciando..." : "Iniciar Pós-Consulta"}
+                    </Button>
                 )}
-                {isSending ? "Enviando..." : "Iniciar Pós-Consulta"}
-            </Button>
+
+                {/* Se JÁ iniciou (POS_CONSULTA ou ENVIADO) */}
+                {isPostConsultationStarted && (
+                    <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="flex-1 text-xs border-emerald-800 text-emerald-500 bg-emerald-950/30 cursor-default hover:bg-emerald-950/30">
+                            <CheckCircle2 className="w-3 h-3 mr-2" /> Iniciada
+                        </Button>
+                        <Link href={`/dashboard/records?query=${encodeURIComponent(lead.name)}`} className="flex-1">
+                            <Button size="sm" variant="secondary" className="w-full text-xs bg-[#76A771] text-[#062214] hover:bg-[#5e8a5a]">
+                                <FileText className="w-3 h-3 mr-2" /> Prontuário
+                            </Button>
+                        </Link>
+                    </div>
+                )}
+            </div>
         ) : (
+            // === LÓGICA PADRÃO PARA OUTRAS COLUNAS ===
             <>
-                {/* Botão de Agendar */}
                 {(['CONTACTED', 'SCHEDULED'].includes(statusKey)) ? (
                     <Link 
                     href={`/dashboard/schedule?newPatientName=${encodeURIComponent(lead.name)}`}
@@ -169,11 +205,8 @@ const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, 
                     >
                     <CalendarCheck className="w-3.5 h-3.5" /> Agendar
                     </Link>
-                ) : (
-                    <div className="flex-1"></div>
-                )}
+                ) : <div className="flex-1"></div>}
 
-                {/* Botão de Mover Próximo Passo */}
                 <div className="ml-auto">
                     {statusKey === 'NEW' && (
                     <Button size="sm" variant="ghost" className="text-xs h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30" onClick={() => onMove(lead.id, 'CONTACTED')}>
@@ -198,17 +231,9 @@ const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, 
   );
 };
 
-// --- 2. COMPONENTE DA COLUNA (KanbanColumn) ---
-const KanbanColumn = ({ 
-  statusKey, 
-  refreshTrigger,
-  onLeadMoved 
-}: { 
-  statusKey: string, 
-  refreshTrigger: number,
-  onLeadMoved: (id: string, from: string, to: string) => void 
-}) => {
-  const config = STATUS_CONFIG[statusKey];
+// --- 2. COMPONENTE DA COLUNA ---
+const KanbanColumn = ({ statusKey, refreshTrigger, onLeadMoved }: { statusKey: string, refreshTrigger: number, onLeadMoved: (id: string, from: string, to: string) => void }) => {
+  const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG['WON']; // Fallback
   const [leads, setLeads] = useState<Lead[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -220,6 +245,7 @@ const KanbanColumn = ({
     if (loading) return;
     setLoading(true);
 
+    // Se a coluna for WON, queremos buscar também os POS_CONSULTA para exibir nela
     const res = await getLeadsPaginated(statusKey, pageNum);
 
     if (res.success && res.data) {
@@ -231,12 +257,8 @@ const KanbanColumn = ({
     setLoading(false);
   }, [statusKey]); 
 
-  // Carga inicial
-  useEffect(() => {
-    fetchLeads(1, true);
-  }, []);
+  useEffect(() => { fetchLeads(1, true); }, []);
 
-  // Recarregar quando necessário
   useEffect(() => {
     if (refreshTrigger > 0) {
       setPage(1);
@@ -255,24 +277,19 @@ const KanbanColumn = ({
   };
 
   const handleMove = async (id: string, newStatus: string) => {
-    // UI Otimista
     setLeads(prev => prev.filter(l => l.id !== id));
-    
     const res = await updateLeadStatus(id, newStatus);
-
     if (res.success) {
-      toast.success("Lead atualizado");
+      toast.success("Atualizado");
       onLeadMoved(id, statusKey, newStatus);
     } else {
-      toast.error("Erro ao mover");
+      toast.error("Erro");
       fetchLeads(1, true);
     }
   };
 
   return (
     <div className="flex flex-col h-full min-w-[300px] max-w-[300px] rounded-xl bg-[#062214] border border-[#2A5432]/30 shadow-lg overflow-hidden">
-      
-      {/* Header Fixo da Coluna */}
       <div className={cn("p-3 border-b border-[#2A5432]/30 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md", config.bgHeader)}>
         <div className="flex items-center gap-2">
           <div className={cn("p-1.5 rounded-md bg-[#062214]/50 border border-white/5", config.color)}>
@@ -283,12 +300,7 @@ const KanbanColumn = ({
           </span>
         </div>
         <div className="flex items-center gap-1">
-            <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 text-[#F1F1F1]/50 hover:text-[#F1F1F1]" 
-                onClick={() => fetchLeads(1, true)}
-            >
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#F1F1F1]/50 hover:text-[#F1F1F1]" onClick={() => fetchLeads(1, true)}>
                 <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
             </Button>
             <Badge variant="outline" className="bg-[#062214] text-[#F1F1F1]/70 border-[#2A5432]/50 text-[10px] h-5">
@@ -297,39 +309,29 @@ const KanbanColumn = ({
         </div>
       </div>
 
-      {/* Corpo com Scroll Individual e Custom Scrollbar */}
-      <div 
-        className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar"
-        onScroll={handleScroll}
-        ref={scrollRef}
-      >
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar" onScroll={handleScroll} ref={scrollRef}>
         {leads.map((lead) => (
           <LeadCard 
             key={lead.id} 
             lead={lead} 
             statusKey={statusKey} 
-            onMove={handleMove} 
+            onMove={handleMove}
+            onRefresh={() => fetchLeads(1, true)} // Passa função de refresh
           />
         ))}
-
         {leads.length === 0 && !loading && (
           <div className="h-32 flex flex-col items-center justify-center text-[#F1F1F1]/20 border-2 border-dashed border-[#2A5432]/30 rounded-xl">
             <UserPlus className="w-8 h-8 mb-2 opacity-20" />
             <span className="text-xs">Vazio</span>
           </div>
         )}
-
-        {loading && (
-          <div className="py-4 flex justify-center">
-            <Loader2 className="w-5 h-5 animate-spin text-[#76A771]" />
-          </div>
-        )}
+        {loading && <div className="py-4 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-[#76A771]" /></div>}
       </div>
     </div>
   );
 };
 
-// --- 3. COMPONENTE PAI (KanbanBoard) ---
+// --- 3. COMPONENTE PAI ---
 export function KanbanBoard() {
   const COLUMNS = ["NEW", "CONTACTED", "SCHEDULED", "WON"];
   const [refreshTriggers, setRefreshTriggers] = useState<Record<string, number>>({
@@ -337,14 +339,10 @@ export function KanbanBoard() {
   });
 
   const handleLeadMoved = (id: string, from: string, to: string) => {
-    setRefreshTriggers(prev => ({
-      ...prev,
-      [to]: (prev[to] || 0) + 1
-    }));
+    setRefreshTriggers(prev => ({ ...prev, [to]: (prev[to] || 0) + 1 }));
   };
 
   return (
-    // Altura calculada para caber exatamente na tela (100vh - Header ~100px - Padding)
     <div className="h-[calc(100vh-140px)] w-full overflow-x-auto pb-2 custom-scrollbar">
       <div className="flex h-full gap-4 px-1 min-w-max">
         {COLUMNS.map((status) => (
