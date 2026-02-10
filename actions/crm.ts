@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sendEmail, getWelcomeTemplate } from "@/lib/mail";
-import { LeadStatus } from "@prisma/client"; // 👈 Importação Essencial para corrigir o erro de tipo
+import { LeadStatus } from "@prisma/client";
 
 const LeadSchema = z.object({
   name: z.string().min(2, "Nome obrigatório"),
@@ -14,6 +14,22 @@ const LeadSchema = z.object({
   source: z.string().min(1, "Origem obrigatória"),
   notes: z.string().optional(),
 });
+
+// === FUNÇÃO INTERNA PARA N8N ===
+async function triggerN8nPostConsultation(patientData: { name: string; phone: string; patientId?: string }) {
+  const webhookUrl = process.env.N8N_WORKFLOW_START_URL;
+  if (!webhookUrl) return;
+
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patientData),
+    });
+  } catch (error) {
+    console.error("Erro ao chamar n8n:", error);
+  }
+}
 
 // 1. CRIAR LEAD
 export async function createLead(formData: FormData) {
@@ -30,7 +46,6 @@ export async function createLead(formData: FormData) {
   try {
     const data = LeadSchema.parse(rawData);
     
-    // Definir Dono do Lead (Se for profissional, vincula a ele. Se for admin/secretária, fica solto ou vincula a quem criou)
     const professionalId = session?.user?.role === "PROFESSIONAL" ? session.user.id : null;
 
     const newLead = await db.lead.create({ 
@@ -40,12 +55,11 @@ export async function createLead(formData: FormData) {
         source: data.source,
         email: data.email === "" ? null : data.email,
         notes: data.notes === "" ? null : data.notes,
-        status: "NEW", // O Prisma aceita a string se bater com o Enum
+        status: "NEW", 
         professionalId: professionalId,
       } 
     });
 
-    // Envio de Email de Boas-vindas (se houver email)
     if (newLead.email) {
       sendEmail({
         to: newLead.email,
@@ -69,22 +83,30 @@ export async function createLead(formData: FormData) {
 // 2. ATUALIZAR STATUS (Mover Card)
 export async function updateLeadStatus(id: string, newStatus: string) {
   try {
-    // Validação de Segurança: Verificar se o status existe no Enum
     if (!Object.values(LeadStatus).includes(newStatus as LeadStatus)) {
         return { success: false, message: "Status inválido." };
     }
 
-    await db.lead.update({
+    const lead = await db.lead.update({
       where: { id },
-      data: { 
-        status: newStatus as LeadStatus // 👈 Casting Correto
-      },
+      data: { status: newStatus as LeadStatus },
     });
     
-    // Revalidar é opcional aqui se estiver usando state local otimista, 
-    // mas é bom para garantir consistência
-    revalidatePath("/dashboard/crm");
+    // GATILHO AUTOMÁTICO: Se virou Paciente (WON)
+    if (newStatus === "WON") {
+       const cleanPhone = lead.phone.replace(/\D/g, "");
+       const patient = await db.patient.findFirst({
+         where: { phone: { contains: cleanPhone.slice(-8) } }
+       });
+
+       triggerN8nPostConsultation({
+          name: lead.name,
+          phone: cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`,
+          patientId: patient?.id
+       });
+    }
     
+    revalidatePath("/dashboard/crm");
     return { success: true, message: "Status atualizado" };
   } catch (error) {
     console.error("Erro ao atualizar status:", error);
@@ -92,15 +114,39 @@ export async function updateLeadStatus(id: string, newStatus: string) {
   }
 }
 
-// 3. BUSCAR LEADS (Lista Completa - Legado ou uso específico)
+// 3. DISPARO MANUAL DE PÓS-CONSULTA
+export async function triggerPostConsultationManual(leadId: string) {
+  try {
+    const lead = await db.lead.findUnique({ where: { id: leadId } });
+    if (!lead) return { success: false, message: "Lead não encontrado" };
+
+    const cleanPhone = lead.phone.replace(/\D/g, "");
+    
+    const patient = await db.patient.findFirst({
+        where: { phone: { contains: cleanPhone.slice(-8) } }
+    });
+
+    await triggerN8nPostConsultation({
+        name: lead.name,
+        phone: cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`,
+        patientId: patient?.id
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro manual:", error);
+    return { success: false };
+  }
+}
+
+// 4. BUSCAR LEADS (Legado)
 export async function getLeads() {
   const session = await auth();
   if (!session) return [];
 
-  // Filtro de Segurança
   const whereClause = session.user.role === "ADMIN" || session.user.role === "SECRETARY"
-    ? {} // Admin/Secretária vê tudo
-    : { professionalId: session.user.id }; // Profissional vê só os dele
+    ? {} 
+    : { professionalId: session.user.id };
 
   return await db.lead.findMany({
     where: whereClause,
@@ -108,7 +154,7 @@ export async function getLeads() {
   });
 }
 
-// 4. BUSCAR LEADS PAGINADOS (Para o Kanban Otimizado)
+// 5. BUSCAR LEADS PAGINADOS
 export async function getLeadsPaginated(status: string, page: number) {
   const session = await auth();
   if (!session) return { success: false, data: [] };
@@ -116,17 +162,14 @@ export async function getLeadsPaginated(status: string, page: number) {
   const PAGE_SIZE = 10;
 
   try {
-    // Validação do Status
     if (!Object.values(LeadStatus).includes(status as LeadStatus)) {
         return { success: false, data: [] };
     }
 
-    // Construção do Filtro (Status + Permissão de Usuário)
     const whereClause: any = {
-        status: status as LeadStatus // 👈 Casting
+        status: status as LeadStatus
     };
 
-    // Se NÃO for Admin/Secretária, aplica filtro de dono
     if (session.user.role !== "ADMIN" && session.user.role !== "SECRETARY") {
         whereClause.professionalId = session.user.id;
     }

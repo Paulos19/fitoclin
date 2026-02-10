@@ -13,11 +13,11 @@ import {
   Loader2, 
   ArrowRight,
   RefreshCw,
-  MoreHorizontal
+  Send // Ícone para o botão de envio
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { updateLeadStatus, getLeadsPaginated } from "@/actions/crm";
+import { updateLeadStatus, getLeadsPaginated, triggerPostConsultationManual } from "@/actions/crm";
 import { cn } from "@/lib/utils";
 
 // --- TIPOS ---
@@ -57,8 +57,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgHeader: st
   },
   WON: { 
     label: "Virou Paciente", 
-    color: "text-[#76A771]", // Secondary Brand Color
-    bgHeader: "bg-[#2A5432]/40", // Primary Brand Color
+    color: "text-[#76A771]", 
+    bgHeader: "bg-[#2A5432]/40", 
     border: "border-[#76A771]/50",
     icon: UserPlus 
   },
@@ -73,13 +73,27 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgHeader: st
 
 // --- 1. COMPONENTE DO CARD (LeadCard) ---
 const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, onMove: (id: string, newStatus: string) => void }) => {
-  
+  const [isSending, setIsSending] = useState(false);
+
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     const cleanPhone = lead.phone.replace(/\D/g, '');
     const fullPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
     const message = encodeURIComponent(`Olá ${lead.name}, tudo bem? Sou da Clínica Fitoclin.`);
     window.open(`https://wa.me/${fullPhone}?text=${message}`, '_blank');
+  };
+
+  const handlePostConsultation = async () => {
+    setIsSending(true);
+    try {
+        const res = await triggerPostConsultationManual(lead.id);
+        if (res.success) toast.success("Fluxo de Pós-Consulta iniciado!");
+        else toast.error("Erro ao iniciar fluxo.");
+    } catch (error) {
+        toast.error("Erro de conexão.");
+    } finally {
+        setIsSending(false);
+    }
   };
 
   return (
@@ -129,36 +143,56 @@ const LeadCard = ({ lead, statusKey, onMove }: { lead: Lead, statusKey: string, 
 
       {/* Ações (Aparecem suaves) */}
       <div className="pt-3 mt-1 border-t border-[#2A5432]/30 flex items-center justify-between gap-2">
-        {/* Botão de Agendar */}
-        {(['CONTACTED', 'SCHEDULED', 'WON'].includes(statusKey)) ? (
-           <Link 
-             href={`/dashboard/schedule?newPatientName=${encodeURIComponent(lead.name)}`}
-             className="flex-1 text-xs flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-[#2A5432]/40 text-[#76A771] hover:bg-[#76A771] hover:text-[#062214] border border-[#2A5432] transition-all font-medium"
-           >
-             <CalendarCheck className="w-3.5 h-3.5" /> Agendar
-           </Link>
+        
+        {/* Lógica Específica para Coluna WON (Virou Paciente) */}
+        {statusKey === 'WON' ? (
+            <Button 
+                size="sm" 
+                className="w-full text-xs h-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-0 shadow-lg shadow-emerald-900/20 transition-all"
+                onClick={handlePostConsultation}
+                disabled={isSending}
+            >
+                {isSending ? (
+                    <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                ) : (
+                    <Send className="w-3 h-3 mr-2" />
+                )}
+                {isSending ? "Enviando..." : "Iniciar Pós-Consulta"}
+            </Button>
         ) : (
-           <div className="flex-1"></div>
-        )}
+            <>
+                {/* Botão de Agendar */}
+                {(['CONTACTED', 'SCHEDULED'].includes(statusKey)) ? (
+                    <Link 
+                    href={`/dashboard/schedule?newPatientName=${encodeURIComponent(lead.name)}`}
+                    className="flex-1 text-xs flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-[#2A5432]/40 text-[#76A771] hover:bg-[#76A771] hover:text-[#062214] border border-[#2A5432] transition-all font-medium"
+                    >
+                    <CalendarCheck className="w-3.5 h-3.5" /> Agendar
+                    </Link>
+                ) : (
+                    <div className="flex-1"></div>
+                )}
 
-        {/* Botão de Mover Próximo Passo */}
-        <div className="ml-auto">
-            {statusKey === 'NEW' && (
-            <Button size="sm" variant="ghost" className="text-xs h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30" onClick={() => onMove(lead.id, 'CONTACTED')}>
-                Contatar <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
-            )}
-            {statusKey === 'CONTACTED' && (
-            <Button size="sm" variant="ghost" className="text-xs h-7 text-purple-400 hover:text-purple-300 hover:bg-purple-900/30" onClick={() => onMove(lead.id, 'SCHEDULED')}>
-                Agendou <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
-            )}
-            {statusKey === 'SCHEDULED' && (
-            <Button size="sm" variant="ghost" className="text-xs h-7 text-[#76A771] hover:text-[#A4D49E] hover:bg-[#2A5432]/30" onClick={() => onMove(lead.id, 'WON')}>
-                Virou Paciente <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
-            )}
-        </div>
+                {/* Botão de Mover Próximo Passo */}
+                <div className="ml-auto">
+                    {statusKey === 'NEW' && (
+                    <Button size="sm" variant="ghost" className="text-xs h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30" onClick={() => onMove(lead.id, 'CONTACTED')}>
+                        Contatar <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                    )}
+                    {statusKey === 'CONTACTED' && (
+                    <Button size="sm" variant="ghost" className="text-xs h-7 text-purple-400 hover:text-purple-300 hover:bg-purple-900/30" onClick={() => onMove(lead.id, 'SCHEDULED')}>
+                        Agendou <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                    )}
+                    {statusKey === 'SCHEDULED' && (
+                    <Button size="sm" variant="ghost" className="text-xs h-7 text-[#76A771] hover:text-[#A4D49E] hover:bg-[#2A5432]/30" onClick={() => onMove(lead.id, 'WON')}>
+                        Virou Paciente <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                    )}
+                </div>
+            </>
+        )}
       </div>
     </div>
   );
