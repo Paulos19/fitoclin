@@ -7,6 +7,8 @@ import { CoursesSection } from "@/components/home/courses-section";
 import { PricingSection } from "@/components/home/pricing-section";
 import { MaterialsSection } from "@/components/home/materials-section";
 import { ContactSection } from "@/components/home/contact-section"; 
+import { SpecializationSection } from "@/components/home/specialization-section"; // <--- NOVO
+import { CommunitySection } from "@/components/home/community-section"; // <--- NOVO
 import { Footer } from "@/components/layout/footer";
 import { db } from "@/lib/db"; 
 
@@ -28,7 +30,41 @@ export default async function Home() {
 
   const courses = rawCourses.map(c => ({
     ...c,
-    price: c.price ? Number(c.price) : 0, // Converte Decimal para number
+    price: c.price ? Number(c.price) : 0, 
+  }));
+
+  const rawMaterials = await db.moduleMaterial.findMany({
+    where: {
+      module: {
+        course: {
+          active: true
+        }
+      }
+    },
+    take: 2,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      module: {
+        include: {
+          course: {
+            select: {
+              id: true,
+              title: true,
+              imageUrl: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const materials = rawMaterials.map(m => ({
+    id: m.id,
+    title: m.title, // ou m.title dependendo do seu schema
+    courseId: m.module.course.id,
+    courseTitle: m.module.course.title,
+    courseImage: m.module.course.imageUrl,
+    moduleTitle: m.module.title
   }));
 
   // 3. Buscar Planos e converter Decimal -> Number
@@ -39,7 +75,7 @@ export default async function Home() {
 
   const plans = rawPlans.map(p => ({
     ...p,
-    price: Number(p.price), // Converte Decimal para number
+    price: Number(p.price),
   }));
 
   return (
@@ -51,6 +87,9 @@ export default async function Home() {
         subtitle={siteInfo?.heroSubtitle} 
       />
       
+      {/* Seção de Especialização: Destaque logo após o Hero para ancorar autoridade */}
+      <SpecializationSection />
+
       <AboutSection 
         aboutText={siteInfo?.aboutText}
         whatsapp={siteInfo?.whatsapp}
@@ -59,14 +98,16 @@ export default async function Home() {
       
       <MethodSection />
       
+      {/* Comunidade: Quebra o ritmo técnico e traz o lado humano/social antes dos produtos */}
+      <CommunitySection />
+
       <ServicesSection />
       
-      {/* Agora passamos os dados convertidos */}
       <CoursesSection courses={courses} />
       
       <PricingSection plans={plans} />
       
-      <MaterialsSection />
+      <MaterialsSection materials={materials} />
 
       <ContactSection />
       

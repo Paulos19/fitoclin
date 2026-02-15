@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react"; // Importando hook de sessão
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,14 +12,12 @@ import {
   SheetTrigger,
   SheetTitle,
   SheetDescription,
-  SheetClose,
 } from "@/components/ui/sheet";
 import {
   Menu,
   Home,
-  User,
   Leaf,
-  GraduationCap,
+  GraduationCap, // Para Cursos
   CreditCard,
   Instagram,
   Mail,
@@ -27,29 +25,31 @@ import {
   LayoutDashboard,
   LogIn,
   Loader2,
+  Users, // Para Comunidade
+  Award, // Para Especialização
+  BookOpen
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Menu items separados para fácil manutenção
+// Menu atualizado com as novas rotas estratégicas
 const NAV_LINKS = [
   { name: "Início", href: "/", icon: Home },
-  { name: "A Clínica", href: "/#sobre", icon: User }, // Ajuste para âncoras funcionarem melhor
+  { name: "Especialização", href: "/#especializacao", icon: Award }, // Novo destaque
+  { name: "Comunidade", href: "/#comunidade", icon: Users },         // Novo destaque
+  { name: "Cursos", href: "/#cursos", icon: BookOpen },
   { name: "Método", href: "/#metodo", icon: Leaf },
-  { name: "Cursos", href: "/community", icon: GraduationCap }, // Assumindo rota dos cursos
-  { name: "Planos", href: "/#planos", icon: CreditCard },
+  { name: "Planos", href: "/subscription", icon: CreditCard },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   
-  // Hooks do Next.js e Auth
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const isLoading = status === "loading";
 
-  // Efeito de scroll otimizado
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 20;
@@ -93,7 +93,7 @@ export function Navbar() {
         </Link>
 
         {/* --- DESKTOP NAVIGATION --- */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -101,11 +101,15 @@ export function Navbar() {
                 key={link.name}
                 href={link.href}
                 className={`
-                  relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
-                  hover:bg-white/10 hover:text-white
+                  relative px-3 py-2 rounded-full text-sm font-medium transition-all duration-300
+                  hover:bg-white/10 hover:text-white flex items-center gap-1.5
                   ${isActive ? "text-white bg-white/10" : "text-gray-300"}
                 `}
               >
+                {/* Ícone opcional no desktop para dar um charme visual nas novas seções */}
+                {(link.name === "Especialização" || link.name === "Comunidade") && (
+                    <link.icon className="w-3.5 h-3.5 text-[#76A771]" />
+                )}
                 {link.name}
               </Link>
             );
@@ -146,7 +150,7 @@ export function Navbar() {
         </nav>
 
         {/* --- MOBILE TOGGLE --- */}
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button
@@ -172,7 +176,7 @@ export function Navbar() {
                   Fito<span className="text-[#76A771]">clin</span>
                 </SheetTitle>
                 <SheetDescription className="text-gray-400 text-xs mt-1">
-                  Menu de navegação
+                  Navegue pela plataforma
                 </SheetDescription>
               </div>
 
@@ -189,9 +193,21 @@ export function Navbar() {
                       <Link
                         href={link.href}
                         onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-4 px-4 py-3 rounded-xl text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all group active:scale-95"
+                        className={`
+                            flex items-center gap-4 px-4 py-3 rounded-xl text-base font-medium transition-all group active:scale-95
+                            ${(link.name === "Especialização" || link.name === "Comunidade") 
+                                ? "bg-[#76A771]/10 text-white border border-[#76A771]/20" 
+                                : "text-gray-300 hover:text-white hover:bg-white/5"
+                            }
+                        `}
                       >
-                        <span className="p-2 rounded-lg bg-[#0A311D] text-[#76A771] group-hover:text-white group-hover:bg-[#76A771] transition-colors">
+                        <span className={`
+                            p-2 rounded-lg transition-colors
+                            ${(link.name === "Especialização" || link.name === "Comunidade") 
+                                ? "bg-[#76A771] text-[#062214]" 
+                                : "bg-[#0A311D] text-[#76A771] group-hover:text-white group-hover:bg-[#76A771]"
+                            }
+                        `}>
                           <link.icon className="w-5 h-5" />
                         </span>
                         {link.name}
@@ -215,7 +231,7 @@ export function Navbar() {
                   <Link href="/login" onClick={() => setIsOpen(false)}>
                     <Button className="w-full h-12 rounded-xl bg-white text-[#062214] hover:bg-gray-200 font-bold text-lg shadow-lg">
                       <LogIn className="w-5 h-5 mr-2" />
-                      Área do Paciente
+                      Área do Aluno
                     </Button>
                   </Link>
                 )}
