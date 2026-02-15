@@ -39,8 +39,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { pdf } from "@react-pdf/renderer";
 import { PrescriptionPDF } from "@/components/documents/prescription-pdf";
 import { uploadDocument, getPatientPrescriptions, deleteDocument } from "@/actions/documents";
-import { getPatientEvolutions } from "@/actions/record"; // <--- Importe a nova action
-import { generatePrescriptionSuggestion } from "@/actions/ai"; // <--- Importe a action da IA
+import { getPatientEvolutions } from "@/actions/record"; 
+import { generatePrescriptionSuggestion } from "@/actions/ai"; 
 
 import { toast } from "sonner";
 import { 
@@ -59,13 +59,18 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+// Interface atualizada para receber idade e gênero explicitamente
 interface PrescriptionPanelProps {
   patientId: string;
   patientName: string;
-  patientDetails?: string; // Ex: "32 anos"
+  patientDetails?: string; 
   patientEmail?: string | null;
   patientPhone?: string | null;
   doctorName?: string;
+  
+  // Novos campos obrigatórios para a IA
+  patientAge: string | number;
+  patientGender: string;
 }
 
 interface PrescriptionDoc {
@@ -75,10 +80,15 @@ interface PrescriptionDoc {
   createdAt: Date;
 }
 
+// Interface completa correspondente ao retorno do backend (getPatientEvolutions)
 interface EvolutionRecord {
   id: string;
   date: Date;
   title: string;
+  pilar1_investigacao: string | null;
+  pilar2_fitoterapia: string | null;
+  pilar3_metabolismo: string | null;
+  pilar4_estresse: string | null;
   pilar5_evolucao: string | null;
   notes: string | null;
 }
@@ -89,25 +99,27 @@ export function PrescriptionPanel({
   patientDetails,
   patientEmail,
   patientPhone,
-  doctorName
+  doctorName,
+  // Props desestruturados
+  patientAge,
+  patientGender
 }: PrescriptionPanelProps) {
   const [content, setContent] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false); // PDF Generation
+  const [isGenerating, setIsGenerating] = useState(false);
   const [logoBase64, setLogoBase64] = useState<string>("");
   
-  // Estados para o Histórico
+  // Histórico de Prescrições (PDFs)
   const [history, setHistory] = useState<PrescriptionDoc[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  // Estados para IA
+  // IA
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [manualComplaint, setManualComplaint] = useState("");
   const [evolutions, setEvolutions] = useState<EvolutionRecord[]>([]);
   const [selectedEvolutionId, setSelectedEvolutionId] = useState<string>("");
 
-  // Carregar Logo
   useEffect(() => {
     async function prepareImage() {
       try {
@@ -121,7 +133,6 @@ export function PrescriptionPanel({
     prepareImage();
   }, []);
 
-  // Busca Histórico
   const fetchHistory = useCallback(async () => {
     try {
       setIsLoadingHistory(true);
@@ -134,7 +145,6 @@ export function PrescriptionPanel({
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  // Busca Evoluções quando abre o Modal de IA
   const handleOpenAiModal = async (open: boolean) => {
     setIsAiModalOpen(open);
     if (open && evolutions.length === 0) {
@@ -144,75 +154,86 @@ export function PrescriptionPanel({
     }
   };
 
-  // --- FUNÇÃO GERAR COM IA ---
+  // --- FUNÇÃO PRINCIPAL: GERAR COM IA ---
   const handleGenerateAiSuggestion = async () => {
     let complaintText = "";
 
-    // Lógica para decidir qual texto enviar
     if (manualComplaint.trim()) {
       complaintText = manualComplaint;
     } else if (selectedEvolutionId) {
       const record = evolutions.find(e => e.id === selectedEvolutionId);
-      complaintText = record?.pilar5_evolucao || record?.notes || "";
+      
+      // MONTAGEM DO CONTEXTO CLÍNICO COMPLETO
+      if (record) {
+        const parts = [];
+        parts.push(`[Consulta: ${record.title} - ${format(new Date(record.date), "dd/MM/yyyy")}]`);
+        
+        if (record.pilar1_investigacao) parts.push(`QUEIXA PRINCIPAL E SINTOMAS:\n${record.pilar1_investigacao}`);
+        if (record.pilar3_metabolismo) parts.push(`METABOLISMO/DIGESTÃO:\n${record.pilar3_metabolismo}`);
+        if (record.pilar4_estresse) parts.push(`ESTRESSE E EMOCIONAL:\n${record.pilar4_estresse}`);
+        if (record.pilar5_evolucao) parts.push(`EVOLUÇÃO DO QUADRO:\n${record.pilar5_evolucao}`);
+        if (record.notes) parts.push(`OBSERVAÇÕES ADICIONAIS:\n${record.notes}`);
+        
+        complaintText = parts.join("\n\n---\n\n");
+      }
     }
 
-    if (!complaintText) {
-      toast.warning("Selecione uma evolução ou escreva a queixa manualmente.");
+    if (!complaintText || complaintText.length < 5) {
+      toast.warning("A evolução selecionada parece vazia. Por favor, escreva a queixa manualmente ou preencha o prontuário.");
       return;
     }
 
     setIsAiLoading(true);
 
     try {
-      // Extrair idade numérica do patientDetails (ex: "32 anos")
-      const ageMatch = patientDetails?.match(/\d+/);
-      const age = ageMatch ? parseInt(ageMatch[0]) : "N/A";
-
+      // Usa os dados passados via props, sem regex
       const result = await generatePrescriptionSuggestion({
         patientName,
-        age,
+        age: patientAge,
+        gender: patientGender,
         complaint: complaintText
       });
 
       if (result.error) {
         toast.error(result.error);
       } else {
-        // Formata a resposta da IA para o textarea
-        // Supondo que o n8n devolva { suggestions: [ ... ], analysis: "..." } ou um texto puro
         const aiResponse = result.success; 
-        
         let formattedText = "";
         
-        // Se a IA já retornar string formatada
         if (typeof aiResponse === 'string') {
             formattedText = aiResponse;
-        } 
-        // Se retornar JSON estruturado (ajuste conforme seu fluxo n8n)
-        else if (aiResponse.suggestions) {
+        } else if (aiResponse.suggestions) {
             formattedText = `📋 ANÁLISE CLÍNICA:\n${aiResponse.analysis}\n\n`;
             formattedText += `💊 PRESCRIÇÃO SUGERIDA:\n`;
             aiResponse.suggestions.forEach((item: any, idx: number) => {
                 formattedText += `${idx + 1}. ${item.name}\n   Posologia: ${item.dosage}\n   Nota: ${item.reason}\n\n`;
             });
             if(aiResponse.alerts) formattedText += `⚠️ ALERTAS: ${aiResponse.alerts}\n`;
+        } else if (aiResponse.output) {
+             try {
+                const inner = JSON.parse(aiResponse.output);
+                formattedText = `📋 ANÁLISE: ${inner.analysis}\n\n💊 SUGESTÕES:\n` + 
+                inner.suggestions.map((s:any) => `• ${s.name}: ${s.dosage}`).join('\n');
+                if(inner.alerts) formattedText += `\n⚠️ ALERTAS: ${inner.alerts}`;
+             } catch (e) {
+                formattedText = aiResponse.output;
+             }
         }
 
-        // Adiciona ao editor existente
         setContent(prev => prev ? `${prev}\n\n---\n\n${formattedText}` : formattedText);
-        
         toast.success("Sugestão gerada com sucesso!");
         setIsAiModalOpen(false);
         setManualComplaint("");
         setSelectedEvolutionId("");
       }
     } catch (error) {
+      console.error(error);
       toast.error("Erro de comunicação com a IA.");
     } finally {
       setIsAiLoading(false);
     }
   };
 
-  // Funções de Deletar e Salvar (Mantidas iguais)
   const handleDelete = async (docId: string) => {
     setIsDeletingId(docId);
     try {
@@ -283,7 +304,6 @@ export function PrescriptionPanel({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                    {/* BOTÃO LIMPAR */}
                     {content.length > 0 && (
                         <Button 
                             variant="ghost" size="sm" onClick={() => setContent("")}
@@ -293,7 +313,7 @@ export function PrescriptionPanel({
                         </Button>
                     )}
 
-                    {/* BOTÃO IA (NOVO) */}
+                    {/* BOTÃO IA */}
                     <Dialog open={isAiModalOpen} onOpenChange={handleOpenAiModal}>
                         <DialogTrigger asChild>
                             <Button variant="outline" size="sm" className="border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214] gap-2 transition-all">
@@ -307,7 +327,7 @@ export function PrescriptionPanel({
                                     <Bot className="w-5 h-5 text-[#76A771]" /> Assistente de Prescrição
                                 </DialogTitle>
                                 <DialogDescription className="text-gray-400">
-                                    Escolha a fonte de dados para a IA analisar e sugerir fitoterápicos.
+                                    Escolha a fonte de dados para a IA analisar.
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -321,13 +341,12 @@ export function PrescriptionPanel({
                                     </TabsTrigger>
                                 </TabsList>
 
-                                {/* ABA: PRONTUÁRIO */}
                                 <TabsContent value="record" className="space-y-4 py-4">
                                     <div className="space-y-2">
                                         <Label className="text-gray-300">Selecione uma consulta recente:</Label>
                                         <Select onValueChange={(val) => {
                                             setSelectedEvolutionId(val);
-                                            setManualComplaint(""); // Limpa o manual se escolher record
+                                            setManualComplaint(""); 
                                         }}>
                                             <SelectTrigger className="bg-[#062214] border-[#2A5432] text-white">
                                                 <SelectValue placeholder="Selecione..." />
@@ -343,17 +362,27 @@ export function PrescriptionPanel({
                                             </SelectContent>
                                         </Select>
                                         
+                                        {/* PREVIEW DO CONTEXTO */}
                                         {selectedEvolutionId && (
-                                            <div className="bg-[#062214]/50 p-3 rounded-md border border-[#2A5432]/30 mt-2 max-h-[100px] overflow-y-auto">
+                                            <div className="bg-[#062214]/50 p-3 rounded-md border border-[#2A5432]/30 mt-2 max-h-[150px] overflow-y-auto">
                                                 <p className="text-xs text-gray-400 italic">
-                                                    "{evolutions.find(e => e.id === selectedEvolutionId)?.pilar5_evolucao?.slice(0, 150)}..."
+                                                    {(() => {
+                                                        const r = evolutions.find(e => e.id === selectedEvolutionId);
+                                                        return r ? (
+                                                            <>
+                                                                <span className="block font-bold mb-1 text-[#76A771]">Resumo do Prontuário:</span>
+                                                                {r.pilar1_investigacao ? `Queixa: ${r.pilar1_investigacao.slice(0, 60)}...` : "Sem queixa principal."}
+                                                                <br/>
+                                                                {r.pilar3_metabolismo ? `Metab.: ${r.pilar3_metabolismo.slice(0, 40)}...` : ""}
+                                                            </>
+                                                        ) : "";
+                                                    })()}
                                                 </p>
                                             </div>
                                         )}
                                     </div>
                                 </TabsContent>
 
-                                {/* ABA: MANUAL */}
                                 <TabsContent value="manual" className="space-y-4 py-4">
                                     <div className="space-y-2">
                                         <Label className="text-gray-300">Descreva as queixas e sintomas:</Label>
@@ -363,7 +392,7 @@ export function PrescriptionPanel({
                                             value={manualComplaint}
                                             onChange={(e) => {
                                                 setManualComplaint(e.target.value);
-                                                setSelectedEvolutionId(""); // Limpa o record se digitar manual
+                                                setSelectedEvolutionId(""); 
                                             }}
                                         />
                                     </div>

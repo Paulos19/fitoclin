@@ -6,20 +6,18 @@ export async function generatePrescriptionSuggestion(data: {
   patientName: string;
   age: string | number;
   gender?: string;
-  complaint: string; // O texto da queixa/evolução
+  complaint: string; // O texto que vem do front
 }) {
   const session = await auth();
   
-  // Verifica permissão (apenas profissionais e admins)
   if (!session || !["ADMIN", "PROFESSIONAL"].includes(session.user.role)) {
     return { error: "Não autorizado." };
   }
 
-  // URL do seu Webhook n8n (Defina no .env)
   const webhookUrl = process.env.N8N_PRESCRIPTION_WEBHOOK_URL; 
 
   if (!webhookUrl) {
-    return { error: "Serviço de IA não configurado (Env Var missing)." };
+    return { error: "Serviço de IA não configurado." };
   }
 
   try {
@@ -27,23 +25,26 @@ export async function generatePrescriptionSuggestion(data: {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // "X-Auth-Token": process.env.N8N_SECRET // Se tiver auth no n8n
+        // A chave deve bater com o "Name" definido na credencial do n8n
+        "x-n8n-secret": process.env.N8N_API_SECRET || "", 
       },
       body: JSON.stringify({
-        ...data,
+        patientName: data.patientName,
+        age: data.age,
+        gender: data.gender || "Não informado",
+        // CORREÇÃO CRITICA: Mapeando 'complaint' para 'evolutionText' que o n8n espera
+        evolutionText: data.complaint, 
         professionalName: session.user.name
       }),
       cache: "no-store",
     });
 
     if (!response.ok) {
-      throw new Error(`Erro n8n: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Erro n8n (${response.status}): ${errorText}`);
     }
 
     const result = await response.json();
-    
-    // O n8n deve retornar um JSON com { suggestion: string } ou a estrutura completa
-    // Vamos assumir que ele retorna o texto formatado ou um objeto
     return { success: result }; 
 
   } catch (error) {

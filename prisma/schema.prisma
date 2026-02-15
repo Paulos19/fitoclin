@@ -307,6 +307,7 @@ model Anamnesis {
   medications String? @db.Text
   supplements String? @db.Text
   allergies   String? @db.Text
+  gender      String?
   dietQuality Int
 
   lgpdAuthorized Boolean @default(false)
@@ -484,7 +485,7 @@ enum LeadStatus {
   CONTACTED
   SCHEDULED
   POS_CONSULTA
-  POS_CONSULTA_ENVIADO 
+  POS_CONSULTA_ENVIADO
   WON
   LOST
 }

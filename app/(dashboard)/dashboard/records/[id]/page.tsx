@@ -71,6 +71,28 @@ export default async function RecordDetailPage({ params }: Props) {
   }
 
   // 3. Preparar Dados Auxiliares
+  
+  // --- LÓGICA DE DADOS CORRIGIDA (IDADE E GÊNERO) ---
+  
+  // Cálculo de Idade (Prioriza Data de Nascimento do Perfil, depois Anamnese)
+  let calculatedAge: string | number = "N/A";
+  if (patient.birthDate) {
+    const today = new Date();
+    const birth = new Date(patient.birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    calculatedAge = age;
+  } else if (patient.anamnesis?.age) {
+    calculatedAge = patient.anamnesis.age;
+  }
+
+  // Gênero (Prioriza Perfil, depois Anamnese)
+  const patientGender = patient.gender || patient.anamnesis?.gender || "Não informado";
+
+  // Gráfico de Evolução
   const evolutionData = patient.weeklyCheckins.map(c => ({
     date: c.createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
     Sono: c.sleepQuality,
@@ -79,7 +101,6 @@ export default async function RecordDetailPage({ params }: Props) {
     Digestão: c.digestion
   }));
 
-  const age = patient.anamnesis?.age || "N/A";
   const whatsappNumber = patient.anamnesis?.phone?.replace(/\D/g, '') || "";
 
   // Filtrar Registros de Pós-Consulta (Lógica baseada nos Títulos do N8N)
@@ -117,10 +138,13 @@ export default async function RecordDetailPage({ params }: Props) {
               <h1 className="text-3xl font-bold text-white tracking-tight">{patient.user.name}</h1>
               <div className="flex flex-wrap gap-4 text-sm text-gray-400 mt-2">
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0A311D] border border-[#2A5432]/50">
-                  <User className="w-3.5 h-3.5 text-[#76A771]" /> {age} anos
+                  <User className="w-3.5 h-3.5 text-[#76A771]" /> {calculatedAge} anos
                 </span>
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0A311D] border border-[#2A5432]/50">
                   <Phone className="w-3.5 h-3.5 text-[#76A771]" /> {patient.anamnesis?.phone || patient.user.email}
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0A311D] border border-[#2A5432]/50">
+                  <Dna className="w-3.5 h-3.5 text-[#76A771]" /> {patientGender}
                 </span>
               </div>
             </div>
@@ -216,12 +240,17 @@ export default async function RecordDetailPage({ params }: Props) {
           <EvolutionChart data={evolutionData} />
         </TabsContent>
 
-        {/* 3. PRESCRIÇÃO (ATUALIZADO - Sem lista duplicada) */}
+        {/* 3. PRESCRIÇÃO */}
         <TabsContent value="prescription" className="space-y-6 animate-in slide-in-from-bottom-2">
             <PrescriptionPanel
                 patientId={patient.id}
                 patientName={patient.user.name || "Paciente"}
-                patientDetails={`${age} anos`}
+                patientDetails={`${calculatedAge} anos`}
+                
+                // PASSANDO OS DADOS CORRETOS PARA A IA
+                patientAge={calculatedAge}
+                patientGender={patientGender}
+                
                 patientEmail={patient.user.email}
                 patientPhone={patient.anamnesis?.phone}
                 doctorName={session?.user?.name || "Dra. Isa"}
