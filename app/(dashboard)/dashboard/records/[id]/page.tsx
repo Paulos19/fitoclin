@@ -15,12 +15,11 @@ import {
   Leaf,
   ExternalLink,
   Image as ImageIcon,
-  File,
   Dna,
   Pill,
-  MessageCircle, // Importado para o ícone
-  Bot,           // Para indicar automação
-  Send           // Para botão de envio
+  MessageCircle, 
+  Bot,           
+  Send           
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,7 +55,7 @@ export default async function RecordDetailPage({ params }: Props) {
       anamnesis: true,
       weeklyCheckins: { orderBy: { createdAt: 'asc' }, take: 20 },
       appointments: { orderBy: { date: 'desc' }, take: 5 },
-      medicalRecords: { orderBy: { createdAt: 'desc' }, take: 50 }, // Aumentei o take para pegar histórico do chat
+      medicalRecords: { orderBy: { createdAt: 'desc' }, take: 50 }, 
       documents: { orderBy: { createdAt: 'desc' } }
     }
   });
@@ -71,7 +70,7 @@ export default async function RecordDetailPage({ params }: Props) {
       redirect("/dashboard");
   }
 
-  // 3. Preparar Dados
+  // 3. Preparar Dados Auxiliares
   const evolutionData = patient.weeklyCheckins.map(c => ({
     date: c.createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
     Sono: c.sleepQuality,
@@ -83,13 +82,14 @@ export default async function RecordDetailPage({ params }: Props) {
   const age = patient.anamnesis?.age || "N/A";
   const whatsappNumber = patient.anamnesis?.phone?.replace(/\D/g, '') || "";
 
-  // 4. Filtrar Registros de Pós-Consulta (Logica baseada nos Títulos salvos pelo N8N)
+  // Filtrar Registros de Pós-Consulta (Lógica baseada nos Títulos do N8N)
   const postConsultationRecords = patient.medicalRecords.filter(r => 
     r.title.includes("Pós-Consulta") || 
     r.title.includes("WhatsApp") || 
     r.title.includes("Retorno")
   );
 
+  // Estilos reutilizáveis
   const cardStyle = "bg-[#0A311D]/50 border-[#2A5432]/30 backdrop-blur-sm text-white";
   const labelStyle = "text-xs font-semibold text-[#76A771] uppercase tracking-wider mb-1";
   const valueStyle = "text-sm text-gray-300";
@@ -156,7 +156,6 @@ export default async function RecordDetailPage({ params }: Props) {
 
         {/* 1. VISÃO GERAL */}
         <TabsContent value="overview" className="space-y-6 animate-in slide-in-from-bottom-2">
-            {/* ... Conteúdo existente mantido ... */}
             <div className="grid md:grid-cols-2 gap-6">
             <Card className={`${cardStyle} h-full border-l-4 border-l-red-500/50`}>
               <CardHeader>
@@ -217,51 +216,23 @@ export default async function RecordDetailPage({ params }: Props) {
           <EvolutionChart data={evolutionData} />
         </TabsContent>
 
-        {/* 3. PRESCRIÇÃO */}
+        {/* 3. PRESCRIÇÃO (ATUALIZADO - Sem lista duplicada) */}
         <TabsContent value="prescription" className="space-y-6 animate-in slide-in-from-bottom-2">
-          <div className="grid md:grid-cols-3 gap-6 h-full">
-            <div className="md:col-span-2">
-              <PrescriptionPanel
+            <PrescriptionPanel
                 patientId={patient.id}
                 patientName={patient.user.name || "Paciente"}
                 patientDetails={`${age} anos`}
                 patientEmail={patient.user.email}
                 patientPhone={patient.anamnesis?.phone}
                 doctorName={session?.user?.name || "Dra. Isa"}
-              />
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Últimas Receitas</h3>
-              {patient.documents
-                .filter(d => d.type === 'PRESCRIPTION')
-                .slice(0, 5)
-                .map(doc => (
-                  <Card key={doc.id} className="bg-[#062214] border border-[#2A5432]/30 hover:border-[#76A771]/50 transition-colors group">
-                    <CardContent className="p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="bg-[#2A5432]/20 p-2 rounded text-[#76A771]">
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm text-white font-medium truncate" title={doc.title}>{doc.title}</p>
-                          <p className="text-[10px] text-gray-500">{new Date(doc.createdAt).toLocaleDateString('pt-BR')}</p>
-                        </div>
-                      </div>
-                      <a href={doc.url} target="_blank" className="text-[#76A771] group-hover:text-white text-xs font-bold px-2 py-1 rounded hover:bg-[#2A5432] transition-colors">
-                        Ver
-                      </a>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          </div>
+            />
         </TabsContent>
 
-        {/* === NOVA ABA: PÓS-CONSULTA === */}
+        {/* 4. PÓS-CONSULTA */}
         <TabsContent value="post-consultation" className="animate-in slide-in-from-bottom-2">
             <div className="grid md:grid-cols-3 gap-6 h-[600px]">
                 
-                {/* Coluna Esquerda: Timeline / Chat */}
+                {/* Timeline / Chat */}
                 <div className="md:col-span-2 bg-[#0A311D]/30 border border-[#2A5432]/30 rounded-xl p-4 flex flex-col h-full overflow-hidden">
                     <div className="border-b border-[#2A5432]/30 pb-3 mb-3 flex justify-between items-center">
                         <h3 className="text-white font-bold flex items-center gap-2">
@@ -276,7 +247,6 @@ export default async function RecordDetailPage({ params }: Props) {
                     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
                         {postConsultationRecords.length > 0 ? (
                             postConsultationRecords.map((record) => {
-                                // Lógica visual simples para diferenciar envio vs resposta
                                 const isPatientReply = record.title.includes("Retorno") || record.title.includes("Resposta");
                                 
                                 return (
@@ -315,7 +285,7 @@ export default async function RecordDetailPage({ params }: Props) {
                     </div>
                 </div>
 
-                {/* Coluna Direita: Ações Rápidas */}
+                {/* Ações Rápidas */}
                 <div className="space-y-4">
                     <Card className={cardStyle}>
                         <CardHeader>
@@ -361,7 +331,7 @@ export default async function RecordDetailPage({ params }: Props) {
             </div>
         </TabsContent>
 
-        {/* 4. EPIGENÉTICA (Replicada para manter a ordem do código original caso necessário) */}
+        {/* 5. EPIGENÉTICA */}
         <TabsContent value="epigenetic" className="animate-in slide-in-from-bottom-2">
           <div className="bg-[#0A311D]/50 border border-[#2A5432]/30 p-6 rounded-xl backdrop-blur-sm">
             <div className="mb-6 border-b border-[#2A5432]/30 pb-4">
@@ -377,9 +347,8 @@ export default async function RecordDetailPage({ params }: Props) {
           </div>
         </TabsContent>
 
-        {/* 5. HISTÓRICO */}
+        {/* 6. HISTÓRICO */}
         <TabsContent value="history" className="animate-in slide-in-from-bottom-2">
-          {/* ... Conteúdo de histórico existente ... */}
            <div className="space-y-4">
             {patient.medicalRecords.length > 0 ? (
               patient.medicalRecords.map((record) => (
@@ -420,9 +389,8 @@ export default async function RecordDetailPage({ params }: Props) {
           </div>
         </TabsContent>
 
-        {/* 6. EXAMES */}
+        {/* 7. EXAMES */}
         <TabsContent value="exams" className="animate-in slide-in-from-bottom-2">
-            {/* ... Conteúdo de exames existente ... */}
              <div className="grid md:grid-cols-3 gap-4">
             {patient.documents.length > 0 ? (
               patient.documents.map((doc) => (
@@ -455,11 +423,10 @@ export default async function RecordDetailPage({ params }: Props) {
           </div>
         </TabsContent>
 
-        {/* 7. ANAMNESE (Conteúdo já incluso no bloco Overview/Anamnese acima, replicado aqui se necessário para a aba específica) */}
+        {/* 8. ANAMNESE */}
         <TabsContent value="anamnesis" className="animate-in slide-in-from-bottom-2">
              {patient.anamnesis ? (
             <Card className={cardStyle}>
-              {/* ... Detalhes da Anamnese ... */}
                <CardHeader className="border-b border-[#2A5432]/30">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-white">Ficha de Pré-Consulta</CardTitle>
@@ -469,7 +436,6 @@ export default async function RecordDetailPage({ params }: Props) {
                 </div>
               </CardHeader>
               <CardContent className="space-y-8 pt-6">
-                  {/* ... Resto dos dados da anamnese ... */}
                    <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[#2A5432]/30">

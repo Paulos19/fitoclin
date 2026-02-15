@@ -75,3 +75,29 @@ export async function saveMedicalRecord(formData: FormData) {
     return { error: "Erro ao salvar prontuário." };
   }
 }
+
+export async function getPatientEvolutions(patientId: string) {
+  const session = await auth();
+  if (!session) return [];
+
+  try {
+    const records = await db.medicalRecord.findMany({
+      where: { patientId },
+      orderBy: { createdAt: 'desc' },
+      take: 10, // Pega as 10 últimas
+      select: {
+        id: true,
+        date: true,
+        title: true,
+        pilar5_evolucao: true, // O campo onde fica a evolução
+        notes: true
+      }
+    });
+
+    // Filtra apenas registros que tenham algum texto relevante
+    return records.filter(r => r.pilar5_evolucao || r.notes);
+  } catch (error) {
+    console.error("Erro ao buscar evoluções:", error);
+    return [];
+  }
+}
