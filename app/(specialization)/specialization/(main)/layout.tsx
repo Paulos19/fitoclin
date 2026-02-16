@@ -1,19 +1,26 @@
-import { SpecializationSidebar } from "@/components/specialization/sidebar";
+// Arquivo: app/(specialization)/specialization/(main)/layout.tsx
 
-export default function MainSpecializationLayout({
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { SpecializationShell } from "@/components/specialization/layout-shell";
+
+export default async function MainSpecializationLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex">
-      {/* Sidebar Fixa na Esquerda */}
-      <SpecializationSidebar />
+  const session = await auth();
 
-      {/* Conteúdo Principal Scrollável */}
-      <main className="flex-1 min-w-0">
-          {children}
-      </main>
-    </div>
+  if (!session) {
+    return redirect("/login");
+  }
+
+  // ✅ O Shell (Sidebar + Header + Conteúdo) é aplicado AQUI.
+  // Isso garante que ele apareça no Dashboard, Cursos e Certificados,
+  // mas deixa o layout de Player de Aulas (learning) livre para ter sua própria estrutura.
+  return (
+    <SpecializationShell user={session.user}>
+      {children}
+    </SpecializationShell>
   );
 }

@@ -1,96 +1,121 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GraduationCap, Award, BookOpenCheck, ArrowRight } from "lucide-react";
+import { GraduationCap, CheckCircle2, ArrowRight, PlayCircle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 
 export function SpecializationSection() {
   return (
-    <section id="especializacao" className="py-24 bg-[#0A311D] relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-        <div className="absolute left-[-10%] top-[20%] w-[500px] h-[500px] bg-[#76A771] rounded-full blur-[120px]" />
-      </div>
+    <section id="especializacao" className="py-24 relative overflow-hidden bg-[#0f0518]">
+      {/* Background Gradients - Deep Purple Theme */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#2e1065] via-[#0f0518] to-[#0f0518] opacity-60" />
+      
+      {/* Abstract Shapes (Lilac Glows) */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#a855f7]/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#c084fc]/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-16">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           
-          {/* Conteúdo Visual (Imagem ou Mockup) */}
-          <div className="flex-1 w-full relative">
-            <div className="relative aspect-video rounded-2xl overflow-hidden border border-[#2A5432] shadow-2xl shadow-[#76A771]/10">
-               {/* Substitua pelo banner real da especialização se tiver */}
-               <div className="absolute inset-0 bg-[#062214] flex items-center justify-center">
-                  <GraduationCap className="w-24 h-24 text-[#76A771] opacity-20" />
-               </div>
-               <div className="absolute inset-0 bg-gradient-to-t from-[#062214] to-transparent opacity-80" />
-               
-               <div className="absolute bottom-8 left-8 right-8">
-                  <div className="inline-flex items-center gap-2 bg-[#76A771] text-[#062214] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
-                    <Award className="w-4 h-4" /> Formação Certificada
-                  </div>
-                  <h3 className="text-2xl font-bold text-white">Fitoterapia Clínica Integrativa</h3>
-               </div>
-            </div>
+          {/* Conteúdo Visual (Imagem) */}
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="flex-1 w-full relative group"
+          >
+            {/* Powerful Lilac Glow behind image */}
+            <div className="absolute inset-0 bg-[#c084fc] blur-[80px] opacity-20 rounded-full scale-90 group-hover:opacity-40 transition-opacity duration-700" />
             
-            {/* Stats Flutuantes */}
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="absolute -bottom-6 -right-6 bg-[#062214] border border-[#2A5432] p-4 rounded-xl shadow-xl hidden md:block"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-[#2A5432]/30 p-2 rounded-lg">
-                  <BookOpenCheck className="w-6 h-6 text-[#76A771]" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">120h</p>
-                  <p className="text-xs text-gray-400 uppercase">Carga Horária</p>
+            <div className="relative rounded-3xl overflow-hidden border border-[#a855f7]/30 shadow-2xl shadow-[#581c87]/30 aspect-[4/3] lg:aspect-square bg-[#1a0b2e]">
+               <Image 
+                src="/2.png" 
+                alt="Especialização Fitoclin" 
+                fill
+                className="object-cover hover:scale-105 transition-transform duration-700"
+              />
+              
+              {/* Overlay Gradient Purple */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f0518] via-transparent to-transparent opacity-90" />
+
+              {/* Floating Badge - Lilac Theme */}
+              <div className="absolute bottom-6 left-6 right-6">
+                <div className="bg-[#1e1b4b]/80 backdrop-blur-md border border-[#c084fc]/30 p-4 rounded-xl flex items-center gap-4">
+                  <div className="bg-[#c084fc] p-3 rounded-full text-[#0f0518] shadow-[0_0_15px_rgba(192,132,252,0.5)]">
+                    <Star className="w-6 h-6 fill-current" />
+                  </div>
+                  <div>
+                    <p className="text-[#e9d5ff] text-xs font-bold uppercase tracking-wider">Certificação de Elite</p>
+                    <p className="text-white font-semibold">Mestre em Fitoterapia</p>
+                  </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
 
-          {/* Conteúdo de Texto (Copywriting) */}
+          {/* Conteúdo de Texto */}
           <div className="flex-1 space-y-8">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-                Eleve sua carreira com a <br/>
-                <span className="text-[#76A771]">Especialização Fitoclin</span>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#3b0764]/50 border border-[#a855f7]/50 text-[#d8b4fe] text-sm font-semibold mb-6 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+              >
+                <PlayCircle className="w-4 h-4" />
+                <span>Inscrições Abertas 2026</span>
+              </motion.div>
+              
+              <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6 leading-[1.1]">
+                Sua autoridade clínica <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#e879f9] via-[#c084fc] to-[#a855f7]">
+                  começa aqui.
+                </span>
               </h2>
-              <p className="text-gray-400 text-lg leading-relaxed">
-                Não é apenas um curso, é uma jornada completa para profissionais de saúde que desejam dominar a prescrição de fitoterápicos com segurança, embasamento científico e prática clínica.
+              
+              <p className="text-[#d8b4fe]/80 text-lg leading-relaxed font-light">
+                Não é apenas mais um curso. É a <strong>Especialização</strong> definitiva que une a ciência fitoterápica com a prática clínica de alto nível. Diferencie-se no mercado com uma metodologia única.
               </p>
             </div>
 
-            <ul className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-y-4 gap-x-6">
               {[
-                "Metodologia validada com casos clínicos reais",
-                "Certificado reconhecido e válido em todo território nacional",
-                "Acesso a mentorias exclusivas com a Dra. Isa",
-                "Material didático completo e atualizado"
+                "Conteúdo 100% Baseado em Evidências",
+                "Certificação Válida Nacionalmente",
+                "Mentoria Mensal com Especialistas",
+                "Acesso Vitalício ao Material",
+                "Protocolos Prontos para Uso",
+                "Grupo de Networking Premium"
               ].map((item, idx) => (
-                <li key={idx} className="flex items-start gap-3">
-                  <div className="mt-1 w-5 h-5 rounded-full bg-[#2A5432] flex items-center justify-center shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-[#76A771]" />
+                <motion.div 
+                  key={idx}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  viewport={{ once: true }}
+                  className="flex items-center gap-3"
+                >
+                  <div className="bg-[#a855f7]/20 p-1 rounded-full">
+                    <CheckCircle2 className="w-4 h-4 text-[#c084fc] shrink-0" />
                   </div>
-                  <span className="text-gray-300">{item}</span>
-                </li>
+                  <span className="text-gray-300 font-medium text-sm">{item}</span>
+                </motion.div>
               ))}
-            </ul>
+            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href="/subscription" className="flex-1">
-                <Button className="w-full h-12 bg-[#76A771] text-[#062214] hover:bg-[#5e8a5a] font-bold text-base shadow-lg shadow-[#76A771]/20">
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+              <Link href="/subscription" className="w-full sm:w-auto">
+                <Button className="w-full h-14 bg-[#c084fc] text-[#2e1065] hover:bg-[#d8b4fe] font-bold text-lg rounded-xl shadow-[0_0_25px_rgba(192,132,252,0.4)] transition-all hover:scale-105 border border-[#e9d5ff]/20">
                   Quero ser Especialista
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="/specialization" className="flex-1">
-                <Button variant="outline" className="w-full h-12 border-[#2A5432] text-[#76A771] hover:bg-[#2A5432] hover:text-white bg-transparent font-bold text-base">
-                  Ver Dashboard
+              <Link href="/specialization" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full h-14 border-[#581c87] text-[#e9d5ff] hover:text-white hover:bg-[#581c87]/40 rounded-xl bg-transparent transition-all">
+                  Ver Grade Curricular
                 </Button>
               </Link>
             </div>
