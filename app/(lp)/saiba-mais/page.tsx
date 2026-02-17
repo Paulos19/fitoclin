@@ -4,14 +4,17 @@ import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check, X, Star, ChevronDown, Lock, Leaf } from "lucide-react";
+import { ArrowRight, Check, X, Star, ChevronDown, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// --- URL DO CHECKOUT ---
+const CHECKOUT_URL = "https://pay.kiwify.com.br/jblYbMp";
 
 // --- COMPONENTES DE UI PREMIUM ---
 
 // Botão Dourado com brilho e efeito de hover magnético
-const GoldButton = ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => (
-  <Link href={href} className="w-full md:w-auto">
+const GoldButton = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <Link href={CHECKOUT_URL} target="_blank" className="w-full md:w-auto">
     <motion.button
       whileHover={{ scale: 1.02, boxShadow: "0 0 30px -5px rgba(197, 160, 89, 0.3)" }}
       whileTap={{ scale: 0.98 }}
@@ -94,7 +97,7 @@ export default function ManualFitoterapiaPage() {
               <span className="block mt-2 text-[#76A771] font-medium">Visão estratégica. Posicionamento. Resultado.</span>
             </p>
             
-            <GoldButton href="#offer">QUERO DESCOBRIR</GoldButton>
+            <GoldButton>QUERO DESCOBRIR</GoldButton>
           </motion.div>
         </div>
 
@@ -148,13 +151,13 @@ export default function ManualFitoterapiaPage() {
                ))}
 
                {/* Card Especial de Imagem */}
-               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#C5A059] to-[#B08D4B] flex items-center justify-center group cursor-pointer shadow-lg shadow-[#C5A059]/20">
+               <Link href={CHECKOUT_URL} target="_blank" className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#C5A059] to-[#B08D4B] flex items-center justify-center group cursor-pointer shadow-lg shadow-[#C5A059]/20 transition-transform hover:scale-[1.02]">
                    <Image src="/banner-lp.jpeg" alt="Manual" fill className="object-cover opacity-30 mix-blend-overlay group-hover:scale-105 transition-transform duration-700" />
                    <div className="relative z-10 text-center p-6">
                        <Lock className="w-10 h-10 text-white mx-auto mb-3" />
                        <span className="font-bold text-white tracking-widest uppercase text-xs border border-white/30 px-3 py-1 rounded-full backdrop-blur-md">Conteúdo Exclusivo</span>
                    </div>
-               </div>
+               </Link>
             </div>
          </div>
       </section>
@@ -296,7 +299,7 @@ export default function ManualFitoterapiaPage() {
                </div>
 
                <div className="flex flex-col items-center gap-6">
-                  <GoldButton href="/checkout" className="w-full md:w-auto px-16 py-6 text-xl shadow-[#C5A059]/20">
+                  <GoldButton className="w-full md:w-auto px-16 py-6 text-xl shadow-[#C5A059]/20">
                      LIBERAR ACESSO AGORA
                   </GoldButton>
                   
@@ -492,7 +495,7 @@ function NarrativeTextItemDark({ step, index, setActiveStep, isActive }: any) {
              animate={{ opacity: 1, y: 0 }}
              className="mt-10"
            >
-              <Link href="#offer" className="text-[#76A771] font-bold flex items-center gap-2 hover:gap-4 transition-all group">
+              <Link href={CHECKOUT_URL} target="_blank" className="text-[#76A771] font-bold flex items-center gap-2 hover:gap-4 transition-all group">
                  Começar Jornada <ArrowRight className="w-5 h-5 group-hover:text-white transition-colors"/>
               </Link>
            </motion.div>
