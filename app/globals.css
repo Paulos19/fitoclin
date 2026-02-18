@@ -7,37 +7,44 @@
   /* --- FORÇA O TEMA ESCURO NO NAVEGADOR --- */
   color-scheme: dark;
 
-  /* --- PALETA FITOCLIN PREMIUM --- */
-  --background: hsl(150 70% 8%);      /* #062214 */
-  --foreground: hsl(0 0% 95%);        /* #F1F1F1 */
+  /* --- PALETA FITOCLIN PREMIUM (Verde & Natureza) --- */
+  /* Fundo profundo (Dark Forest) */
+  --background: hsl(150 70% 4%);      /* #03120b - Quase preto, toque verde */
+  --foreground: hsl(140 20% 96%);     /* #f0fdf4 - Branco gelo esverdeado */
 
-  --card: hsl(149 66% 12%);           /* #0A311D */
-  --card-foreground: hsl(0 0% 95%);
+  /* Cartões e seções secundárias */
+  --card: hsl(150 60% 6%);            /* #06180e */
+  --card-foreground: hsl(140 20% 96%);
 
-  --popover: hsl(149 66% 12%);
-  --popover-foreground: hsl(0 0% 95%);
+  --popover: hsl(150 60% 6%);
+  --popover-foreground: hsl(140 20% 96%);
 
-  --primary: hsl(131 33% 25%);        /* #2A5432 (Verde Musgo) */
+  /* Primary: Verde Musgo Elegante (Botões, Destaques Fortes) */
+  --primary: hsl(135 40% 35%);        /* #357d4a */
   --primary-foreground: hsl(0 0% 100%);
 
-  --secondary: hsl(115 25% 55%);      /* #76A771 (Verde Lima) */
+  /* Secondary: Verde Lima/Dourado (Acentos, Ícones, CTA Secundário) */
+  /* Substitui o antigo dourado #D4AF37 */
+  --secondary: hsl(115 40% 60%);      /* #8bc97d */
   --secondary-foreground: hsl(150 70% 5%);
 
-  --muted: hsl(149 30% 20%);
-  --muted-foreground: hsl(149 10% 70%);
+  --muted: hsl(150 30% 12%);
+  --muted-foreground: hsl(140 10% 70%);
+
+  --accent: hsl(150 30% 15%);
+  --accent-foreground: hsl(140 20% 96%);
 
   --destructive: hsl(0 62% 30%);
   --destructive-foreground: hsl(0 0% 98%);
 
-  --border: hsl(149 30% 20%);
-  --input: hsl(149 30% 20%);
-  --ring: hsl(115 25% 55%);
+  --border: hsl(150 30% 15%);
+  --input: hsl(150 30% 15%);
+  --ring: hsl(115 40% 60%); /* Ring com a cor secundária */
 
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 }
 
 @theme inline {
-  /* --- Mapeamento de Cores --- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -50,52 +57,19 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-
-  /* --- ANIMAÇÕES CUSTOMIZADAS (LP) --- */
-  --animate-spin-slow: spin 12s linear infinite;
-  --animate-shine: shine 1.5s ease-in-out infinite;
-  --animate-border-spin: border-spin 4s linear infinite;
-
-  /* --- KEYFRAMES --- */
-  @keyframes shine {
-    0% { left: -100%; }
-    100% { left: 200%; }
-  }
-
-  @keyframes border-spin {
-    100% { transform: rotate(360deg); }
-  }
-}
-
-/* --- SCROLLBAR GLOBAL (Chrome, Edge, Safari) --- */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #062214;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: #2A5432;
-  border-radius: 99px;
-  border: 2px solid #062214;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: #76A771;
-}
-
-::-webkit-scrollbar-corner {
-  background: #062214;
+  
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 /* --- ESTILOS GLOBAIS --- */
@@ -105,57 +79,22 @@
   }
   
   html {
-    scrollbar-width: thin;
-    scrollbar-color: #2A5432 #062214;
+    @apply scroll-smooth;
   }
   
-  html, body {
-    @apply overflow-x-hidden;
-    width: 100%;
-    max-width: 100%;
-    position: relative;
-  }
-
   body {
-    @apply bg-background text-foreground antialiased selection:bg-[#76A771]/30 selection:text-white;
+    @apply bg-background text-foreground antialiased selection:bg-secondary/30 selection:text-white;
   }
 }
 
 @layer components {
-  .btn-gradient {
-    @apply bg-gradient-to-r from-[#2A5432] to-[#76A771] text-white shadow-lg hover:shadow-primary/20 hover:brightness-110 transition-all duration-300 border-none cursor-pointer;
+  /* Botão Premium Verde */
+  .btn-premium {
+    @apply relative overflow-hidden bg-gradient-to-r from-primary to-[#4a9e64] text-white shadow-lg hover:shadow-secondary/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-bold tracking-wider uppercase rounded-sm;
   }
   
-  /* Scrollbar Fina para áreas internas */
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #2A5432 transparent;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #2A5432;
-    border-radius: 10px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #76A771;
-  }
-
-  /* Overlay para Hero Section (se necessário) */
-  .hero-fade-overlay {
-    background: linear-gradient(to bottom, 
-      rgba(6, 34, 20, 0.3) 0%,
-      rgba(6, 34, 20, 0.8) 60%,
-      rgba(6, 34, 20, 1) 100%
-    );
+  /* Utilitários de Texto */
+  .text-gradient-gold {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-secondary via-[#bdfcc9] to-secondary;
   }
 }
