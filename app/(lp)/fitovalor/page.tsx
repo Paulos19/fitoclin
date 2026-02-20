@@ -8,8 +8,6 @@ import { ArrowRight, Check, X, Star, ChevronDown, Lock, Crown, BookOpen, Target,
 import { cn } from "@/lib/utils";
 
 // --- URL DO CHECKOUT ---
-// No Next.js Client Components ("use client"), a variável no .env precisa começar com NEXT_PUBLIC_
-// Colocamos o fallback (||) para garantir que NUNCA seja undefined, evitando o erro de "Failed prop type".
 const CHECKOUT_URL = process.env.NEXT_PUBLIC_CHECKOUT_URL || "https://pay.kiwify.com.br/jblYbMp";
 
 // --- COMPONENTES DE UI ---
@@ -45,17 +43,18 @@ const SectionHeading = ({ subtitle, title, centered = false }: { subtitle: strin
     </div>
 );
 
-// --- NOVO COMPONENTE: PADRÃO DE IMAGENS ---
-const ImageBlock = ({ src, alt, className }: { src: string, alt: string, className?: string }) => (
-    <div className={cn("relative aspect-square md:aspect-[4/5] w-full max-w-md mx-auto rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] group p-2 bg-white/5", className)}>
+// Ajuste principal aqui: 'object-contain' em vez de 'object-cover' e um padding (p-4)
+const ImageBlock = ({ src, alt, className, imageClassName = "object-contain p-6" }: { src: string, alt: string, className?: string, imageClassName?: string }) => (
+    <div className={cn("relative aspect-square md:aspect-[4/5] w-full max-w-md mx-auto rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] group bg-white/5", className)}>
         <div className="relative w-full h-full rounded-[1.5rem] overflow-hidden">
             <Image 
                 src={src} 
                 alt={alt} 
                 fill 
-                className="object-cover group-hover:scale-105 transition-transform duration-1000"
+                className={cn("group-hover:scale-105 transition-transform duration-1000 drop-shadow-2xl", imageClassName)}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none" />
+            {/* Overlay sutil para dar profundidade ao card, não cobre a imagem inteira de forma agressiva */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/5 to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none" />
         </div>
     </div>
 );
@@ -72,7 +71,7 @@ export default function ManualFitoterapiaProPage() {
     <div ref={containerRef} className="bg-background text-foreground font-sans overflow-x-hidden selection:bg-secondary/30">
       
       {/* --- DOBRA 1: HERO --- */}
-      <section className="relative min-h-[100svh] w-full flex items-center justify-center overflow-hidden border-b border-white/5 pt-20 pb-20 md:pt-0 md:pb-0">
+      <section className="relative min-h-[100svh] w-full flex items-center justify-center overflow-hidden border-b border-white/5 pt-24 pb-20 md:pt-0 md:pb-0">
         <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
         
         <div className="absolute top-20 right-10 opacity-10 text-secondary animate-pulse duration-[4s]">
@@ -82,7 +81,7 @@ export default function ManualFitoterapiaProPage() {
             <Sprout size={180} strokeWidth={0.5} />
         </div>
 
-        <div className="relative z-10 container mx-auto px-6 max-w-7xl grid lg:grid-cols-2 gap-12 lg:gap-8 items-center mt-10 md:mt-0">
+        <div className="relative z-10 container mx-auto px-6 max-w-7xl grid lg:grid-cols-2 gap-16 lg:gap-8 items-center mt-10 md:mt-0">
           
           <motion.div 
             style={{ y: heroTextY }}
@@ -96,7 +95,7 @@ export default function ManualFitoterapiaProPage() {
                 <span className="text-secondary text-xs font-bold tracking-[0.2em] uppercase">Edição Profissional</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-white leading-[1.1] mb-6 tracking-tight drop-shadow-lg">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-serif text-white leading-[1.05] mb-6 tracking-tight drop-shadow-lg">
               MANUAL DA <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-white to-secondary">
                 FITOTERAPIA DE VALOR
@@ -112,24 +111,34 @@ export default function ManualFitoterapiaProPage() {
             </div>
           </motion.div>
 
+          {/* IMAGEM MELHORADA AQUI (Hero) */}
           <motion.div 
             style={{ y: heroImageY }}
             initial={{ opacity: 0, scale: 0.9, rotate: 5 }}
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="order-1 lg:order-2 flex justify-center lg:justify-end relative"
+            className="order-1 lg:order-2 flex justify-center lg:justify-end relative mt-8 lg:mt-0"
           >
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] md:w-[350px] h-[400px] md:h-[550px] bg-primary/30 blur-[100px] rounded-full" />
-            <div className="relative w-[240px] md:w-[320px] aspect-[9/16] rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl rotate-[-3deg] hover:rotate-0 transition-transform duration-500 group">
+            {/* Glow de fundo expandido e mais integrado */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[450px] h-[450px] md:h-[600px] bg-gradient-to-tr from-secondary/30 to-primary/20 blur-[100px] rounded-full" />
+            
+            {/* Imagem flutuante com object-contain e padding para não cortar as pontas do manual */}
+            <motion.div 
+              animate={{ y: [-10, 10, -10] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+              className="relative w-[280px] md:w-[360px] aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/20 shadow-[0_25px_50px_-12px_rgba(118,167,113,0.4)] rotate-[-3deg] hover:rotate-0 hover:scale-[1.02] transition-all duration-500 group z-10 bg-white/5 backdrop-blur-sm"
+            >
                  <Image 
                     src="/5.png" 
-                    alt="Manual Fitoterapia Mobile" 
+                    alt="Manual Fitoterapia Profissional" 
                     fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="object-contain p-6 opacity-90 group-hover:opacity-100 transition-all duration-700 drop-shadow-2xl"
                     priority
                  />
-                 <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-            </div>
+                 <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-black/40 pointer-events-none mix-blend-overlay" />
+                 {/* Borda interna iluminada */}
+                 <div className="absolute inset-0 border-[2px] border-white/10 rounded-[2rem] pointer-events-none" />
+            </motion.div>
           </motion.div>
         </div>
 
@@ -170,6 +179,7 @@ export default function ManualFitoterapiaProPage() {
             </div>
             
             <div className="order-1 lg:order-2">
+                {/* Agora usando 'object-contain' via prop default do novo ImageBlock */}
                 <ImageBlock src="/6.png" alt="A Estagnação" />
             </div>
         </div>
@@ -343,6 +353,7 @@ export default function ManualFitoterapiaProPage() {
 
             <div className="mt-16 relative bg-gradient-to-br from-primary to-[#184223] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between">
                 <div className="absolute top-0 right-0 w-full md:w-1/2 h-full opacity-30 md:opacity-40 mix-blend-overlay pointer-events-none">
+                     {/* Textura botânica de background continua com object-cover pois é só textura */}
                      <Image src="/4.png" alt="Textura Botânica" fill className="object-cover object-center" />
                      <div className="absolute inset-0 bg-gradient-to-r from-[#184223] via-transparent to-transparent hidden md:block" />
                      <div className="absolute inset-0 bg-gradient-to-t from-[#184223] via-transparent to-transparent md:hidden" />
@@ -390,12 +401,13 @@ export default function ManualFitoterapiaProPage() {
                     </ul>
                 </div>
 
-                <div className="bg-[#0a0a0a] p-8 md:p-12 rounded-[2.5rem] border border-white/5 relative overflow-hidden shadow-lg">
-                    <div className="absolute -top-10 -right-10 p-10 opacity-[0.03] rotate-12 pointer-events-none">
+                {/* CARD "NÃO É PARA VOCÊ" */}
+                <div className="bg-card/40 backdrop-blur-md p-8 md:p-12 rounded-[2.5rem] border border-red-900/20 relative overflow-hidden group shadow-[0_0_30px_-10px_rgba(239,68,68,0.08)] hover:border-red-900/40 hover:bg-card/60 transition-colors">
+                    <div className="absolute -top-10 -right-10 p-10 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity rotate-12 pointer-events-none">
                         <X size={200} className="text-red-500" />
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-serif text-gray-400 mb-10 flex items-center gap-4">
-                        <span className="bg-red-900/20 p-3 rounded-xl"><X className="w-6 h-6 text-red-500" /></span>
+                    <h3 className="text-2xl md:text-3xl font-serif text-gray-300 mb-10 flex items-center gap-4">
+                        <span className="bg-red-900/10 p-3 rounded-xl shadow-inner border border-red-900/20"><X className="w-6 h-6 text-red-400" /></span>
                         Este manual NÃO é para você se:
                     </h3>
                     <ul className="space-y-4">
@@ -405,8 +417,8 @@ export default function ManualFitoterapiaProPage() {
                             "Não está disposto a repensar sua atuação",
                             "Procura atalhos fáceis"
                         ].map((item, i) => (
-                            <li key={i} className="flex gap-4 text-gray-500 items-center p-4 border border-transparent">
-                                <span className="w-2.5 h-2.5 rounded-full bg-red-900/50 shrink-0"/>
+                            <li key={i} className="flex gap-4 text-gray-400 items-center p-4 border border-transparent rounded-2xl hover:bg-red-950/10 hover:border-red-900/20 transition-colors">
+                                <span className="w-2.5 h-2.5 rounded-full bg-red-900/60 shrink-0"/>
                                 <span className="text-base md:text-lg">{item}</span>
                             </li>
                         ))}
@@ -510,6 +522,7 @@ export default function ManualFitoterapiaProPage() {
                 <div className="lg:col-span-5 relative order-2 lg:order-1">
                     <div className="relative aspect-[4/5] w-full max-w-md mx-auto bg-gradient-to-b from-primary/20 to-background rounded-[2.5rem] overflow-hidden border border-white/10 group shadow-2xl p-2">
                         <div className="relative w-full h-full rounded-[2rem] overflow-hidden">
+                            {/* Na foto de perfil sim, mantemos object-cover, pois é retrato humano e não mockup */}
                             <Image 
                                 src="/isa.png" 
                                 alt="Dra Isa Bieski" 
