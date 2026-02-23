@@ -393,6 +393,7 @@ model Module {
 
   lessons   Lesson[]
   materials ModuleMaterial[]
+  quiz      Quiz?
 }
 
 model Lesson {
@@ -509,4 +510,33 @@ enum CourseCategory {
 enum SubscriptionPlan {
   COMMUNITY
   SPECIALIZATION
+}
+
+model Quiz {
+  id           String @id @default(cuid())
+  passingScore Int    @default(70)
+
+  moduleId String @unique
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  questions Question[]
+}
+
+model Question {
+  id   String @id @default(cuid())
+  text String @db.Text
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  options Option[]
+}
+
+model Option {
+  id        String  @id @default(cuid())
+  text      String
+  isCorrect Boolean @default(false)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }

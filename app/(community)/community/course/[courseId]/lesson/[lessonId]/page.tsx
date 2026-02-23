@@ -5,10 +5,12 @@ import { Separator } from "@/components/ui/separator";
 import { LessonCheckButton } from "@/components/community/lesson-check-button"; 
 import { VideoPlayer } from "@/components/community/video-player"; 
 import { hasCourseAccess } from "@/lib/access";
-// 👇 Novos imports para ícones e UI
 import { FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+
+// 👇 Import do componente de questionário
+import { ModuleQuiz } from "@/components/community/module-quiz";
 
 export default async function LessonPage({
   params,
@@ -27,15 +29,29 @@ export default async function LessonPage({
     redirect(`/community/course/${courseId}`);
   }
 
-  // 2. Buscar dados da aula + MATERIAIS DO MÓDULO
+  // 2. Buscar dados da aula + MATERIAIS + QUIZ + TODAS AS AULAS DO MÓDULO
   const lesson = await db.lesson.findUnique({
     where: { id: lessonId },
     include: {
       module: { 
         include: { 
           course: true,
-          // 👇 AQUI: Carregamos os materiais vinculados a este módulo
-          materials: true 
+          materials: true,
+          // Precisamos da lista de aulas para saber se esta é a última
+          lessons: {
+            orderBy: { order: 'asc' },
+            select: { id: true }
+          },
+          // Incluímos a estrutura completa do Quiz
+          quiz: {
+            include: {
+              questions: {
+                include: {
+                  options: true
+                }
+              }
+            }
+          }
         } 
       },
       progress: {
@@ -48,6 +64,10 @@ export default async function LessonPage({
 
   const isCompleted = lesson.progress.length > 0 && lesson.progress[0].completed;
   const materials = lesson.module.materials; // Atalho para facilitar leitura
+  const quiz = lesson.module.quiz;
+
+  // Verifica se a aula atual é a última aula da lista ordenada de aulas deste módulo
+  const isLastLessonOfModule = lesson.module.lessons[lesson.module.lessons.length - 1]?.id === lesson.id;
 
   return (
     <div className="flex flex-col pb-20">
@@ -131,13 +151,20 @@ export default async function LessonPage({
                         </CardContent>
                     </Card>
                 ) : (
-                   /* Estado Vazio Opcional ou apenas null */
                    <div className="p-4 rounded-lg bg-gray-50 border border-dashed border-gray-200 text-center">
                        <p className="text-sm text-gray-400">Nenhum material neste módulo.</p>
                    </div>
                 )}
             </div>
         </div>
+
+        {/* 👇 [NOVO] Renderiza o Quiz se for a última aula do módulo e o módulo possuir um quiz */}
+        {isLastLessonOfModule && quiz && quiz.questions.length > 0 && (
+          <div className="mt-12 pt-8 border-t border-gray-200">
+             <ModuleQuiz quiz={quiz} />
+          </div>
+        )}
+
       </div>
     </div>
   );

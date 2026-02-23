@@ -4,9 +4,9 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { del, put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
-import { CourseCategory } from "@prisma/client"; // Certifique-se de ter rodado o prisma generate
+import { CourseCategory } from "@prisma/client";
 
-// 1. Listar Cursos (Com filtro de Categoria)
+// 1. Listar Cursos (Com filtro de Categoria e incluindo Quiz)
 export async function getCourses(category?: CourseCategory) {
   const whereClause = category ? { category } : {};
 
@@ -17,7 +17,17 @@ export async function getCourses(category?: CourseCategory) {
         orderBy: { order: 'asc' },
         include: {
           lessons: { orderBy: { order: 'asc' } },
-          materials: true
+          materials: true,
+          // [NOVO] Incluindo o Questionário na listagem
+          quiz: {
+            include: {
+              questions: {
+                include: {
+                  options: true
+                }
+              }
+            }
+          }
         }
       },
       _count: { select: { modules: true } }
@@ -50,7 +60,17 @@ export async function getCourseContent(courseId: string) {
               }
             }
           },
-          materials: true
+          materials: true,
+          // [NOVO] Incluindo o Questionário para o Aluno poder responder
+          quiz: {
+            include: {
+              questions: {
+                include: {
+                  options: true // Trazemos as opções (o frontend cuidará de não mostrar a resposta certa se for o caso)
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -171,11 +191,10 @@ export async function upsertCourse(data: any) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
-  // Adicionado o campo category na desestruturação
   const { id, title, description, imageUrl, active, price, modules, category } = data;
 
   try {
-    // 1. Curso Base (incluindo category)
+    // 1. Curso Base
     const course = await db.course.upsert({
       where: { id: id || "new" },
       create: { 
@@ -184,7 +203,7 @@ export async function upsertCourse(data: any) {
         imageUrl, 
         active, 
         price,
-        category: category || "COMMUNITY" // Default caso venha vazio
+        category: category || "COMMUNITY"
       },
       update: { 
         title, 
@@ -199,6 +218,7 @@ export async function upsertCourse(data: any) {
     // 2. Sincronizar Módulos
     const moduleIdsInForm = modules.filter((m: any) => m.id).map((m: any) => m.id);
 
+    // Deleta módulos que foram removidos no frontend
     await db.module.deleteMany({
       where: {
         courseId: course.id,
@@ -207,12 +227,14 @@ export async function upsertCourse(data: any) {
     });
 
     for (const [mIndex, mod] of modules.entries()) {
+      // Upsert do Módulo
       const currentModule = await db.module.upsert({
         where: { id: mod.id || "new-mod" },
         create: { title: mod.title, order: mIndex, courseId: course.id },
         update: { title: mod.title, order: mIndex }
       });
 
+      // 3. Sincronizar Aulas (Recriação para evitar complexidade)
       await db.lesson.deleteMany({ where: { moduleId: currentModule.id } });
 
       if (mod.lessons && mod.lessons.length > 0) {
@@ -225,10 +247,36 @@ export async function upsertCourse(data: any) {
             }))
         });
       }
+
+      // 4. [NOVO] Sincronizar Questionário (Quiz)
+      // Como a estrutura é aninhada (Quiz -> Questões -> Opções), a forma mais segura e 
+      // limpa de atualizar é deletar o quiz atual e recriar com os novos dados.
+      // Graças ao onDelete: Cascade no schema, as perguntas e opções somem juntas.
+      await db.quiz.deleteMany({ where: { moduleId: currentModule.id } });
+
+      if (mod.quiz && mod.quiz.questions && mod.quiz.questions.length > 0) {
+        await db.quiz.create({
+          data: {
+            moduleId: currentModule.id,
+            passingScore: mod.quiz.passingScore ?? 70,
+            questions: {
+              create: mod.quiz.questions.map((q: any) => ({
+                text: q.text,
+                options: {
+                  create: q.options.map((o: any) => ({
+                    text: o.text,
+                    isCorrect: o.isCorrect
+                  }))
+                }
+              }))
+            }
+          }
+        });
+      }
     }
 
     revalidatePath("/dashboard/courses");
-    revalidatePath("/specialization"); // Revalida a nova página também
+    revalidatePath("/specialization");
     return { success: "Curso salvo com sucesso!" };
 
   } catch (error) {

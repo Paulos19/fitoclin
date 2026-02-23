@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, FileText, Download } from "lucide-react";
 import Link from "next/link";
+import { ModuleQuiz } from "@/components/community/module-quiz"; // [NOVO] Importação do componente
 
 export default async function LessonPage({
   params
@@ -41,6 +42,9 @@ export default async function LessonPage({
   const currentIndex = flatLessons.findIndex(l => l.id === lessonId);
   if (currentIndex > 0) prevLessonId = flatLessons[currentIndex - 1].id;
   if (currentIndex < flatLessons.length - 1) nextLessonId = flatLessons[currentIndex + 1].id;
+
+  // [NOVO] Verifica se esta é a última aula deste módulo específico
+  const isLastLessonOfModule = currentModule?.lessons?.[currentModule.lessons.length - 1]?.id === currentLesson.id;
 
   // Helper de Embed (Simples)
   const getEmbedUrl = (url: string) => {
@@ -82,11 +86,10 @@ export default async function LessonPage({
       {/* 2. BARRA DE CONTROLE E NAVEGAÇÃO */}
       <div className="border-b border-white/10 bg-[#0A311D] p-4 flex items-center justify-between sticky top-0 z-10">
          <div className="flex items-center gap-4">
-             {/* CORREÇÃO AQUI: initialIsCompleted */}
              <div className="scale-110">
                 <LessonCheckButton 
                     lessonId={currentLesson.id} 
-                    initialIsCompleted={isCompleted} // Prop corrigida
+                    initialIsCompleted={isCompleted} 
                 />
              </div>
              <span className="text-gray-400 text-sm hidden md:inline">Marcar como vista</span>
@@ -144,6 +147,11 @@ export default async function LessonPage({
                      ))}
                  </div>
              </div>
+         )}
+
+         {/* [NOVO] RENDERIZAÇÃO DO QUESTIONÁRIO SE FOR A ÚLTIMA AULA DO MÓDULO */}
+         {isLastLessonOfModule && currentModule?.quiz && currentModule.quiz.questions.length > 0 && (
+            <ModuleQuiz quiz={currentModule.quiz} />
          )}
       </div>
     </div>

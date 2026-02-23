@@ -36,9 +36,10 @@ import {
   Image as ImageIcon,
   Upload,
   FileText,
-  Crown // [NOVO] Ícone para Especialização
+  Crown,
+  ListTodo,
+  CheckCircle2 
 } from "lucide-react";
-// [NOVO] Imports do Select
 import {
   Select,
   SelectContent,
@@ -54,6 +55,26 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 
 // --- TIPAGEM ---
+
+type Option = {
+  id?: string;
+  tempId?: string;
+  text: string;
+  isCorrect: boolean;
+};
+
+type Question = {
+  id?: string;
+  tempId?: string;
+  text: string;
+  options: Option[];
+};
+
+type Quiz = {
+  id?: string;
+  passingScore: number;
+  questions: Question[];
+};
 
 type Lesson = {
   id?: string;
@@ -77,6 +98,7 @@ type Module = {
   order: number;
   lessons: Lesson[];
   materials?: Material[];
+  quiz?: Quiz | null; 
 };
 
 type CourseForm = {
@@ -86,7 +108,7 @@ type CourseForm = {
   imageUrl: string;
   active: boolean;
   price: number;
-  category: "COMMUNITY" | "SPECIALIZATION"; // [NOVO] Campo de Categoria
+  category: "COMMUNITY" | "SPECIALIZATION";
   modules: Module[];
 };
 
@@ -108,7 +130,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     imageUrl: "",
     active: true,
     price: 0,
-    category: "COMMUNITY", // [NOVO] Padrão
+    category: "COMMUNITY",
     modules: []
   };
 
@@ -122,13 +144,27 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     if (course) {
       setEditingCourse(course);
       
-      // Sanitização Profunda
       const cleanModules: Module[] = (course.modules || []).map((m: any) => ({
         id: m.id,
         tempId: m.id,
         title: m.title ?? "",
         order: m.order ?? 0,
         materials: m.materials || [],
+        quiz: m.quiz ? {
+          id: m.quiz.id,
+          passingScore: m.quiz.passingScore ?? 70,
+          questions: (m.quiz.questions || []).map((q: any) => ({
+            id: q.id,
+            tempId: q.id,
+            text: q.text ?? "",
+            options: (q.options || []).map((o: any) => ({
+              id: o.id,
+              tempId: o.id,
+              text: o.text ?? "",
+              isCorrect: !!o.isCorrect
+            }))
+          }))
+        } : null,
         lessons: (m.lessons || []).map((l: any) => ({
           id: l.id,
           tempId: l.id,
@@ -145,7 +181,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         imageUrl: course.imageUrl ?? "",
         active: !!course.active,
         price: Number(course.price) || 0,
-        category: course.category || "COMMUNITY", // [NOVO] Carrega a categoria
+        category: course.category || "COMMUNITY",
         modules: cleanModules
       });
       setImagePreview(course.imageUrl || null);
@@ -170,7 +206,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     startTransition(async () => {
       let finalImageUrl = formData.imageUrl;
 
-      // 1. Upload da Imagem
       if (selectedImageFile) {
         const uploadForm = new FormData();
         uploadForm.append("file", selectedImageFile);
@@ -184,7 +219,18 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         }
       }
 
-      // 2. Preparar payload
+      // Validação básica do Questionário
+      for (const mod of formData.modules) {
+        if (mod.quiz && mod.quiz.questions.length > 0) {
+          for (const q of mod.quiz.questions) {
+            if (!q.options.some(o => o.isCorrect)) {
+              toast.error(`A pergunta "${q.text || 'Sem título'}" no módulo "${mod.title}" precisa ter uma resposta correta.`);
+              return;
+            }
+          }
+        }
+      }
+
       const dataToSave = { 
         ...formData, 
         imageUrl: finalImageUrl,
@@ -217,7 +263,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     });
   };
 
-  // Novo Handler para Materiais
   const handleDeleteMaterial = async (id: string, url: string) => {
     if (!confirm("Remover este material?")) return;
     const res = await deleteModuleMaterial(id, url);
@@ -225,7 +270,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     else toast.error(res.error);
   };
 
-  // --- GESTÃO DE ESTADO LOCAL ---
+  // --- GESTÃO DE ESTADO LOCAL (MÓDULOS E AULAS COM IMUTABILIDADE CORRIGIDA) ---
 
   const addModule = () => {
     setFormData(prev => ({
@@ -236,7 +281,8 @@ export function CoursesManager({ courses }: { courses: any[] }) {
           tempId: `new-mod-${crypto.randomUUID()}`, 
           title: "Novo Módulo", 
           order: prev.modules.length, 
-          lessons: [] 
+          lessons: [],
+          quiz: null
         }
       ]
     }));
@@ -263,13 +309,13 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         const targetModule = { ...newModules[moduleIndex] };
         
         targetModule.lessons = [
-            ...targetModule.lessons,
-            {
-                tempId: `new-lesson-${crypto.randomUUID()}`,
-                title: "Nova Aula",
-                videoUrl: "",
-                order: targetModule.lessons.length
-            }
+          ...targetModule.lessons,
+          {
+            tempId: `new-lesson-${crypto.randomUUID()}`,
+            title: "Nova Aula",
+            videoUrl: "",
+            order: targetModule.lessons.length
+          }
         ];
         
         newModules[moduleIndex] = targetModule;
@@ -283,13 +329,10 @@ export function CoursesManager({ courses }: { courses: any[] }) {
         const targetModule = { ...newModules[modIndex] };
         const newLessons = [...targetModule.lessons];
         
-        newLessons[lessonIndex] = {
-            ...newLessons[lessonIndex],
-            [field]: value
-        };
-
+        newLessons[lessonIndex] = { ...newLessons[lessonIndex], [field]: value };
         targetModule.lessons = newLessons;
         newModules[modIndex] = targetModule;
+        
         return { ...prev, modules: newModules };
     });
   };
@@ -298,9 +341,180 @@ export function CoursesManager({ courses }: { courses: any[] }) {
     setFormData(prev => {
         const newModules = [...prev.modules];
         const targetModule = { ...newModules[modIndex] };
+        
         targetModule.lessons = targetModule.lessons.filter((_, i) => i !== lessonIndex);
         newModules[modIndex] = targetModule;
+        
         return { ...prev, modules: newModules };
+    });
+  };
+
+  // --- GESTÃO DE QUESTIONÁRIOS (QUIZ) ---
+
+  const toggleQuiz = (modIndex: number) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] }; // Cópia imutável do módulo
+
+      if (targetModule.quiz) {
+        targetModule.quiz = null;
+      } else {
+        targetModule.quiz = { passingScore: 70, questions: [] };
+      }
+
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const updateQuizScore = (modIndex: number, score: number) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        targetModule.quiz = { ...targetModule.quiz, passingScore: score };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const addQuestion = (modIndex: number) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        targetModule.quiz = {
+          ...targetModule.quiz,
+          questions: [
+            ...targetModule.quiz.questions,
+            {
+              tempId: `new-q-${crypto.randomUUID()}`,
+              text: "Nova Pergunta",
+              options: [
+                { tempId: `new-opt-${crypto.randomUUID()}`, text: "Opção A", isCorrect: true },
+                { tempId: `new-opt-${crypto.randomUUID()}`, text: "Opção B", isCorrect: false }
+              ]
+            }
+          ]
+        };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const updateQuestionText = (modIndex: number, qIndex: number, text: string) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        const newQuestions = [...targetModule.quiz.questions];
+        newQuestions[qIndex] = { ...newQuestions[qIndex], text };
+        targetModule.quiz = { ...targetModule.quiz, questions: newQuestions };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const removeQuestion = (modIndex: number, qIndex: number) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        const newQuestions = targetModule.quiz.questions.filter((_, i) => i !== qIndex);
+        targetModule.quiz = { ...targetModule.quiz, questions: newQuestions };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const addOption = (modIndex: number, qIndex: number) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        const newQuestions = [...targetModule.quiz.questions];
+        newQuestions[qIndex] = {
+          ...newQuestions[qIndex],
+          options: [
+            ...newQuestions[qIndex].options,
+            { tempId: `new-opt-${crypto.randomUUID()}`, text: "Nova Opção", isCorrect: false }
+          ]
+        };
+        targetModule.quiz = { ...targetModule.quiz, questions: newQuestions };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const updateOptionText = (modIndex: number, qIndex: number, optIndex: number, text: string) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        const newQuestions = [...targetModule.quiz.questions];
+        const newOptions = [...newQuestions[qIndex].options];
+        newOptions[optIndex] = { ...newOptions[optIndex], text };
+        newQuestions[qIndex] = { ...newQuestions[qIndex], options: newOptions };
+        targetModule.quiz = { ...targetModule.quiz, questions: newQuestions };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const setCorrectOption = (modIndex: number, qIndex: number, correctOptIndex: number) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        const newQuestions = [...targetModule.quiz.questions];
+        const newOptions = newQuestions[qIndex].options.map((opt, idx) => ({
+          ...opt,
+          isCorrect: idx === correctOptIndex
+        }));
+        newQuestions[qIndex] = { ...newQuestions[qIndex], options: newOptions };
+        targetModule.quiz = { ...targetModule.quiz, questions: newQuestions };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
+    });
+  };
+
+  const removeOption = (modIndex: number, qIndex: number, optIndex: number) => {
+    setFormData(prev => {
+      const newModules = [...prev.modules];
+      const targetModule = { ...newModules[modIndex] };
+      
+      if (targetModule.quiz) {
+        const newQuestions = [...targetModule.quiz.questions];
+        newQuestions[qIndex] = {
+          ...newQuestions[qIndex],
+          options: newQuestions[qIndex].options.filter((_, i) => i !== optIndex)
+        };
+        targetModule.quiz = { ...targetModule.quiz, questions: newQuestions };
+      }
+      
+      newModules[modIndex] = targetModule;
+      return { ...prev, modules: newModules };
     });
   };
 
@@ -320,7 +534,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
       <div className="grid gap-6">
         {courses.map((course) => (
           <Card key={course.id} className="bg-[#0A311D]/50 border-[#2A5432]/30 overflow-hidden relative">
-            {/* [NOVO] Badge de Especialização na Lista */}
             {course.category === "SPECIALIZATION" && (
                 <div className="absolute top-2 right-2 z-10">
                     <Badge className="bg-purple-600 hover:bg-purple-700 text-white border-none flex gap-1 items-center shadow-lg">
@@ -359,7 +572,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
               </div>
             </CardHeader>
             <CardContent className="p-6 pt-0">
-               {/* Visualização Rápida de Materiais no Card */}
                <div className="mt-4 border-t border-[#2A5432]/30 pt-4">
                   <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider flex items-center gap-2">
                      <FileText className="w-3 h-3" /> Materiais (Resumo)
@@ -418,7 +630,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                             className="bg-[#0A311D] border-[#2A5432]" 
                         />
                     </div>
-                    {/* [NOVO] SELETOR DE CATEGORIA */}
                     <div className="space-y-2">
                         <Label>Categoria</Label>
                         <Select
@@ -465,11 +676,11 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                 </div>
             </div>
 
-            {/* 2. ESTRUTURA (MÓDULOS, AULAS E MATERIAIS) */}
+            {/* 2. ESTRUTURA (MÓDULOS, AULAS E QUESTIONÁRIOS) */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
                     <h4 className="text-sm font-bold text-[#76A771] uppercase tracking-wider">Estrutura</h4>
-                    <Button size="sm" onClick={addModule} variant="secondary" className="bg-[#2A5432] text-white hover:bg-[#366b42]">
+                    <Button type="button" size="sm" onClick={addModule} variant="secondary" className="bg-[#2A5432] text-white hover:bg-[#366b42]">
                         <Plus className="w-4 h-4 mr-2" /> Adicionar Módulo
                     </Button>
                 </div>
@@ -478,7 +689,6 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                     {formData.modules.map((module, mIndex) => {
                         const moduleKey = module.id || module.tempId || `mod-${mIndex}`;
                         
-                        // Lógica Híbrida: Busca materiais "vivos" do DB para evitar conflito com state local
                         const liveModule = courses.find(c => c.id === formData.id)?.modules.find((m: any) => m.id === module.id);
                         const materialsToShow = liveModule ? liveModule.materials : (module.materials || []);
 
@@ -488,20 +698,24 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                 <GripVertical className="w-4 h-4 text-gray-600 cursor-grab" />
                                 <AccordionTrigger className="hover:no-underline py-2 flex-1 data-[state=open]:text-[#76A771]">
                                     <Input 
-                                            value={module.title ?? ""}
-                                            onChange={(e) => updateModule(mIndex, e.target.value)}
-                                            className="h-9 bg-transparent border-transparent hover:border-[#2A5432] focus:bg-[#062214] text-white font-bold w-full max-w-sm"
-                                            onClick={(e) => e.stopPropagation()} 
+                                        value={module.title ?? ""}
+                                        onChange={(e) => updateModule(mIndex, e.target.value)}
+                                        className="h-9 bg-transparent border-transparent hover:border-[#2A5432] focus:bg-[#062214] text-white font-bold w-full max-w-sm"
+                                        onClick={(e) => e.stopPropagation()} 
                                     />
                                 </AccordionTrigger>
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:bg-red-900/20" onClick={() => removeModule(mIndex)}>
+                                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:bg-red-900/20" onClick={() => removeModule(mIndex)}>
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
                             </div>
 
-                            <AccordionContent className="pl-4 pr-2 pb-4 border-t border-[#2A5432]/30 pt-4">
+                            <AccordionContent className="pl-4 pr-2 pb-4 border-t border-[#2A5432]/30 pt-4 space-y-6">
+                                
+                                {/* GESTÃO DE AULAS */}
                                 <div className="space-y-3">
-                                    {/* LISTA DE AULAS */}
+                                    <Label className="text-[#76A771] text-xs uppercase font-bold flex items-center gap-2">
+                                        <Video className="w-4 h-4" /> Aulas do Módulo
+                                    </Label>
                                     {module.lessons.map((lesson, lIndex) => {
                                         const lessonKey = lesson.id || lesson.tempId || `lesson-${lIndex}`;
                                         return (
@@ -514,7 +728,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                                     onChange={(e) => updateLesson(mIndex, lIndex, "title", e.target.value)}
                                                     className="h-8 bg-[#0A311D] border-[#2A5432] text-white flex-1 font-medium"
                                                 />
-                                                <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:bg-red-900/20" onClick={() => removeLesson(mIndex, lIndex)}>
+                                                <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:bg-red-900/20" onClick={() => removeLesson(mIndex, lIndex)}>
                                                     <Trash2 className="w-3 h-3" />
                                                 </Button>
                                             </div>
@@ -528,56 +742,145 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                                             </div>
                                         </div>
                                     )})}
-                                    <Button size="sm" variant="ghost" className="w-full border border-dashed border-[#2A5432] text-gray-400 hover:text-white" onClick={() => addLesson(mIndex)}>
+                                    <Button type="button" size="sm" variant="ghost" className="w-full border border-dashed border-[#2A5432] text-gray-400 hover:text-white" onClick={() => addLesson(mIndex)}>
                                         <Plus className="w-3 h-3 mr-2" /> Adicionar Aula
                                     </Button>
+                                </div>
 
-                                    {/* GESTÃO DE MATERIAIS */}
-                                    <div className="pt-4 border-t border-[#2A5432]/30 mt-4">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <Label className="text-[#76A771] text-xs uppercase font-bold flex items-center gap-2">
-                                                <FileText className="w-3 h-3" /> Materiais de Apoio
-                                            </Label>
-                                            
-                                            {module.id ? (
-                                                <Dialog>
-                                                    <DialogTrigger asChild>
-                                                        <Button size="sm" variant="outline" className="h-6 text-xs border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214]">
-                                                            <Upload className="w-3 h-3 mr-1" /> Anexar
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent className="bg-[#0A311D] border-[#2A5432] text-white">
-                                                        <DialogHeader>
-                                                            <DialogTitle>Anexar Material</DialogTitle>
-                                                            <CardDescription>Adicione PDFs ou documentos ao módulo "{module.title}".</CardDescription>
-                                                        </DialogHeader>
-                                                        <MaterialUploadForm moduleId={module.id} />
-                                                    </DialogContent>
-                                                </Dialog>
-                                            ) : (
-                                                <span className="text-[10px] text-gray-500 italic">Salve o curso para anexar arquivos</span>
-                                            )}
+                                {/* GESTÃO DE QUESTIONÁRIOS (QUIZ) */}
+                                <div className="pt-4 border-t border-[#2A5432]/30">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <Label className="text-yellow-500 text-xs uppercase font-bold flex items-center gap-2">
+                                            <ListTodo className="w-4 h-4" /> Avaliação do Módulo (Obrigatória para Certificado)
+                                        </Label>
+                                        <Button 
+                                          type="button"
+                                          size="sm" 
+                                          variant="outline" 
+                                          onClick={() => toggleQuiz(mIndex)}
+                                          className={`h-7 text-xs ${module.quiz ? 'border-red-500 text-red-400 hover:bg-red-950/30' : 'border-yellow-600 text-yellow-500 hover:bg-yellow-900/30'}`}
+                                        >
+                                          {module.quiz ? 'Remover Avaliação' : '+ Adicionar Avaliação'}
+                                        </Button>
+                                    </div>
+
+                                    {module.quiz && (
+                                      <div className="bg-[#0A311D]/40 p-4 rounded-lg border border-yellow-900/50 space-y-4">
+                                        <div className="flex items-center gap-4 border-b border-[#2A5432]/30 pb-4">
+                                          <div className="space-y-1">
+                                            <Label className="text-xs text-gray-300">Nota mínima para aprovação (%)</Label>
+                                            <Input 
+                                              type="number" 
+                                              min="0" max="100"
+                                              value={module.quiz.passingScore}
+                                              onChange={(e) => updateQuizScore(mIndex, Number(e.target.value))}
+                                              className="w-24 h-8 bg-[#062214] border-[#2A5432]"
+                                            />
+                                          </div>
+                                          <p className="text-xs text-gray-500 flex-1">
+                                            Se configurado, o aluno só poderá prosseguir/obter o certificado se acertar esta porcentagem da prova.
+                                          </p>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            {materialsToShow?.map((mat: any) => (
-                                                <div key={mat.id} className="flex items-center justify-between p-2 bg-[#062214]/50 border border-[#2A5432]/30 rounded text-xs text-gray-300">
-                                                    <div className="flex items-center gap-2 overflow-hidden">
-                                                        <FileText className="w-3 h-3 text-gray-500 shrink-0" />
-                                                        <span className="truncate">{mat.title}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <a href={mat.url} target="_blank" className="text-[#76A771] hover:underline mr-2">Ver</a>
-                                                        <Button size="icon" variant="ghost" className="h-5 w-5 text-red-400 hover:bg-red-900/20" onClick={() => handleDeleteMaterial(mat.id, mat.url)}>
-                                                            <Trash2 className="w-3 h-3" />
-                                                        </Button>
-                                                    </div>
+                                        <div className="space-y-4">
+                                          {module.quiz.questions.map((question, qIndex) => (
+                                            <div key={question.id || question.tempId} className="bg-[#062214] p-3 rounded border border-[#2A5432]/50">
+                                              <div className="flex items-start gap-2 mb-3">
+                                                <span className="text-yellow-600 font-bold mt-2">{qIndex + 1}.</span>
+                                                <Textarea 
+                                                  value={question.text}
+                                                  onChange={(e) => updateQuestionText(mIndex, qIndex, e.target.value)}
+                                                  placeholder="Digite a pergunta..."
+                                                  className="bg-[#0A311D] border-[#2A5432] min-h-[40px] text-sm flex-1"
+                                                />
+                                                <Button type="button" size="icon" variant="ghost" className="text-red-400 hover:bg-red-900/20" onClick={() => removeQuestion(mIndex, qIndex)}>
+                                                  <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                              </div>
+
+                                              <div className="pl-6 space-y-2">
+                                                {question.options.map((option, oIndex) => (
+                                                  <div key={option.id || option.tempId} className={`flex items-center gap-2 p-1 rounded ${option.isCorrect ? 'bg-[#76A771]/10 border border-[#76A771]/30' : ''}`}>
+                                                    <Button 
+                                                      type="button"
+                                                      size="icon" 
+                                                      variant="ghost" 
+                                                      className={`w-6 h-6 shrink-0 rounded-full ${option.isCorrect ? 'text-[#76A771] hover:text-green-400' : 'text-gray-600 hover:text-gray-400'}`}
+                                                      onClick={() => setCorrectOption(mIndex, qIndex, oIndex)}
+                                                      title="Marcar como alternativa correta"
+                                                    >
+                                                      <CheckCircle2 className="w-4 h-4" />
+                                                    </Button>
+                                                    <Input 
+                                                      value={option.text}
+                                                      onChange={(e) => updateOptionText(mIndex, qIndex, oIndex, e.target.value)}
+                                                      placeholder={`Alternativa ${String.fromCharCode(65 + oIndex)}`}
+                                                      className={`h-7 text-xs border-transparent focus:border-[#2A5432] ${option.isCorrect ? 'bg-transparent text-[#76A771]' : 'bg-[#0A311D] text-gray-300'}`}
+                                                    />
+                                                    <Button type="button" size="icon" variant="ghost" className="w-6 h-6 text-gray-500 hover:text-red-400" onClick={() => removeOption(mIndex, qIndex, oIndex)}>
+                                                      <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                  </div>
+                                                ))}
+                                                <Button type="button" size="sm" variant="ghost" className="text-xs text-yellow-600 hover:text-yellow-500 mt-2" onClick={() => addOption(mIndex, qIndex)}>
+                                                  + Adicionar Alternativa
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          <Button type="button" size="sm" variant="outline" className="w-full border-dashed border-yellow-800 text-yellow-600 hover:bg-yellow-900/20 hover:text-yellow-500" onClick={() => addQuestion(mIndex)}>
+                                              <Plus className="w-4 h-4 mr-2" /> Adicionar Nova Pergunta
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                </div>
+
+                                {/* GESTÃO DE MATERIAIS */}
+                                <div className="pt-4 border-t border-[#2A5432]/30">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <Label className="text-[#76A771] text-xs uppercase font-bold flex items-center gap-2">
+                                            <FileText className="w-3 h-3" /> Materiais de Apoio
+                                        </Label>
+                                        
+                                        {module.id ? (
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button type="button" size="sm" variant="outline" className="h-6 text-xs border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214]">
+                                                        <Upload className="w-3 h-3 mr-1" /> Anexar
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="bg-[#0A311D] border-[#2A5432] text-white">
+                                                    <DialogHeader>
+                                                        <DialogTitle>Anexar Material</DialogTitle>
+                                                        <CardDescription>Adicione PDFs ou documentos ao módulo "{module.title}".</CardDescription>
+                                                    </DialogHeader>
+                                                    <MaterialUploadForm moduleId={module.id} />
+                                                </DialogContent>
+                                            </Dialog>
+                                        ) : (
+                                            <span className="text-[10px] text-gray-500 italic">Salve o curso para anexar arquivos</span>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        {materialsToShow?.map((mat: any) => (
+                                            <div key={mat.id} className="flex items-center justify-between p-2 bg-[#062214]/50 border border-[#2A5432]/30 rounded text-xs text-gray-300">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <FileText className="w-3 h-3 text-gray-500 shrink-0" />
+                                                    <span className="truncate">{mat.title}</span>
                                                 </div>
-                                            ))}
-                                            {(!materialsToShow || materialsToShow.length === 0) && (
-                                                <p className="text-[10px] text-gray-600 italic text-center py-2">Nenhum material anexado.</p>
-                                            )}
-                                        </div>
+                                                <div className="flex items-center gap-1">
+                                                    <a href={mat.url} target="_blank" className="text-[#76A771] hover:underline mr-2">Ver</a>
+                                                    <Button type="button" size="icon" variant="ghost" className="h-5 w-5 text-red-400 hover:bg-red-900/20" onClick={() => handleDeleteMaterial(mat.id, mat.url)}>
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(!materialsToShow || materialsToShow.length === 0) && (
+                                            <p className="text-[10px] text-gray-600 italic text-center py-2">Nenhum material anexado.</p>
+                                        )}
                                     </div>
                                 </div>
                             </AccordionContent>
@@ -588,7 +891,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">Cancelar</Button>
+            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">Cancelar</Button>
             <Button onClick={handleSave} className="bg-[#76A771] text-[#062214] hover:bg-[#5e8a5a]" disabled={isPending}>
               {isPending ? "Salvando..." : "Salvar Alterações"}
             </Button>

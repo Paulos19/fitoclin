@@ -1,5 +1,3 @@
-// Arquivo: app/(specialization)/layout.tsx
-
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
@@ -14,11 +12,11 @@ export default async function SpecializationRootLayout({
     return redirect("/login");
   }
 
-  // ⚠️ IMPORTANTE: Aqui retornamos APENAS o children.
-  // Não coloque Sidebar ou Header aqui para evitar duplicação.
+  // Envolvemos o children num flex-col de tela cheia (100dvh adapta bem no mobile)
+  // Assim os layouts filhos podem usar flex-1 para preencher a tela perfeitamente
   return (
-    <>
+    <div className="flex flex-col min-h-[100dvh] w-full bg-[#062214]">
       {children}
-    </>
+    </div>
   );
 }
