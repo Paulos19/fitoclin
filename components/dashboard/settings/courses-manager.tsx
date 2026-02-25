@@ -38,7 +38,8 @@ import {
   FileText,
   Crown,
   ListTodo,
-  CheckCircle2 
+  CheckCircle2,
+  Leaf
 } from "lucide-react";
 import {
   Select,
@@ -108,7 +109,7 @@ type CourseForm = {
   imageUrl: string;
   active: boolean;
   price: number;
-  category: "COMMUNITY" | "SPECIALIZATION";
+  category: "COMMUNITY" | "SPECIALIZATION" | "MEI"; // [ATUALIZADO] Adicionado MEI
   modules: Module[];
 };
 
@@ -541,6 +542,15 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                     </Badge>
                 </div>
             )}
+            
+            {/* [ATUALIZADO] NOVA BADGE PARA O MEI */}
+            {course.category === "MEI" && (
+                <div className="absolute top-2 right-2 z-10">
+                    <Badge className="bg-green-600 hover:bg-green-700 text-white border-none flex gap-1 items-center shadow-lg">
+                        <Leaf className="w-3 h-3 text-green-300" /> MEI
+                    </Badge>
+                </div>
+            )}
 
             {course.imageUrl && (
                 <div className="relative h-40 w-full bg-black/20">
@@ -632,9 +642,10 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                     </div>
                     <div className="space-y-2">
                         <Label>Categoria</Label>
+                        {/* [ATUALIZADO] Select incluindo o MEI */}
                         <Select
                             value={formData.category}
-                            onValueChange={(value: "COMMUNITY" | "SPECIALIZATION") => setFormData({ ...formData, category: value })}
+                            onValueChange={(value: "COMMUNITY" | "SPECIALIZATION" | "MEI") => setFormData({ ...formData, category: value })}
                         >
                             <SelectTrigger className="bg-[#0A311D] border-[#2A5432] text-white">
                                 <SelectValue placeholder="Selecione a categoria" />
@@ -642,6 +653,7 @@ export function CoursesManager({ courses }: { courses: any[] }) {
                             <SelectContent className="bg-[#0A311D] border-[#2A5432] text-white">
                                 <SelectItem value="COMMUNITY">Comunidade (Padrão)</SelectItem>
                                 <SelectItem value="SPECIALIZATION">Especialização (Premium)</SelectItem>
+                                <SelectItem value="MEI">Método Emagrecimento Int. (MEI)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

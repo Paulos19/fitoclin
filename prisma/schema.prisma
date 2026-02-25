@@ -505,11 +505,13 @@ enum PaymentStatus {
 enum CourseCategory {
   COMMUNITY
   SPECIALIZATION
+  MEI
 }
 
 enum SubscriptionPlan {
   COMMUNITY
   SPECIALIZATION
+  MEI
 }
 
 model Quiz {
