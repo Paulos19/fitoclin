@@ -23,11 +23,11 @@ export default async function MeiLayout({
 
   if (!hasAccess) {
     // Redireciona para a página de vendas do MEI ou dashboard principal caso não tenha acesso
-    redirect("/dashboard"); 
+    redirect("/dashboard");
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#04150c]">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-white via-green-50/50 to-white">
       {children}
     </div>
   );

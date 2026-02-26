@@ -16,21 +16,21 @@ export function MeiNavbar({ userRole }: { userRole?: string }) {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-[#2A5432] bg-[#04150c]/90 backdrop-blur supports-[backdrop-filter]:bg-[#04150c]/60">
+    <nav className="sticky top-0 z-50 w-full border-b border-green-200/50 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        
+
         {/* Logo / Brand */}
         <div className="flex items-center gap-2">
-          <div className="bg-green-600/20 p-2 rounded-lg">
-            <Leaf className="w-5 h-5 text-green-400" />
+          <div className="bg-green-100 p-2 rounded-lg border border-green-200 shadow-sm">
+            <Leaf className="w-5 h-5 text-green-700" />
           </div>
-          <span className="text-white font-bold tracking-wider">
-            M<span className="text-green-400">E</span>I
+          <span className="text-gray-900 font-bold tracking-wider text-xl">
+            M<span className="text-green-600">E</span>I
           </span>
         </div>
 
         {/* Links Principais */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-8">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -38,11 +38,10 @@ export function MeiNavbar({ userRole }: { userRole?: string }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-green-400 ${
-                  isActive ? "text-green-400" : "text-gray-400"
-                }`}
+                className={`flex items-center gap-2 text-sm font-semibold transition-all duration-300 hover:text-green-600 ${isActive ? "text-green-700 bg-green-50 px-4 py-2 rounded-full shadow-inner" : "text-gray-600 hover:bg-gray-50 px-4 py-2 rounded-full"
+                  }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`w-4 h-4 ${isActive ? "text-green-600" : ""}`} />
                 {item.name}
               </Link>
             );
@@ -50,17 +49,17 @@ export function MeiNavbar({ userRole }: { userRole?: string }) {
         </div>
 
         {/* Ações / Dashboard Access */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {userRole === "ADMIN" && (
             <Link href="/dashboard">
-              <Button variant="outline" size="sm" className="hidden md:flex border-[#2A5432] text-gray-300 hover:text-white hover:bg-[#0A311D]">
+              <Button variant="outline" size="sm" className="hidden md:flex border-green-200 text-green-700 hover:text-green-800 hover:bg-green-50 font-medium">
                 <LayoutDashboard className="w-4 h-4 mr-2" />
                 Dashboard Gestão
               </Button>
             </Link>
           )}
           <Link href="/dashboard/profile">
-            <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white">
+            <Button size="icon" variant="ghost" className="text-gray-600 hover:text-green-700 hover:bg-green-50 rounded-full h-10 w-10">
               <UserCircle className="w-6 h-6" />
             </Button>
           </Link>

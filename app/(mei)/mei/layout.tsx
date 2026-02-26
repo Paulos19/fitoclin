@@ -28,7 +28,7 @@ export default async function MeiLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#04150c]">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-white via-green-50/50 to-white">
       <MeiNavbar userRole={session.user.role} />
       <main className="flex-1">
         {children}
