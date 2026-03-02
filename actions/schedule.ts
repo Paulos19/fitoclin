@@ -25,35 +25,35 @@ export async function getAppointments() {
   // Removemos a cláusula 'where: { doctorId }' para eles verem todos os agendamentos
   // @ts-ignore
   if (role === "ADMIN" || role === "SECRETARY") {
-      return await db.appointment.findMany({
-          // Sem filtro de doctorId para ver a agenda geral
-          include: { 
-            patient: { include: { user: true } },
-            doctor: true // Importante para saber de qual médico é o agendamento
-          },
-          orderBy: { date: 'asc' }
-      });
+    return await db.appointment.findMany({
+      // Sem filtro de doctorId para ver a agenda geral
+      include: {
+        patient: { include: { user: true } },
+        doctor: true // Importante para saber de qual médico é o agendamento
+      },
+      orderBy: { date: 'asc' }
+    });
   }
 
   // 👇 PROFISSIONAL: Vê apenas os SEUS agendamentos
   if (role === "PROFESSIONAL") {
-      return await db.appointment.findMany({
-          where: { doctorId: session.user.id },
-          include: { patient: { include: { user: true } } },
-          orderBy: { date: 'asc' }
-      });
+    return await db.appointment.findMany({
+      where: { doctorId: session.user.id },
+      include: { patient: { include: { user: true } } },
+      orderBy: { date: 'asc' }
+    });
   }
 
   // 👇 PACIENTE: Vê onde ele é o paciente
   if (role === "PATIENT") {
-      const patient = await db.patient.findUnique({ where: { userId: session.user.id } });
-      if (!patient) return [];
-      
-      return await db.appointment.findMany({
-          where: { patientId: patient.id },
-          include: { doctor: true },
-          orderBy: { date: 'asc' }
-      });
+    const patient = await db.patient.findUnique({ where: { userId: session.user.id } });
+    if (!patient) return [];
+
+    return await db.appointment.findMany({
+      where: { patientId: patient.id },
+      include: { doctor: true },
+      orderBy: { date: 'asc' }
+    });
   }
 
   return [];
@@ -62,7 +62,7 @@ export async function getAppointments() {
 // --- 1. SALVAR CONFIGURAÇÃO DE HORÁRIOS ---
 export async function saveScheduleSettings(data: any) {
   const session = await auth();
-  
+
   // @ts-ignore
   const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL" || session?.user?.role === "SECRETARY";
   if (!isAllowed) return { error: "Não autorizado" };
@@ -77,13 +77,13 @@ export async function saveScheduleSettings(data: any) {
 
     // @ts-ignore
     if (session.user.role === "SECRETARY") {
-        const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
-        if (!admin) return { error: "Administrador principal não encontrado." };
-        targetUserId = admin.id;
+      const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
+      if (!admin) return { error: "Administrador principal não encontrado." };
+      targetUserId = admin.id;
     }
 
     await db.$transaction(
-      schedules.map((schedule) => 
+      schedules.map((schedule) =>
         db.doctorSchedule.upsert({
           where: {
             userId_dayOfWeek: {
@@ -122,12 +122,12 @@ export async function createAppointment(formData: FormData) {
 
   const rawDate = formData.get("date") as string;
   const time = formData.get("time") as string;
-  
+
   if (!rawDate || !time) return { error: "Data e horário são obrigatórios." };
 
   const dateObj = new Date(rawDate);
   const [hours, minutes] = time.split(':').map(Number);
-  dateObj.setHours(hours, minutes, 0, 0); 
+  dateObj.setHours(hours, minutes, 0, 0);
 
   let patientId = formData.get("patientId") as string;
   let doctorId = "";
@@ -135,34 +135,34 @@ export async function createAppointment(formData: FormData) {
   // 👇 LÓGICA DE QUEM É O MÉDICO
   // @ts-ignore
   if (session.user.role === "PROFESSIONAL" || session.user.role === "ADMIN" || session.user.role === "SECRETARY") {
-      
-      // Se for Secretária, o médico é o Admin (Dra.)
-      // @ts-ignore
-      if (session.user.role === "SECRETARY") {
-          const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
-          if (!admin) return { error: "Médico não encontrado." };
-          doctorId = admin.id;
-      } else {
-          // Se for Admin ou Profissional, o médico é ele mesmo
-          doctorId = session.user.id;
-      }
 
-      if (!patientId) return { error: "Selecione um paciente." };
-  
+    // Se for Secretária, o médico é o Admin (Dra.)
+    // @ts-ignore
+    if (session.user.role === "SECRETARY") {
+      const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
+      if (!admin) return { error: "Médico não encontrado." };
+      doctorId = admin.id;
+    } else {
+      // Se for Admin ou Profissional, o médico é ele mesmo
+      doctorId = session.user.id;
+    }
+
+    if (!patientId) return { error: "Selecione um paciente." };
+
   } else {
-      // Se é PACIENTE (Auto-agendamento)
-      const patientProfile = await db.patient.findUnique({ where: { userId: session.user.id } });
-      if (!patientProfile) return { error: "Perfil incompleto." };
-      
-      patientId = patientProfile.id;
+    // Se é PACIENTE (Auto-agendamento)
+    const patientProfile = await db.patient.findUnique({ where: { userId: session.user.id } });
+    if (!patientProfile) return { error: "Perfil incompleto." };
 
-      if (patientProfile.professionalId) {
-          doctorId = patientProfile.professionalId;
-      } else {
-          const admin = await db.user.findFirst({ where: { role: 'ADMIN' } });
-          if (!admin) return { error: "Médico não encontrado." };
-          doctorId = admin.id;
-      }
+    patientId = patientProfile.id;
+
+    if (patientProfile.professionalId) {
+      doctorId = patientProfile.professionalId;
+    } else {
+      const admin = await db.user.findFirst({ where: { role: 'ADMIN' } });
+      if (!admin) return { error: "Médico não encontrado." };
+      doctorId = admin.id;
+    }
   }
 
   const data = {
@@ -185,19 +185,19 @@ export async function createAppointment(formData: FormData) {
           status: "SCHEDULED",
           type: "FIRST_VISIT"
         },
-        include: { patient: { include: { user: true } } } 
+        include: { patient: { include: { user: true } } }
       });
 
       // Notificação (apenas se foi o paciente que agendou)
       if (session.user.role === "PATIENT") {
-          await tx.notification.create({
-            data: {
-              userId: doctorId,
-              title: "Novo Agendamento! 🗓️",
-              message: `${appointment.patient.user.name} agendou para ${data.date.toLocaleDateString()}.`,
-              link: "/dashboard/appointments",
-            }
-          });
+        await tx.notification.create({
+          data: {
+            userId: doctorId,
+            title: "Novo Agendamento! 🗓️",
+            message: `${appointment.patient.user.name} agendou para ${data.date.toLocaleDateString()}.`,
+            link: "/dashboard/appointments",
+          }
+        });
       }
 
       return appointment;
@@ -244,10 +244,10 @@ export async function updateMeetLink(formData: FormData) {
     // Profissional só edita OS DELE.
     // Admin e Secretária editam QUALQUER UM.
     const whereClause: any = { id: appointmentId };
-    
+
     // @ts-ignore
     if (session.user.role === "PROFESSIONAL") {
-        whereClause.doctorId = session.user.id;
+      whereClause.doctorId = session.user.id;
     }
 
     const updatedAppointment = await db.appointment.update({
@@ -257,20 +257,64 @@ export async function updateMeetLink(formData: FormData) {
     });
 
     if (updatedAppointment.patient?.user?.email && meetLink) {
-        sendEmail({
-            to: updatedAppointment.patient.user.email,
-            subject: "Atualização: Link da Sua Consulta",
-            html: getAppointmentTemplate(
-                updatedAppointment.patient.user.name || "Paciente", 
-                updatedAppointment.date, 
-                "Consulta (Link Atualizado)"
-            )
-        }).catch(err => console.error(err));
+      sendEmail({
+        to: updatedAppointment.patient.user.email,
+        subject: "Atualização: Link da Sua Consulta",
+        html: getAppointmentTemplate(
+          updatedAppointment.patient.user.name || "Paciente",
+          updatedAppointment.date,
+          "Consulta (Link Atualizado)"
+        )
+      }).catch(err => console.error(err));
     }
 
     revalidatePath("/dashboard/appointments");
     return { success: "Link atualizado!" };
   } catch (error) {
     return { error: "Erro ao atualizar ou permissão negada." };
+  }
+}
+
+// --- 4. EXCLUIR AGENDAMENTO ---
+export async function deleteAppointment(appointmentId: string) {
+  const session = await auth();
+  if (!session) return { error: "Não autorizado" };
+
+  if (!appointmentId) return { error: "ID do agendamento é obrigatório." };
+
+  try {
+    const appointment = await db.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { patient: true }
+    });
+
+    if (!appointment) return { error: "Agendamento não encontrado." };
+
+    // @ts-ignore
+    const role = session.user.role;
+    let isAllowed = false;
+
+    if (role === "ADMIN" || role === "SECRETARY") {
+      isAllowed = true;
+    } else if (role === "PROFESSIONAL" && appointment.doctorId === session.user.id) {
+      isAllowed = true;
+    } else if (role === "PATIENT" && appointment.patient?.userId === session.user.id) {
+      isAllowed = true;
+    }
+
+    if (!isAllowed) return { error: "Sem permissão para excluir este agendamento." };
+
+    await db.appointment.delete({
+      where: { id: appointmentId }
+    });
+
+    revalidatePath("/dashboard/appointments");
+    revalidatePath("/dashboard/schedule");
+    revalidatePath("/dashboard");
+
+    return { success: "Agendamento excluído com sucesso!" };
+  } catch (error) {
+    console.error("Erro ao deletar agendamento:", error);
+    return { error: "Erro interno ao excluir agendamento." };
   }
 }

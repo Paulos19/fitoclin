@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog";
 import { MeetLinkDialog } from "@/components/dashboard/meet-link-dialog"; // Certifique-se de ter criado este componente
+import { DeleteAppointmentButton } from "@/components/dashboard/delete-appointment-button";
 import Link from "next/link";
 
 const prisma = new PrismaClient();
@@ -37,9 +38,9 @@ export default async function AppointmentsPage() {
     });
 
     if (!patient) {
-        return <div className="text-white p-6">Perfil de paciente não encontrado.</div>;
+      return <div className="text-white p-6">Perfil de paciente não encontrado.</div>;
     }
-    
+
     appointments = await prisma.appointment.findMany({
       where: { patientId: patient.id },
       orderBy: { date: 'asc' },
@@ -50,7 +51,7 @@ export default async function AppointmentsPage() {
   // Separação Lógica: Futuras vs Passadas
   const now = new Date();
   const upcoming = appointments.filter(apt => new Date(apt.date) >= now && apt.status !== 'CANCELED');
-  
+
   // Para histórico, invertemos a ordem (mais recentes primeiro)
   const past = appointments
     .filter(apt => new Date(apt.date) < now || apt.status === 'CANCELED')
@@ -58,7 +59,7 @@ export default async function AppointmentsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
+
       {/* Header Híbrido */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#2A5432]/30 pb-6">
         <div>
@@ -66,12 +67,12 @@ export default async function AppointmentsPage() {
             {isAdmin ? "Gestão de Consultas" : "Minhas Consultas"}
           </h1>
           <p className="text-gray-400 mt-1">
-            {isAdmin 
-              ? "Visualize e gerencie a agenda completa da clínica." 
+            {isAdmin
+              ? "Visualize e gerencie a agenda completa da clínica."
               : "Gerencie seus agendamentos e veja seu histórico."}
           </p>
         </div>
-        
+
         <div className="flex flex-col-reverse md:flex-row items-end md:items-center gap-3 w-full md:w-auto">
           {/* O Admin sempre pode agendar manualmente, o Paciente também */}
           <NewAppointmentDialog />
@@ -80,13 +81,13 @@ export default async function AppointmentsPage() {
 
       <Tabs defaultValue="upcoming" className="w-full">
         <TabsList className="grid w-full md:w-[400px] grid-cols-2 bg-[#062214] p-1 rounded-xl border border-[#2A5432]/30 mb-6">
-          <TabsTrigger 
+          <TabsTrigger
             value="upcoming"
             className="data-[state=active]:bg-[#2A5432] data-[state=active]:text-white text-gray-400"
           >
             Agendadas ({upcoming.length})
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="history"
             className="data-[state=active]:bg-[#2A5432] data-[state=active]:text-white text-gray-400"
           >
@@ -103,7 +104,7 @@ export default async function AppointmentsPage() {
                 <p>Nenhuma consulta agendada para o futuro.</p>
                 {/* Atalho para agendar se estiver vazio */}
                 <div className="mt-2 scale-90 opacity-80">
-                    <NewAppointmentDialog />
+                  <NewAppointmentDialog />
                 </div>
               </CardContent>
             </Card>
@@ -112,7 +113,7 @@ export default async function AppointmentsPage() {
               <Card key={apt.id} className="bg-[#0A311D]/50 border-[#76A771]/30 overflow-hidden relative group hover:border-[#76A771] transition-all">
                 {/* Efeito Glow Lateral */}
                 <div className="absolute top-0 left-0 w-1 h-full bg-[#76A771]" />
-                
+
                 <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                   <div className="flex gap-4 items-center w-full">
                     {/* Box da Data */}
@@ -124,46 +125,46 @@ export default async function AppointmentsPage() {
                         {new Date(apt.date).getDate()}
                       </span>
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          {/* Título: Se Admin, mostra nome do Paciente. Se Paciente, mostra "Consulta..." */}
-                          <h3 className="font-bold text-white text-lg">
-                            {isAdmin 
-                                ? (apt as any).patient?.user?.name || "Paciente sem nome"
-                                : "Consulta com Dra. Isa"}
-                          </h3>
-                          <Badge className="bg-[#76A771]/20 text-[#76A771] hover:bg-[#76A771]/30 border-none">Confirmado</Badge>
+                        {/* Título: Se Admin, mostra nome do Paciente. Se Paciente, mostra "Consulta..." */}
+                        <h3 className="font-bold text-white text-lg">
+                          {isAdmin
+                            ? (apt as any).patient?.user?.name || "Paciente sem nome"
+                            : "Consulta com Dra. Isa"}
+                        </h3>
+                        <Badge className="bg-[#76A771]/20 text-[#76A771] hover:bg-[#76A771]/30 border-none">Confirmado</Badge>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-4 text-sm text-gray-400">
                         <span className="flex items-center gap-1.5">
-                          <Clock className="w-4 h-4 text-[#76A771]" /> 
+                          <Clock className="w-4 h-4 text-[#76A771]" />
                           {new Date(apt.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                        
+
                         {apt.meetLink ? (
-                           <span className="flex items-center gap-1.5 text-[#76A771]">
-                             <Video className="w-4 h-4" /> Link Gerado
-                           </span>
+                          <span className="flex items-center gap-1.5 text-[#76A771]">
+                            <Video className="w-4 h-4" /> Link Gerado
+                          </span>
                         ) : (
-                           <span className="flex items-center gap-1.5 text-gray-500">
-                             <Video className="w-4 h-4" /> Online (Meet)
-                           </span>
+                          <span className="flex items-center gap-1.5 text-gray-500">
+                            <Video className="w-4 h-4" /> Online (Meet)
+                          </span>
                         )}
 
                         {/* Info extra para Admin */}
                         {isAdmin && (apt as any).patient?.user?.email && (
-                            <span className="flex items-center gap-1.5 text-blue-400/80">
-                                <User className="w-3 h-3" /> {(apt as any).patient.user.email}
-                            </span>
+                          <span className="flex items-center gap-1.5 text-blue-400/80">
+                            <User className="w-3 h-3" /> {(apt as any).patient.user.email}
+                          </span>
                         )}
                       </div>
 
                       {/* Motivo/Notas */}
                       {apt.notes && (
                         <div className="mt-2 text-xs text-gray-500 bg-[#062214]/50 p-2 rounded border border-[#2A5432]/20 inline-block max-w-md truncate">
-                           💬 {apt.notes}
+                          💬 {apt.notes}
                         </div>
                       )}
                     </div>
@@ -171,7 +172,7 @@ export default async function AppointmentsPage() {
 
                   {/* AÇÕES */}
                   <div className="w-full md:w-auto shrink-0 flex flex-col sm:flex-row md:flex-col gap-2">
-                    
+
                     {/* Botão de Entrar (Para todos se tiver link) */}
                     {apt.meetLink ? (
                       <a href={apt.meetLink} target="_blank" rel="noopener noreferrer">
@@ -190,20 +191,23 @@ export default async function AppointmentsPage() {
 
                     {/* --- BOTÃO DE ADICIONAR LINK (SÓ ADMIN) --- */}
                     {isAdmin && (
-                      <MeetLinkDialog 
-                        appointmentId={apt.id} 
-                        currentLink={apt.meetLink} 
+                      <MeetLinkDialog
+                        appointmentId={apt.id}
+                        currentLink={apt.meetLink}
                       />
                     )}
 
                     {/* Botão de Prontuário (Só Admin) */}
                     {isAdmin && (
-                        <Link href={`/dashboard/records/${(apt as any).patientId}`}>
-                            <Button variant="outline" size="sm" className="w-full border-[#2A5432] text-gray-300 hover:text-white hover:bg-[#2A5432]">
-                                <FileText className="w-4 h-4 mr-2" /> Prontuário
-                            </Button>
-                        </Link>
+                      <Link href={`/dashboard/records/${(apt as any).patientId}`}>
+                        <Button variant="outline" size="sm" className="w-full border-[#2A5432] text-gray-300 hover:text-white hover:bg-[#2A5432]">
+                          <FileText className="w-4 h-4 mr-2" /> Prontuário
+                        </Button>
+                      </Link>
                     )}
+
+                    {/* Botão de Excluir Agendamento */}
+                    <DeleteAppointmentButton appointmentId={apt.id} />
                   </div>
                 </CardContent>
               </Card>
@@ -214,21 +218,21 @@ export default async function AppointmentsPage() {
         {/* --- ABA: HISTÓRICO --- */}
         <TabsContent value="history" className="space-y-4">
           {past.length === 0 ? (
-             <div className="text-center p-8 text-gray-500">Nenhum histórico encontrado.</div>
+            <div className="text-center p-8 text-gray-500">Nenhum histórico encontrado.</div>
           ) : (
             past.map((apt) => (
               <Card key={apt.id} className="bg-[#062214]/30 border-[#2A5432]/20 opacity-80 hover:opacity-100 transition-opacity">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="p-3 rounded-full bg-[#2A5432]/10 text-gray-500">
-                       {apt.status === 'CANCELED' ? <History className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                      {apt.status === 'CANCELED' ? <History className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
                     </div>
                     <div>
                       <p className="text-gray-300 font-medium">
                         {/* No histórico também mostramos o nome se for Admin */}
-                        {isAdmin 
-                            ? (apt as any).patient?.user?.name + " - " 
-                            : ""}
+                        {isAdmin
+                          ? (apt as any).patient?.user?.name + " - "
+                          : ""}
                         {new Date(apt.date).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
                       <p className="text-xs text-gray-500">

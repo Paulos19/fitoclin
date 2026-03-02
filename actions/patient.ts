@@ -34,7 +34,7 @@ export async function getPatients() {
   // 👇 ISOLAMENTO ATUALIZADO:
   // Admin e Secretária podem ver todos os pacientes da clínica.
   // Profissional VÊ APENAS OS SEUS.
-  
+
   // @ts-ignore: Caso o TypeScript reclame que SECRETARY não existe no tipo ainda
   const canViewAll = role === "ADMIN" || role === "SECRETARY";
 
@@ -54,11 +54,11 @@ export async function getPatients() {
 // --- CRIAÇÃO ---
 export async function createPatient(formData: FormData) {
   const session = await auth();
-  
+
   // 👇 PERMISSÃO ATUALIZADA: Adicionado SECRETARY
   // @ts-ignore
   const isAllowed = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL" || session?.user?.role === "SECRETARY";
-  
+
   if (!isAllowed) return { error: "Não autorizado" };
 
   const rawData = {
@@ -150,8 +150,8 @@ export async function updatePatientProfile(formData: FormData) {
   const data = validated.data;
 
   try {
-    const birthDateObj = data.birthDate 
-      ? new Date(data.birthDate + "T12:00:00") 
+    const birthDateObj = data.birthDate
+      ? new Date(data.birthDate + "T12:00:00")
       : undefined;
 
     await db.$transaction(async (tx) => {
@@ -178,11 +178,38 @@ export async function updatePatientProfile(formData: FormData) {
     });
 
     revalidatePath("/dashboard/profile");
-    revalidatePath("/", "layout"); 
-    
+    revalidatePath("/", "layout");
+
     return { success: "Perfil atualizado com sucesso!" };
   } catch (error) {
     console.error(error);
     return { error: "Erro ao atualizar perfil." };
   }
+}
+
+// --- BUSCA SIMPLIFICADA PARA SELECT ---
+export async function getPatientsForSelect() {
+  const session = await auth();
+  if (!session) return [];
+
+  const role = session.user.role;
+  // @ts-ignore
+  const canViewAll = role === "ADMIN" || role === "SECRETARY";
+
+  const whereClause = canViewAll
+    ? {}
+    : { professionalId: session.user.id };
+
+  const patients = await db.patient.findMany({
+    where: whereClause,
+    include: { user: { select: { name: true, email: true } } },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return patients.map(p => ({
+    id: p.id,
+    name: p.user?.name || "Sem Nome",
+    phone: p.phone || "",
+    email: p.user?.email || ""
+  }));
 }
