@@ -24,13 +24,13 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-// 👇 1. Definimos a interface das Props
 interface NewAppointmentDialogProps {
   patientId?: string; // Opcional, pois pode ser chamado sem ID (pelo menu geral)
+  showFullButton?: boolean;
 }
 
 // 👇 2. Recebemos as props no componente
-export function NewAppointmentDialog({ patientId }: NewAppointmentDialogProps) {
+export function NewAppointmentDialog({ patientId, showFullButton }: NewAppointmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
@@ -128,14 +128,14 @@ export function NewAppointmentDialog({ patientId }: NewAppointmentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {/* Se tiver patientId, mostra um botão menor (ícone), senão mostra o botão grande */}
-        {patientId ? (
+        {/* Se tiver patientId e NÃO pediu full button, mostra um botão menor (ícone). Senão mostra o botão grande */}
+        {patientId && !showFullButton ? (
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#76A771] hover:border-[#76A771] transition-all">
             <Plus className="w-4 h-4" />
           </Button>
         ) : (
-          <Button className="bg-[#76A771] hover:bg-[#659160] text-[#062214] font-bold shadow-lg shadow-[#76A771]/20">
-            <Plus className="w-4 h-4 mr-2" /> Agendar Consulta
+          <Button className="flex-1 md:flex-none bg-[#76A771] hover:bg-[#659160] text-[#062214] font-bold shadow-lg shadow-[#76A771]/20">
+            <Plus className="w-4 h-4 mr-2" /> Nova Consulta
           </Button>
         )}
       </DialogTrigger>

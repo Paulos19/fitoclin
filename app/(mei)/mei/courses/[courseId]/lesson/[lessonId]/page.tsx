@@ -5,7 +5,7 @@ import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Importando o novo player que não trava a tela cheia
-import { MeiVideoPlayer } from "@/components/mei/mei-video-player"; 
+import { MeiVideoPlayer } from "@/components/mei/mei-video-player";
 import { LessonCheckButton } from "@/components/community/lesson-check-button";
 
 export default async function MeiLessonPage({
@@ -15,7 +15,7 @@ export default async function MeiLessonPage({
 }) {
   const { courseId, lessonId } = await params;
   const course = await getCourseContent(courseId);
-  
+
   if (!course) redirect("/mei/courses");
 
   let currentLesson = null;
@@ -38,7 +38,7 @@ export default async function MeiLessonPage({
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-5xl mx-auto w-full p-4 md:p-6 lg:p-8 space-y-8">
-        
+
         {/* PLAYER DE VÍDEO ATUALIZADO (MeiVideoPlayer) */}
         <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-[#2A5432] shadow-2xl relative">
           {currentLesson.videoUrl ? (
@@ -63,11 +63,11 @@ export default async function MeiLessonPage({
             )}
           </div>
 
-          {/* BOTÃO DE CONCLUÍDO (Corrigido o nome da propriedade para 'completed') */}
+          {/* BOTÃO DE CONCLUÍDO */}
           <div className="shrink-0 w-full md:w-auto">
-            <LessonCheckButton 
-               lessonId={currentLesson.id} 
-               completed={isCompleted} 
+            <LessonCheckButton
+              lessonId={currentLesson.id}
+              initialIsCompleted={isCompleted}
             />
           </div>
         </div>
