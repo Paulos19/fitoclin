@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,10 +28,11 @@ import { cn } from "@/lib/utils";
 interface NewAppointmentDialogProps {
   patientId?: string; // Opcional, pois pode ser chamado sem ID (pelo menu geral)
   showFullButton?: boolean;
+  trigger?: React.ReactNode;
 }
 
 // 👇 2. Recebemos as props no componente
-export function NewAppointmentDialog({ patientId, showFullButton }: NewAppointmentDialogProps) {
+export function NewAppointmentDialog({ patientId, showFullButton, trigger }: NewAppointmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
@@ -45,16 +47,27 @@ export function NewAppointmentDialog({ patientId, showFullButton }: NewAppointme
   const [patients, setPatients] = useState<any[]>([]);
   const [searchPatient, setSearchPatient] = useState("");
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(patientId || null);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
   const canScheduleForOthers = session?.user?.role === "ADMIN" || session?.user?.role === "PROFESSIONAL";
 
-  // Efeito: Buscar pacientes quando o modal abrir (se tiver permissão e não tiver paciente pré-selecionado por prop)
+  // Efeito: Sincronizar selectedPatientId com a prop patientId
   useEffect(() => {
-    if (open && canScheduleForOthers && !patientId) {
+    setSelectedPatientId(patientId || null);
+  }, [patientId]);
+
+  // Efeito: Buscar nome do paciente se patientId for fornecido
+  useEffect(() => {
+    if (selectedPatientId && canScheduleForOthers) {
+      getPatientsForSelect().then(allPatients => {
+        const p = allPatients.find(p => p.id === selectedPatientId);
+        if (p) setSearchPatient(p.name);
+        setPatients(allPatients);
+      });
+    } else if (open && canScheduleForOthers && !patientId) {
       getPatientsForSelect().then(data => setPatients(data));
     }
-  }, [open, canScheduleForOthers, patientId]);
+  }, [selectedPatientId, open, canScheduleForOthers, patientId]);
 
   // Efeito: Buscar slots quando a data muda
   useEffect(() => {
@@ -129,7 +142,7 @@ export function NewAppointmentDialog({ patientId, showFullButton }: NewAppointme
       setDate(new Date());
       setSelectedTime(null);
       setSearchPatient("");
-      setSelectedPatientId(patientId || null);
+      setSelectedPatientId(null); // Reset after submit
     }
   }
 
@@ -141,8 +154,9 @@ export function NewAppointmentDialog({ patientId, showFullButton }: NewAppointme
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {/* Se tiver patientId e NÃO pediu full button, mostra um botão menor (ícone). Senão mostra o botão grande */}
-        {patientId && !showFullButton ? (
+        {trigger ? (
+          trigger
+        ) : patientId && !showFullButton ? (
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#76A771] hover:border-[#76A771] transition-all">
             <Plus className="w-4 h-4" />
           </Button>
@@ -269,7 +283,18 @@ export function NewAppointmentDialog({ patientId, showFullButton }: NewAppointme
                                 setShowPatientDropdown(false);
                               }}
                             >
-                              <div className="font-medium text-[#76A771]">{p.name}</div>
+                              <div className="font-medium flex items-center justify-between">
+                                <span className="text-[#76A771]">{p.name}</span>
+                                {p.type === 'lead' ? (
+                                  <Badge variant="outline" className="text-[9px] h-4 bg-blue-950/50 text-blue-400 border-blue-900 leading-none px-1">
+                                    Novo Lead
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-[9px] h-4 bg-[#2A5432]/30 text-emerald-400 border-emerald-900 leading-none px-1">
+                                    Paciente
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="text-xs text-gray-400 mt-0.5">{p.phone || "Sem telefone"} {p.email ? `• ${p.email}` : ''}</div>
                             </div>
                           ))

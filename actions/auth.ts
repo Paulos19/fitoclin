@@ -61,7 +61,7 @@ export async function register(prevState: any, formData: FormData) {
         email,
         password: hashedPassword,
         // @ts-ignore: O Enum do Prisma pode precisar de cast se não estiver gerado
-        role: role, 
+        role: role,
       },
     });
 
@@ -99,6 +99,62 @@ export async function register(prevState: any, formData: FormData) {
   }
 }
 
+// === REGISTER COM TOKEN (Convite de Lead) ===
+export async function registerWithToken(prevState: any, formData: FormData) {
+  const token = formData.get("token") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  if (!token || !email || !password) {
+    return { error: "Preencha todos os campos." };
+  }
+
+  if (password.length < 6) {
+    return { error: "A senha deve ter no mínimo 6 caracteres." };
+  }
+
+  try {
+    // 1. Buscar Lead pelo token
+    const lead = await db.lead.findUnique({ where: { registrationToken: token } });
+    if (!lead) return { error: "Token inválido ou expirado." };
+
+    // 2. Verificar se email já existe
+    const existing = await db.user.findUnique({ where: { email } });
+    if (existing) return { error: "Este email já está em uso!" };
+
+    // 3. Criar o usuário
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await db.user.create({
+      data: {
+        name: lead.name,
+        email,
+        password: hashedPassword,
+        role: "PATIENT",
+      },
+    });
+
+    // 4. Criar paciente vinculado ao profissional do Lead
+    await db.patient.create({
+      data: {
+        userId: user.id,
+        phone: lead.phone,
+        professionalId: lead.professionalId,
+      },
+    });
+
+    // 5. Atualizar Lead para WON
+    await db.lead.update({
+      where: { id: lead.id },
+      data: { status: "WON", email: email },
+    });
+
+    return { success: "Cadastro realizado com sucesso! Você já pode fazer login." };
+  } catch (error) {
+    console.error("Erro registerWithToken:", error);
+    return { error: "Erro ao criar conta. Tente novamente." };
+  }
+}
+
 // === LOGIN ACTION ===
 export async function login(prevState: any, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
@@ -112,7 +168,7 @@ export async function login(prevState: any, formData: FormData) {
       email: data.email,
       password: data.password,
       // Redireciona para o dashboard após login
-      redirectTo: "/dashboard", 
+      redirectTo: "/dashboard",
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -124,8 +180,8 @@ export async function login(prevState: any, formData: FormData) {
       }
     }
     // Necessário relançar o erro para o redirecionamento do NextAuth funcionar
-    throw error; 
+    throw error;
   }
-  
+
   return undefined;
 }

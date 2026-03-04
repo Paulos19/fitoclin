@@ -200,16 +200,120 @@ export async function getPatientsForSelect() {
     ? {}
     : { professionalId: session.user.id };
 
+  // 1. Busca Pacientes
   const patients = await db.patient.findMany({
     where: whereClause,
     include: { user: { select: { name: true, email: true } } },
     orderBy: { createdAt: 'desc' }
   });
 
-  return patients.map(p => ({
+  // 2. Busca Leads (Interessados)
+  // Nota: Idealmente filtramos leads que já são pacientes. 
+  // Por simplicidade, traremos todos os leads atrelados ao profissional (ou todos se admin)
+  const leads = await db.lead.findMany({
+    where: whereClause,
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const patientResults = patients.map(p => ({
     id: p.id,
     name: p.user?.name || "Sem Nome",
     phone: p.phone || "",
-    email: p.user?.email || ""
+    email: p.user?.email || "",
+    type: 'patient' as const
   }));
+
+  // Filtra leads que possam ter o mesmo email de um paciente já cadastrado
+  const patientEmails = new Set(patientResults.map(p => p.email).filter(Boolean));
+  const leadResults = leads
+    .filter(l => !l.email || !patientEmails.has(l.email))
+    .map(l => ({
+      id: `lead_${l.id}`,
+      name: l.name,
+      phone: l.phone,
+      email: l.email || "",
+      type: 'lead' as const
+    }));
+
+  return [...patientResults, ...leadResults];
+}
+
+// --- BUSCA PAGINADA DE PACIENTES + LEADS ---
+export async function getPatientsAndLeadsPaginated(page: number = 1, query: string = "") {
+  const session = await auth();
+  if (!session) return { data: [], totalPages: 0, currentPage: page, total: 0 };
+
+  const role = session.user.role;
+  // @ts-ignore
+  const canViewAll = role === "ADMIN" || role === "SECRETARY";
+  const PAGE_SIZE = 15;
+
+  const whereBase = canViewAll ? {} : { professionalId: session.user.id };
+
+  // 1. Busca Pacientes
+  const patientWhere: any = {
+    ...whereBase,
+    ...(query ? { user: { name: { contains: query, mode: 'insensitive' } } } : {}),
+  };
+  const patients = await db.patient.findMany({
+    where: patientWhere,
+    include: {
+      user: { select: { name: true, email: true } },
+      appointments: { orderBy: { date: 'desc' as const }, take: 1 },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // 2. Busca Leads (excluindo convertidos / WON)
+  const leadWhere: any = {
+    ...whereBase,
+    status: { notIn: ['WON'] },
+    ...(query ? { name: { contains: query, mode: 'insensitive' } } : {}),
+  };
+  const leads = await db.lead.findMany({
+    where: leadWhere,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // 3. Unificar
+  const pEmails = new Set(patients.map(p => p.user?.email).filter(Boolean));
+
+  const unified = [
+    ...patients.map(p => ({
+      id: p.id,
+      name: p.user?.name || "Sem Nome",
+      email: p.user?.email || "",
+      phone: p.phone || "",
+      city: p.city || "",
+      state: p.state || "",
+      type: 'patient' as const,
+      lastAppointment: p.appointments[0]?.date || null,
+      createdAt: p.createdAt,
+      leadId: null as string | null,
+      registrationToken: null as string | null,
+    })),
+    ...leads
+      .filter(l => !l.email || !pEmails.has(l.email))
+      .map(l => ({
+        id: `lead_${l.id}`,
+        name: l.name,
+        email: l.email || "",
+        phone: l.phone || "",
+        city: "",
+        state: "",
+        type: 'lead' as const,
+        lastAppointment: null as Date | null,
+        createdAt: l.createdAt,
+        leadId: l.id,
+        registrationToken: l.registrationToken || null,
+      })),
+  ];
+
+  // 4. Paginar
+  const total = unified.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const start = (page - 1) * PAGE_SIZE;
+  const data = unified.slice(start, start + PAGE_SIZE);
+
+  return { data, totalPages, currentPage: page, total };
 }
