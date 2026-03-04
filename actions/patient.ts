@@ -246,40 +246,50 @@ export async function getPatientsAndLeadsPaginated(page: number = 1, query: stri
   const role = session.user.role;
   // @ts-ignore
   const canViewAll = role === "ADMIN" || role === "SECRETARY";
-  const PAGE_SIZE = 15;
+  const PAGE_SIZE = 10;
 
   const whereBase = canViewAll ? {} : { professionalId: session.user.id };
 
-  // 1. Busca Pacientes
+  // Filtros
   const patientWhere: any = {
     ...whereBase,
     ...(query ? { user: { name: { contains: query, mode: 'insensitive' } } } : {}),
   };
-  const patients = await db.patient.findMany({
-    where: patientWhere,
-    include: {
-      user: { select: { name: true, email: true } },
-      appointments: { orderBy: { date: 'desc' as const }, take: 1 },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  // 2. Busca Leads (excluindo convertidos / WON)
   const leadWhere: any = {
     ...whereBase,
     status: { notIn: ['WON'] },
     ...(query ? { name: { contains: query, mode: 'insensitive' } } : {}),
   };
-  const leads = await db.lead.findMany({
-    where: leadWhere,
-    orderBy: { createdAt: 'desc' },
-  });
 
-  // 3. Unificar
-  const pEmails = new Set(patients.map(p => p.user?.email).filter(Boolean));
+  // 1. Contar totais no banco
+  const [patientCount, leadCount] = await Promise.all([
+    db.patient.count({ where: patientWhere }),
+    db.lead.count({ where: leadWhere }),
+  ]);
 
-  const unified = [
-    ...patients.map(p => ({
+  const totalRecords = patientCount + leadCount;
+  const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
+  const offset = (page - 1) * PAGE_SIZE;
+
+  // 2. Calcular quais registros buscar de cada tabela
+  // Pacientes vêm primeiro, depois Leads
+  let data: any[] = [];
+
+  if (offset < patientCount) {
+    // Ainda estamos na faixa de pacientes
+    const patientsToFetch = Math.min(PAGE_SIZE, patientCount - offset);
+    const patients = await db.patient.findMany({
+      where: patientWhere,
+      include: {
+        user: { select: { name: true, email: true } },
+        appointments: { orderBy: { date: 'desc' as const }, take: 1 },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: patientsToFetch,
+      skip: offset,
+    });
+
+    data = patients.map(p => ({
       id: p.id,
       name: p.user?.name || "Sem Nome",
       email: p.user?.email || "",
@@ -291,10 +301,19 @@ export async function getPatientsAndLeadsPaginated(page: number = 1, query: stri
       createdAt: p.createdAt,
       leadId: null as string | null,
       registrationToken: null as string | null,
-    })),
-    ...leads
-      .filter(l => !l.email || !pEmails.has(l.email))
-      .map(l => ({
+    }));
+
+    // Se sobrou espaço na página, preencher com leads
+    const remaining = PAGE_SIZE - data.length;
+    if (remaining > 0) {
+      const leads = await db.lead.findMany({
+        where: leadWhere,
+        orderBy: { createdAt: 'desc' },
+        take: remaining,
+        skip: 0,
+      });
+
+      data.push(...leads.map(l => ({
         id: `lead_${l.id}`,
         name: l.name,
         email: l.email || "",
@@ -306,14 +325,32 @@ export async function getPatientsAndLeadsPaginated(page: number = 1, query: stri
         createdAt: l.createdAt,
         leadId: l.id,
         registrationToken: l.registrationToken || null,
-      })),
-  ];
+      })));
+    }
+  } else {
+    // Já passamos de todos os pacientes, buscar apenas leads
+    const leadOffset = offset - patientCount;
+    const leads = await db.lead.findMany({
+      where: leadWhere,
+      orderBy: { createdAt: 'desc' },
+      take: PAGE_SIZE,
+      skip: leadOffset,
+    });
 
-  // 4. Paginar
-  const total = unified.length;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const start = (page - 1) * PAGE_SIZE;
-  const data = unified.slice(start, start + PAGE_SIZE);
+    data = leads.map(l => ({
+      id: `lead_${l.id}`,
+      name: l.name,
+      email: l.email || "",
+      phone: l.phone || "",
+      city: "",
+      state: "",
+      type: 'lead' as const,
+      lastAppointment: null as Date | null,
+      createdAt: l.createdAt,
+      leadId: l.id,
+      registrationToken: l.registrationToken || null,
+    }));
+  }
 
-  return { data, totalPages, currentPage: page, total };
+  return { data, totalPages, currentPage: page, total: totalRecords };
 }

@@ -58,14 +58,36 @@ export async function importLeadsFromXlsx(base64File: string) {
 
     if (validLeads.length === 0) return { success: false, message: "Nenhum lead válido encontrado" };
 
-    // Inserção em massa
-    await db.lead.createMany({
-      data: validLeads,
-      skipDuplicates: true, // Evita duplicatas se o banco suportar e houver campos unique
-    });
+    // Upsert: atualiza se já existe (mesmo nome + telefone), senão cria novo
+    let created = 0;
+    let updated = 0;
+
+    for (const lead of validLeads) {
+      const existing = await db.lead.findFirst({
+        where: {
+          name: { equals: lead.name, mode: 'insensitive' },
+          phone: lead.phone,
+        },
+      });
+
+      if (existing) {
+        await db.lead.update({
+          where: { id: existing.id },
+          data: {
+            email: lead.email || existing.email,
+            source: lead.source,
+            notes: lead.notes || existing.notes,
+          },
+        });
+        updated++;
+      } else {
+        await db.lead.create({ data: lead });
+        created++;
+      }
+    }
 
     revalidatePath("/dashboard/crm");
-    return { success: true, message: `${validLeads.length} leads importados com sucesso!` };
+    return { success: true, message: `${created} novos leads importados, ${updated} atualizados.` };
 
   } catch (error) {
     console.error("Erro importLeadsFromXlsx:", error);
@@ -210,7 +232,7 @@ export async function getLeadsFiltered(page: number = 1, query: string = "", sta
   const session = await auth();
   if (!session) return { data: [], totalPages: 0, currentPage: page, total: 0 };
 
-  const PAGE_SIZE = 15;
+  const PAGE_SIZE = 10;
 
   try {
     const whereClause: any = {};
