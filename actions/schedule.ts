@@ -216,7 +216,10 @@ export async function createAppointment(formData: FormData) {
     revalidatePath("/dashboard/appointments");
     revalidatePath("/dashboard");
 
-    return { success: "Agendamento realizado com sucesso!" };
+    return {
+      success: "Agendamento realizado com sucesso!",
+      phone: result.patient?.phone
+    };
 
   } catch (error: any) {
     if (error.code === 'P2002') {

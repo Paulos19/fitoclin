@@ -6,13 +6,13 @@ import { ServicesSection } from "@/components/home/services-section";
 import { CoursesSection } from "@/components/home/courses-section";
 import { PricingSection } from "@/components/home/pricing-section";
 import { MaterialsSection } from "@/components/home/materials-section";
-import { ContactSection } from "@/components/home/contact-section"; 
+import { ContactSection } from "@/components/home/contact-section";
 import { SpecializationSection } from "@/components/home/specialization-section"; // <--- NOVO
 import { CommunitySection } from "@/components/home/community-section"; // <--- NOVO
 import { Footer } from "@/components/layout/footer";
-import { db } from "@/lib/db"; 
+import { db } from "@/lib/db";
 
-export const revalidate = 60; 
+export const revalidate = 60;
 
 export default async function Home() {
   // 1. Buscar Configurações
@@ -30,7 +30,7 @@ export default async function Home() {
 
   const courses = rawCourses.map(c => ({
     ...c,
-    price: c.price ? Number(c.price) : 0, 
+    price: c.price ? Number(c.price) : 0,
   }));
 
   const rawMaterials = await db.moduleMaterial.findMany({
@@ -81,36 +81,37 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-[#062214] text-white selection:bg-[#76A771] selection:text-[#062214] flex flex-col">
       <Navbar />
-      
-      <HeroSection 
-        title={siteInfo?.heroTitle} 
-        subtitle={siteInfo?.heroSubtitle} 
+
+      <HeroSection
+        title={siteInfo?.heroTitle}
+        subtitle={siteInfo?.heroSubtitle}
+        customBanners={siteInfo?.homeBanners}
       />
-      
+
       {/* Seção de Especialização: Destaque logo após o Hero para ancorar autoridade */}
       <SpecializationSection />
 
-      <AboutSection 
+      <AboutSection
         aboutText={siteInfo?.aboutText}
         whatsapp={siteInfo?.whatsapp}
         instagram={siteInfo?.instagram}
       />
-      
+
       <MethodSection />
-      
+
       {/* Comunidade: Quebra o ritmo técnico e traz o lado humano/social antes dos produtos */}
-      <CommunitySection />
+      <CommunitySection customBanner={siteInfo?.communityBanner} />
 
       <ServicesSection />
-      
+
       <CoursesSection courses={courses} />
-      
+
       <PricingSection plans={plans} />
-      
+
       <MaterialsSection materials={materials} />
 
       <ContactSection />
-      
+
     </main>
   );
 }

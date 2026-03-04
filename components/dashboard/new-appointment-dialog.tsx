@@ -111,7 +111,20 @@ export function NewAppointmentDialog({ patientId, showFullButton }: NewAppointme
     if (result.error) {
       toast.error(result.error);
     } else {
-      toast.success(result.success);
+      if (result.phone) {
+        toast.success(result.success + " Redirecionando para o WhatsApp...");
+        // Formata o número (remover não-numéricos)
+        const cleanPhone = result.phone.replace(/\D/g, '');
+        // Adiciona 55 se não tiver (assumindo números do Brasil com DDD de 2 dígitos)
+        const finalPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith('55') ? `55${cleanPhone}` : cleanPhone;
+
+        // Mensagem padrão
+        const msg = encodeURIComponent(`Olá! Confirmando seu agendamento para o dia ${format(date, "dd/MM/yyyy", { locale: ptBR })} às ${selectedTime}.`);
+        window.open(`https://wa.me/${finalPhone}?text=${msg}`, "_blank");
+      } else {
+        toast.success(result.success);
+      }
+
       setOpen(false);
       setDate(new Date());
       setSelectedTime(null);

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 const images = [
   "/1.png",
@@ -16,37 +17,40 @@ const images = [
 interface HeroProps {
   title?: string | null;
   subtitle?: string | null;
+  customBanners?: string[];
 }
 
-export function HeroSection({ title, subtitle }: HeroProps) {
+export function HeroSection({ title, subtitle, customBanners }: HeroProps) {
   const [currentImage, setCurrentImage] = useState(0);
 
   // Defaults caso o banco esteja vazio
   const displayTitle = title || "A Ciência da Natureza a favor da sua Saúde";
   const displaySubtitle = subtitle || "O Método Fitoclin une a sabedoria ancestral das plantas com a precisão da medicina moderna para tratar a causa, não apenas os sintomas.";
 
+  const displayImages = customBanners && customBanners.length > 0 ? customBanners : images;
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % images.length);
+      setCurrentImage((prev) => (prev + 1) % displayImages.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [displayImages.length]);
 
   return (
     <section className="relative w-full h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-background">
-      
+
       {/* Slider de Imagens */}
       <AnimatePresence mode="popLayout">
         <motion.div
           key={currentImage}
           initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 0.5, scale: 1 }} 
+          animate={{ opacity: 0.5, scale: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 2 }}
           className="absolute inset-0 w-full h-full"
         >
           <Image
-            src={images[currentImage]}
+            src={displayImages[currentImage]}
             alt="Ambiente Fitoclin"
             fill
             className="object-cover"
@@ -60,7 +64,7 @@ export function HeroSection({ title, subtitle }: HeroProps) {
 
       <div className="relative z-10 container mx-auto px-6 pt-20 text-center">
         <div className="max-w-4xl mx-auto space-y-8">
-          
+
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -98,12 +102,16 @@ export function HeroSection({ title, subtitle }: HeroProps) {
             transition={{ delay: 0.9, duration: 0.8 }}
             className="flex flex-col sm:flex-row gap-5 pt-6 justify-center"
           >
-            <Button size="lg" className="btn-gradient rounded-full text-lg h-14 px-10">
-              Agendar Avaliação
+            <Button asChild size="lg" className="btn-gradient rounded-full text-lg h-14 px-10">
+              <Link href="https://wa.me/5565998200593" target="_blank" rel="noopener noreferrer">
+                Agendar Avaliação
+              </Link>
             </Button>
-            
-            <Button size="lg" variant="outline" className="border-[#76A771]/50 text-[#F1F1F1] hover:bg-[#76A771]/10 hover:text-white rounded-full text-lg h-14 px-10 bg-transparent backdrop-blur-sm">
-              Conhecer o Método <ArrowRight className="ml-2 w-5 h-5 text-[#76A771]" />
+
+            <Button asChild size="lg" variant="outline" className="border-[#76A771]/50 text-[#F1F1F1] hover:bg-[#76A771]/10 hover:text-white rounded-full text-lg h-14 px-10 bg-transparent backdrop-blur-sm">
+              <Link href="/community">
+                Conhecer o Método <ArrowRight className="ml-2 w-5 h-5 text-[#76A771]" />
+              </Link>
             </Button>
           </motion.div>
         </div>

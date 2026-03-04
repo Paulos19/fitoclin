@@ -43,15 +43,15 @@ const adminLinks = [
   { name: "Pacientes", href: "/dashboard/patients", icon: Users },
   { name: "Agenda", href: "/dashboard/schedule", icon: Calendar },
   { name: "Prontuários", href: "/dashboard/records", icon: FileText },
-  
+
   // Seção Acadêmica
   { name: "Gestão de Cursos", href: "/dashboard/courses", icon: Library },
   { name: "Gestão de Mentorias", href: "/dashboard/mentorships", icon: Video }, // [NOVO]
-  
+
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
-  
+
   // Acesso Direto às Áreas (Opcional, mas útil para ver como está ficando)
   { name: "Ver Especialização", href: "/specialization", icon: Crown }, // [NOVO]
 ];
@@ -88,19 +88,21 @@ const patientLinks = [
 const userLinks = [
   { name: "Meu Painel", href: "/dashboard", icon: LayoutDashboard },
   { name: "Meus Cursos", href: "/dashboard/courses", icon: GraduationCap },
-  { name: "Certificados", href: "/dashboard/certificates", icon: FileText }, 
+  { name: "Certificados", href: "/dashboard/certificates", icon: FileText },
   { name: "Meu Perfil", href: "/dashboard/profile", icon: UserCircle },
 ];
 
 interface SidebarProps {
   role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
-  isSubscribed?: boolean; 
+  isCommunitySubscribed?: boolean;
+  hasCourses?: boolean;
 }
 
-export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
+export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = false }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
+  const [activeTab, setActiveTab] = useState<"community" | "specialization">("community");
+
   let links = patientLinks;
   if (role === "ADMIN") links = adminLinks;
   if (role === "PROFESSIONAL") links = professionalLinks;
@@ -147,7 +149,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
         <div className="flex h-20 items-center px-4 overflow-hidden relative">
           <div className="flex items-center gap-3 w-full">
             <div className="relative shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#2A5432] to-[#1a3821] border border-[#2A5432] shadow-inner">
-               <Image src="/logo.png" alt="Fitoclin Logo" width={28} height={28} className="object-contain"/>
+              <Image src="/logo.png" alt="Fitoclin Logo" width={28} height={28} className="object-contain" />
             </div>
             <AnimatePresence>
               {!isCollapsed && (
@@ -171,9 +173,9 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
 
         <nav className="flex-1 overflow-y-auto px-3 space-y-2 py-2 custom-scrollbar">
           {links.map((link) => {
-            const isActive = link.href === "/dashboard" 
-                ? pathname === "/dashboard"
-                : pathname === link.href || pathname.startsWith(`${link.href}/`);
+            const isActive = link.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname === link.href || pathname.startsWith(`${link.href}/`);
 
             const LinkContent = (
               <Link
@@ -184,7 +186,7 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
                 )}
               >
                 {isActive && (
-                  <motion.div layoutId="active-pill" className="absolute left-0 top-2 bottom-2 w-1 bg-[#76A771] rounded-r-full"/>
+                  <motion.div layoutId="active-pill" className="absolute left-0 top-2 bottom-2 w-1 bg-[#76A771] rounded-r-full" />
                 )}
                 <link.icon className={cn("w-5 h-5 shrink-0 transition-colors duration-300", isActive ? "text-[#76A771]" : "text-[#76A771]/60 group-hover:text-[#76A771]")} />
                 {!isCollapsed && (
@@ -209,117 +211,172 @@ export function Sidebar({ role, isSubscribed = false }: SidebarProps) {
           })}
         </nav>
 
-        {/* --- CARD DE COMUNIDADE (Para Pacientes e Alunos) --- */}
-        {(role === "PATIENT" || role === "USER") && (
-          <div className="px-3 mb-2 mt-2">
-            {!isCollapsed ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                {isSubscribed ? (
-                   // COM ACESSO: Card Verde
-                   <Link href="/community">
-                      <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37]">
-                        <div className="relative flex items-center gap-3 bg-[#051F12] group-hover:bg-gradient-to-r group-hover:from-[#D4AF37]/20 group-hover:to-[#051F12] rounded-[11px] px-3 py-3 transition-all duration-300">
-                          <div className="p-1.5 rounded-lg bg-[#D4AF37]/20 text-[#D4AF37]">
-                            <Sparkles className="w-5 h-5" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-[#D4AF37] leading-none">Comunidade</span>
-                            <span className="text-[10px] text-[#F3E5AB]/80 uppercase tracking-wider">Acesso VIP</span>
-                          </div>
-                        </div>
-                      </div>
-                   </Link>
-                ) : (
-                   // SEM ACESSO: Card Bloqueado/Cinza
-                   <Link href="/subscription">
-                      <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-gray-700 to-gray-600 hover:from-[#76A771] hover:to-[#2A5432] transition-colors">
-                          <div className="bg-[#051F12] p-3 rounded-[11px] flex items-center gap-3">
-                            <div className="p-1.5 rounded-lg bg-gray-800 text-gray-400 group-hover:text-[#76A771] transition-colors">
-                               <Lock className="w-5 h-5" />
+        {/* --- CARDS DE ACESSO (COMUNIDADE & ESPECIALIZAÇÃO) --- */}
+        <div className="px-3 mb-2 mt-2 space-y-2">
+          {!isCollapsed ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <div className="relative rounded-xl overflow-hidden shadow-lg p-1 bg-gradient-to-br from-[#0A311D] to-[#072415] border border-[#2A5432] group">
+
+                {/* Switch Segmentado */}
+                <div className="flex relative bg-[#04140b] rounded-lg p-1 mb-2">
+                  <div className="absolute inset-y-1 left-1 right-1 pointer-events-none">
+                    <motion.div
+                      className="h-full rounded-md shadow-sm bg-gradient-to-r from-[#2A5432] to-[#16a34a]/30"
+                      initial={false}
+                      animate={{
+                        x: activeTab === "community" ? "0%" : "100%",
+                        width: "50%"
+                      }}
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => setActiveTab("community")}
+                    className={cn(
+                      "relative z-10 flex-1 py-1.5 text-[10px] uppercase font-bold tracking-wider rounded-md transition-colors",
+                      activeTab === "community" ? "text-white" : "text-gray-400 hover:text-gray-200"
+                    )}
+                  >
+                    Comunidade
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("specialization")}
+                    className={cn(
+                      "relative z-10 flex-1 py-1.5 text-[10px] uppercase font-bold tracking-wider rounded-md transition-colors",
+                      activeTab === "specialization" ? "text-white" : "text-gray-400 hover:text-gray-200"
+                    )}
+                  >
+                    Especialização
+                  </button>
+                </div>
+
+                {/* Conteúdo do Switch */}
+                <div className="relative h-[4.5rem] overflow-hidden rounded-lg">
+                  <AnimatePresence mode="wait">
+                    {activeTab === "community" ? (
+                      <motion.div
+                        key="community"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute inset-0"
+                      >
+                        <Link href={isCommunitySubscribed ? "/community" : "/subscription"} className="block h-full cursor-pointer group/link">
+                          <div className={cn(
+                            "h-full flex items-center px-4 transition-all",
+                            isCommunitySubscribed
+                              ? "bg-gradient-to-r from-[#D4AF37]/20 to-transparent group-hover/link:from-[#D4AF37]/30"
+                              : "bg-gradient-to-r from-gray-800/80 to-transparent group-hover/link:from-gray-700"
+                          )}>
+                            <div className="flex items-center gap-3">
+                              <div className={cn("p-2 rounded-md", isCommunitySubscribed ? "bg-[#D4AF37]/20 text-[#D4AF37]" : "bg-[#062214] border border-[#2A5432] text-gray-500 group-hover/link:text-[#76A771]")}>
+                                {isCommunitySubscribed ? <Sparkles className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className={cn("text-xs font-bold leading-none mb-1", isCommunitySubscribed ? "text-[#D4AF37]" : "text-gray-300 group-hover/link:text-white")}>
+                                  Acesso VIP
+                                </span>
+                                <span className={cn("text-[9px] uppercase tracking-wider", isCommunitySubscribed ? "text-[#F3E5AB]/70" : "text-gray-500 group-hover/link:text-[#76A771]")}>
+                                  {isCommunitySubscribed ? "Mural exclusivo" : "Assinar agora"}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex flex-col">
-                               <span className="text-sm font-bold text-gray-300 group-hover:text-white">Comunidade</span>
-                               <span className="text-[10px] text-gray-500 group-hover:text-[#76A771]">Adquira seu acesso</span>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="specialization"
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute inset-0"
+                      >
+                        <Link href={hasCourses ? "/specialization" : "/subscription"} className="block h-full cursor-pointer group/link">
+                          <div className={cn(
+                            "h-full flex items-center px-4 transition-all",
+                            hasCourses
+                              ? "bg-gradient-to-r from-purple-500/20 to-transparent group-hover/link:from-purple-500/30"
+                              : "bg-gradient-to-r from-gray-800/80 to-transparent group-hover/link:from-gray-700"
+                          )}>
+                            <div className="flex items-center gap-3">
+                              <div className={cn("p-2 rounded-md", hasCourses ? "bg-purple-500/20 text-purple-400" : "bg-[#062214] border border-[#2A5432] text-gray-500 group-hover/link:text-purple-400")}>
+                                {hasCourses ? <Crown className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className={cn("text-xs font-bold leading-none mb-1", hasCourses ? "text-purple-300" : "text-gray-300 group-hover/link:text-white")}>
+                                  Área do Aluno
+                                </span>
+                                <span className={cn("text-[9px] uppercase tracking-wider", hasCourses ? "text-purple-400/80" : "text-gray-500 group-hover/link:text-purple-400")}>
+                                  {hasCourses ? "Assistir aulas" : "Assinar agora"}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                      </div>
-                   </Link>
-                )}
-              </motion.div>
-            ) : (
-              // Versão Colapsada
+                        </Link>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="flex flex-col gap-2 w-full items-center">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link href={isSubscribed ? "/community" : "/subscription"} className="flex justify-center w-full">
+                  <Link href={isCommunitySubscribed ? "/community" : "/subscription"} className="flex justify-center w-full">
                     <div className={cn(
-                        "h-10 w-10 flex items-center justify-center rounded-xl shadow-lg hover:scale-105 transition-transform",
-                        isSubscribed ? "bg-gradient-to-br from-[#D4AF37] to-[#8C7321] text-[#051F12]" : "bg-gray-800 text-gray-400 border border-gray-700"
+                      "h-10 w-10 flex items-center justify-center rounded-xl shadow-lg transition-colors",
+                      isCommunitySubscribed ? "bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30" : "bg-[#0A311D] text-gray-400 border border-[#2A5432]/30 hover:border-[#76A771] hover:text-[#76A771]"
                     )}>
-                      {isSubscribed ? <Sparkles className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                      <Sparkles className="w-4 h-4" />
                     </div>
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-[#D4AF37] text-[#051F12] font-bold border-none ml-2">
-                  {isSubscribed ? "Acessar Comunidade VIP" : "Desbloquear Comunidade"}
+                  {isCommunitySubscribed ? "Acessar Comunidade VIP" : "Desbloquear Comunidade"}
                 </TooltipContent>
               </Tooltip>
-            )}
-          </div>
-        )}
 
-        {/* --- CARD DE ESPECIALIZAÇÃO (PARA ADMIN) --- */}
-        {role === "ADMIN" && (
-            <div className="px-3 mb-2 mt-2">
-                {!isCollapsed ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <Link href="/specialization">
-                            <div className="relative overflow-hidden group rounded-xl p-[1px] bg-gradient-to-r from-purple-500 via-purple-300 to-purple-600">
-                                <div className="relative flex items-center gap-3 bg-[#051F12] group-hover:bg-purple-900/20 rounded-[11px] px-3 py-3 transition-all">
-                                    <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
-                                        <Crown className="w-5 h-5" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-purple-200">Especialização</span>
-                                        <span className="text-[10px] text-purple-400/80 uppercase">Área VIP</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </Link>
-                    </motion.div>
-                ) : (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Link href="/specialization" className="flex justify-center w-full">
-                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-purple-900/50 border border-purple-500 text-purple-300 hover:bg-purple-500 hover:text-white transition-all">
-                                    <Crown className="w-5 h-5" />
-                                </div>
-                            </Link>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="bg-purple-900 border-purple-500 text-white ml-2">
-                            Acessar Especialização
-                        </TooltipContent>
-                    </Tooltip>
-                )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href={hasCourses ? "/specialization" : "/subscription"} className="flex justify-center w-full">
+                    <div className={cn(
+                      "h-10 w-10 flex items-center justify-center rounded-xl shadow-lg transition-colors",
+                      hasCourses ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "bg-[#0A311D] text-gray-400 border border-[#2A5432]/30 hover:border-purple-400 hover:text-purple-400"
+                    )}>
+                      <Crown className="w-4 h-4" />
+                    </div>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-purple-900 text-white font-bold border-none ml-2">
+                  {hasCourses ? "Acessar Especialização" : "Desbloquear Especialização"}
+                </TooltipContent>
+              </Tooltip>
             </div>
-        )}
+          )}
+        </div>
 
         <div className="p-3 mt-auto">
-           <div className="h-[1px] bg-[#2A5432]/30 mb-3" />
-           {isCollapsed ? (
-             <Tooltip>
-               <TooltipTrigger asChild>
-                 <Button variant="ghost" size="icon" className="w-full h-10 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/50 hover:border hover:border-red-900/30 transition-all" onClick={() => signOut({ callbackUrl: "/login" })}>
-                   <LogOut className="w-5 h-5" />
-                 </Button>
-               </TooltipTrigger>
-               <TooltipContent side="right" className="bg-red-950 border-red-900 text-red-100 ml-2">Sair</TooltipContent>
-             </Tooltip>
-           ) : (
-             <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/60 transition-all group" onClick={() => signOut({ callbackUrl: "/login" })}>
-               <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-               <span className="font-medium">Sair do Sistema</span>
-             </Button>
-           )}
+          <div className="h-[1px] bg-[#2A5432]/30 mb-3" />
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-full h-10 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/50 hover:border hover:border-red-900/30 transition-all" onClick={() => signOut({ callbackUrl: "/login" })}>
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-red-950 border-red-900 text-red-100 ml-2">Sair</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-red-500/10 hover:text-red-400 text-[#F1F1F1]/60 transition-all group" onClick={() => signOut({ callbackUrl: "/login" })}>
+              <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <span className="font-medium">Sair do Sistema</span>
+            </Button>
+          )}
         </div>
       </motion.div>
     </TooltipProvider>

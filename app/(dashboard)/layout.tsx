@@ -2,7 +2,10 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
-import { getNotifications } from "@/actions/notifications"; 
+import { getNotifications } from "@/actions/notifications";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export default async function DashboardLayout({
   children,
@@ -15,16 +18,31 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const role = (session.user.role as "ADMIN" | "PATIENT") || "PATIENT";
-  
+  const role = (session.user.role as "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER") || "PATIENT";
+
+  // Fetch user subscriptions
+  const [purchases, subscription] = await Promise.all([
+    prisma.purchase.count({ where: { userId: session.user.id } }).catch(() => 0),
+    prisma.subscription.findUnique({ where: { userId: session.user.id } }).catch(() => null)
+  ]);
+
+  const isCommunitySubscribed = subscription?.plan === "COMMUNITY" && subscription?.stripeCurrentPeriodEnd
+    ? subscription.stripeCurrentPeriodEnd.getTime() + 86400000 > Date.now()
+    : false;
+
+  const isSpecializationSubscribed = subscription?.plan === "SPECIALIZATION" && subscription?.stripeCurrentPeriodEnd
+    ? subscription.stripeCurrentPeriodEnd.getTime() + 86400000 > Date.now()
+    : false;
+
+  const hasCourses = purchases > 0 || isSpecializationSubscribed;
+
   // Buscar notificações no servidor
-  // Nota: Se der erro aqui, verifique se actions/notifications.ts existe e tem essa função exportada
-  const notifications = await getNotifications().catch(() => []); 
+  const notifications = await getNotifications().catch(() => []);
 
   return (
     <div className="flex h-screen w-full bg-[#062214] overflow-hidden">
       <aside className="hidden lg:block h-full z-20">
-        <Sidebar role={role} />
+        <Sidebar role={role} isCommunitySubscribed={isCommunitySubscribed} hasCourses={hasCourses} />
       </aside>
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">

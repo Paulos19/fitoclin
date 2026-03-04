@@ -38,7 +38,7 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-lg">WhatsApp / Telefone</h4>
-                  <p className="text-gray-400">(11) 99999-9999</p>
+                  <p className="text-gray-400">(65) 99820-0593</p>
                   <p className="text-xs text-[#76A771] mt-1">Seg a Sex das 09h às 18h</p>
                 </div>
               </div>
@@ -50,7 +50,7 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-lg">E-mail</h4>
-                  <p className="text-gray-400">contato@fitoclin.com.br</p>
+                  <p className="text-gray-400">dra.isafito@institutoisa.com.br</p>
                   <p className="text-xs text-[#76A771] mt-1">Resposta em até 24h úteis</p>
                 </div>
               </div>
@@ -62,8 +62,8 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-lg">Localização</h4>
-                  <p className="text-gray-400">Av. Paulista, 1000 - Sala 101</p>
-                  <p className="text-sm text-gray-500">Jardins, São Paulo - SP</p>
+                  <p className="text-gray-400">Rua Ouro Fino, 324, - Bosque da Saude</p>
+                  <p className="text-sm text-gray-500">Cuiaba - MT, 78.050-110</p>
                 </div>
               </div>
             </div>
@@ -71,7 +71,7 @@ export function ContactSection() {
             {/* Redes Sociais */}
             <div className="pt-4">
                 <Link 
-                  href="https://instagram.com" 
+                  href="https://instagram.com/dra.isafito" 
                   target="_blank"
                   className="inline-flex items-center gap-2 text-white hover:text-[#76A771] transition-colors group"
                 >

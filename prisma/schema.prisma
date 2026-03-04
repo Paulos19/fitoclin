@@ -232,6 +232,9 @@ model SiteInfo {
   instagram               String?
   defaultCertificateBgUrl String?
 
+  homeBanners     String[] @default([]) // Array de URLs das imagens do slider da home
+  communityBanner String? // Imagem do banner fixo da tela da comunidade
+
   updatedAt DateTime @updatedAt
 }
 
