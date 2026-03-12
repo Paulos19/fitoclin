@@ -268,6 +268,8 @@ model Lead {
   status LeadStatus @default(NEW)
   notes  String?
 
+  registrationToken String? @unique
+
   professionalId String?
   professional   User?   @relation("MyLeads", fields: [professionalId], references: [id])
 

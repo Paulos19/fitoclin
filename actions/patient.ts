@@ -200,16 +200,157 @@ export async function getPatientsForSelect() {
     ? {}
     : { professionalId: session.user.id };
 
+  // 1. Busca Pacientes
   const patients = await db.patient.findMany({
     where: whereClause,
     include: { user: { select: { name: true, email: true } } },
     orderBy: { createdAt: 'desc' }
   });
 
-  return patients.map(p => ({
+  // 2. Busca Leads (Interessados)
+  // Nota: Idealmente filtramos leads que já são pacientes. 
+  // Por simplicidade, traremos todos os leads atrelados ao profissional (ou todos se admin)
+  const leads = await db.lead.findMany({
+    where: whereClause,
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const patientResults = patients.map(p => ({
     id: p.id,
     name: p.user?.name || "Sem Nome",
     phone: p.phone || "",
-    email: p.user?.email || ""
+    email: p.user?.email || "",
+    type: 'patient' as const
   }));
+
+  // Filtra leads que possam ter o mesmo email de um paciente já cadastrado
+  const patientEmails = new Set(patientResults.map(p => p.email).filter(Boolean));
+  const leadResults = leads
+    .filter(l => !l.email || !patientEmails.has(l.email))
+    .map(l => ({
+      id: `lead_${l.id}`,
+      name: l.name,
+      phone: l.phone,
+      email: l.email || "",
+      type: 'lead' as const
+    }));
+
+  return [...patientResults, ...leadResults];
+}
+
+// --- BUSCA PAGINADA DE PACIENTES + LEADS ---
+export async function getPatientsAndLeadsPaginated(page: number = 1, query: string = "") {
+  const session = await auth();
+  if (!session) return { data: [], totalPages: 0, currentPage: page, total: 0 };
+
+  const role = session.user.role;
+  // @ts-ignore
+  const canViewAll = role === "ADMIN" || role === "SECRETARY";
+  const PAGE_SIZE = 10;
+
+  const whereBase = canViewAll ? {} : { professionalId: session.user.id };
+
+  // Filtros
+  const patientWhere: any = {
+    ...whereBase,
+    ...(query ? { user: { name: { contains: query, mode: 'insensitive' } } } : {}),
+  };
+  const leadWhere: any = {
+    ...whereBase,
+    status: { notIn: ['WON'] },
+    ...(query ? { name: { contains: query, mode: 'insensitive' } } : {}),
+  };
+
+  // 1. Contar totais no banco
+  const [patientCount, leadCount] = await Promise.all([
+    db.patient.count({ where: patientWhere }),
+    db.lead.count({ where: leadWhere }),
+  ]);
+
+  const totalRecords = patientCount + leadCount;
+  const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
+  const offset = (page - 1) * PAGE_SIZE;
+
+  // 2. Calcular quais registros buscar de cada tabela
+  // Pacientes vêm primeiro, depois Leads
+  let data: any[] = [];
+
+  if (offset < patientCount) {
+    // Ainda estamos na faixa de pacientes
+    const patientsToFetch = Math.min(PAGE_SIZE, patientCount - offset);
+    const patients = await db.patient.findMany({
+      where: patientWhere,
+      include: {
+        user: { select: { name: true, email: true } },
+        appointments: { orderBy: { date: 'desc' as const }, take: 1 },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: patientsToFetch,
+      skip: offset,
+    });
+
+    data = patients.map(p => ({
+      id: p.id,
+      name: p.user?.name || "Sem Nome",
+      email: p.user?.email || "",
+      phone: p.phone || "",
+      city: p.city || "",
+      state: p.state || "",
+      type: 'patient' as const,
+      lastAppointment: p.appointments[0]?.date || null,
+      createdAt: p.createdAt,
+      leadId: null as string | null,
+      registrationToken: null as string | null,
+    }));
+
+    // Se sobrou espaço na página, preencher com leads
+    const remaining = PAGE_SIZE - data.length;
+    if (remaining > 0) {
+      const leads = await db.lead.findMany({
+        where: leadWhere,
+        orderBy: { createdAt: 'desc' },
+        take: remaining,
+        skip: 0,
+      });
+
+      data.push(...leads.map(l => ({
+        id: `lead_${l.id}`,
+        name: l.name,
+        email: l.email || "",
+        phone: l.phone || "",
+        city: "",
+        state: "",
+        type: 'lead' as const,
+        lastAppointment: null as Date | null,
+        createdAt: l.createdAt,
+        leadId: l.id,
+        registrationToken: l.registrationToken || null,
+      })));
+    }
+  } else {
+    // Já passamos de todos os pacientes, buscar apenas leads
+    const leadOffset = offset - patientCount;
+    const leads = await db.lead.findMany({
+      where: leadWhere,
+      orderBy: { createdAt: 'desc' },
+      take: PAGE_SIZE,
+      skip: leadOffset,
+    });
+
+    data = leads.map(l => ({
+      id: `lead_${l.id}`,
+      name: l.name,
+      email: l.email || "",
+      phone: l.phone || "",
+      city: "",
+      state: "",
+      type: 'lead' as const,
+      lastAppointment: null as Date | null,
+      createdAt: l.createdAt,
+      leadId: l.id,
+      registrationToken: l.registrationToken || null,
+    }));
+  }
+
+  return { data, totalPages, currentPage: page, total: totalRecords };
 }

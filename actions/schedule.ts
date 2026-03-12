@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sendEmail, getAppointmentTemplate } from "@/lib/mail";
+import bcrypt from "bcryptjs";
 
 // --- SCHEMAS DE VALIDAÇÃO ---
 const ScheduleSettingsSchema = z.array(z.object({
@@ -130,6 +131,62 @@ export async function createAppointment(formData: FormData) {
   dateObj.setHours(hours, minutes, 0, 0);
 
   let patientId = formData.get("patientId") as string;
+  // 👇 LÓGICA DE CONVERSÃO: Se for um LEAD, vira Paciente agora.
+  if (patientId && patientId.startsWith("lead_")) {
+    const leadId = patientId.replace("lead_", "");
+    const lead = await db.lead.findUnique({ where: { id: leadId } });
+
+    if (lead) {
+      let existingUser = lead.email ? await db.user.findUnique({ where: { email: lead.email } }) : null;
+      let targetPatientId = "";
+
+      if (existingUser) {
+        const existingPatient = await db.patient.findUnique({ where: { userId: existingUser.id } });
+        if (existingPatient) {
+          targetPatientId = existingPatient.id;
+        } else {
+          const newPatient = await db.patient.create({
+            data: {
+              userId: existingUser.id,
+              phone: lead.phone,
+              professionalId: lead.professionalId
+            }
+          });
+          targetPatientId = newPatient.id;
+        }
+      } else {
+        const hashedPassword = await bcrypt.hash("fitoclin123", 10);
+        const finalEmail = lead.email || `paciente.${lead.id}@sistema.local`;
+
+        const newUser = await db.user.create({
+          data: {
+            name: lead.name,
+            email: finalEmail,
+            password: hashedPassword,
+            role: "PATIENT",
+          }
+        });
+
+        const newPatient = await db.patient.create({
+          data: {
+            userId: newUser.id,
+            phone: lead.phone,
+            professionalId: lead.professionalId,
+          }
+        });
+        targetPatientId = newPatient.id;
+      }
+
+      // Atualiza o lead para status WON (Virou Paciente)
+      await db.lead.update({
+        where: { id: lead.id },
+        data: { status: "WON" }
+      });
+
+      patientId = targetPatientId;
+    }
+  }
+
   let doctorId = "";
 
   // 👇 LÓGICA DE QUEM É O MÉDICO

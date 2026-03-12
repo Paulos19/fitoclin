@@ -4,13 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Phone, 
-  CalendarCheck, 
-  UserPlus, 
-  XCircle, 
-  MessageCircle, 
-  Loader2, 
+import {
+  Phone,
+  CalendarCheck,
+  UserPlus,
+  XCircle,
+  MessageCircle,
+  Loader2,
   ArrowRight,
   RefreshCw,
   Send,
@@ -19,8 +19,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { updateLeadStatus, getLeadsPaginated, triggerPostConsultationManual } from "@/actions/crm";
+import { updateLeadStatus, getLeadsPaginated, triggerPostConsultationManual, getPatientByLead, sendRegistrationInvite } from "@/actions/crm";
 import { cn } from "@/lib/utils";
+import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog";
 
 // --- TIPOS ---
 type Lead = {
@@ -39,43 +40,43 @@ type Lead = {
 
 // Configuração de cores
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgHeader: string; border: string; icon: any }> = {
-  NEW: { 
-    label: "Novos", 
-    color: "text-blue-400", 
-    bgHeader: "bg-blue-950/40", 
+  NEW: {
+    label: "Novos",
+    color: "text-blue-400",
+    bgHeader: "bg-blue-950/40",
     border: "border-blue-800/50",
-    icon: UserPlus 
+    icon: UserPlus
   },
-  CONTACTED: { 
-    label: "Em Contato", 
-    color: "text-yellow-400", 
-    bgHeader: "bg-yellow-950/40", 
+  CONTACTED: {
+    label: "Em Contato",
+    color: "text-yellow-400",
+    bgHeader: "bg-yellow-950/40",
     border: "border-yellow-800/50",
-    icon: Phone 
+    icon: Phone
   },
-  SCHEDULED: { 
-    label: "Agendados", 
-    color: "text-purple-400", 
-    bgHeader: "bg-purple-950/40", 
+  SCHEDULED: {
+    label: "Agendados",
+    color: "text-purple-400",
+    bgHeader: "bg-purple-950/40",
     border: "border-purple-800/50",
-    icon: CalendarCheck 
+    icon: CalendarCheck
   },
-  WON: { 
-    label: "Virou Paciente", 
-    color: "text-[#76A771]", 
-    bgHeader: "bg-[#2A5432]/40", 
+  WON: {
+    label: "Virou Paciente",
+    color: "text-[#76A771]",
+    bgHeader: "bg-[#2A5432]/40",
     border: "border-[#76A771]/50",
-    icon: UserPlus 
+    icon: UserPlus
   },
   // Estados de Pós-Consulta (Visualmente ficam na coluna WON ou numa separada, aqui trataremos dentro de WON)
   POS_CONSULTA: { label: "Pós-Consulta", color: "text-emerald-400", bgHeader: "", border: "", icon: MessageCircle },
   POS_CONSULTA_ENVIADO: { label: "Enviado", color: "text-emerald-400", bgHeader: "", border: "", icon: MessageCircle },
-  LOST: { 
-    label: "Perdido", 
-    color: "text-red-400", 
-    bgHeader: "bg-red-950/40", 
+  LOST: {
+    label: "Perdido",
+    color: "text-red-400",
+    bgHeader: "bg-red-950/40",
     border: "border-red-900/50",
-    icon: XCircle 
+    icon: XCircle
   },
 };
 
@@ -97,17 +98,26 @@ const LeadCard = ({ lead, statusKey, onMove, onRefresh }: { lead: Lead, statusKe
   const handlePostConsultation = async () => {
     setIsSending(true);
     try {
-        const res = await triggerPostConsultationManual(lead.id);
-        if (res.success) {
-            toast.success("Pós-Consulta iniciada!");
-            onRefresh(); // Atualiza a lista para refletir a mudança de status
-        } else {
-            toast.error("Erro ao iniciar.");
-        }
+      const res = await triggerPostConsultationManual(lead.id);
+      if (res.success) {
+        toast.success("Pós-Consulta iniciada!");
+        onRefresh(); // Atualiza a lista para refletir a mudança de status
+      } else {
+        toast.error("Erro ao iniciar.");
+      }
     } catch (error) {
-        toast.error("Erro de conexão.");
+      toast.error("Erro de conexão.");
     } finally {
-        setIsSending(false);
+      setIsSending(false);
+    }
+  };
+
+  const [resolvedPatientId, setResolvedPatientId] = useState<string | undefined>(undefined);
+
+  const handleOpenAppointment = async () => {
+    if (resolvedPatientId === undefined) {
+      const pId = await getPatientByLead(lead.id);
+      setResolvedPatientId(pId || ""); // Use empty string if not found to avoid re-fetching
     }
   };
 
@@ -127,19 +137,19 @@ const LeadCard = ({ lead, statusKey, onMove, onRefresh }: { lead: Lead, statusKe
             </span>
             <div className="flex items-center gap-2 text-[10px] text-[#F1F1F1]/60">
               <span>{new Date(lead.createdAt).toLocaleDateString()}</span>
-              
+
               {/* Badge extra se já iniciou pós consulta */}
               {isPostConsultationStarted && (
-                  <span className="flex items-center gap-1 text-emerald-400 bg-emerald-950/50 px-1.5 rounded border border-emerald-900">
-                      <CheckCircle2 className="w-3 h-3" /> Pós-Consulta
-                  </span>
+                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-950/50 px-1.5 rounded border border-emerald-900">
+                  <CheckCircle2 className="w-3 h-3" /> Pós-Consulta
+                </span>
               )}
             </div>
           </div>
         </div>
-        <Button 
-          size="icon" 
-          variant="ghost" 
+        <Button
+          size="icon"
+          variant="ghost"
           className="h-7 w-7 text-[#76A771] hover:bg-[#76A771]/20 hover:text-white transition-all"
           onClick={openWhatsApp}
           title="Chamar no WhatsApp"
@@ -161,70 +171,99 @@ const LeadCard = ({ lead, statusKey, onMove, onRefresh }: { lead: Lead, statusKe
         )}
       </div>
 
+      {/* Botão Enviar Convite — visível se não é WON */}
+      {statusKey !== 'WON' && !isPostConsultationStarted && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full text-xs border-blue-900 text-blue-400 hover:bg-blue-950/50 gap-1"
+          onClick={async (e) => {
+            e.stopPropagation();
+            const res = await sendRegistrationInvite(lead.id);
+            if (res.success && res.whatsappUrl) {
+              toast.success("Convite gerado!");
+              window.open(res.whatsappUrl, "_blank");
+            } else {
+              toast.error(res.message || "Erro");
+            }
+          }}
+        >
+          <Send className="w-3 h-3" /> Enviar Convite
+        </Button>
+      )}
+
       {/* Ações */}
       <div className="pt-3 mt-1 border-t border-[#2A5432]/30 flex items-center justify-between gap-2">
-        
+
         {/* === LÓGICA DA COLUNA WON E PÓS-CONSULTA === */}
         {(statusKey === 'WON' || isPostConsultationStarted) ? (
-            <div className="w-full space-y-2">
-                
-                {/* Se ainda NÃO iniciou (Status WON puro) */}
-                {!isPostConsultationStarted && (
-                    <Button 
-                        size="sm" 
-                        className="w-full text-xs h-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-0 shadow-lg shadow-emerald-900/20 transition-all"
-                        onClick={handlePostConsultation}
-                        disabled={isSending}
-                    >
-                        {isSending ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Send className="w-3 h-3 mr-2" />}
-                        {isSending ? "Iniciando..." : "Iniciar Pós-Consulta"}
-                    </Button>
-                )}
+          <div className="w-full space-y-2">
 
-                {/* Se JÁ iniciou (POS_CONSULTA ou ENVIADO) */}
-                {isPostConsultationStarted && (
-                    <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="flex-1 text-xs border-emerald-800 text-emerald-500 bg-emerald-950/30 cursor-default hover:bg-emerald-950/30">
-                            <CheckCircle2 className="w-3 h-3 mr-2" /> Iniciada
-                        </Button>
-                        <Link href={`/dashboard/records?query=${encodeURIComponent(lead.name)}`} className="flex-1">
-                            <Button size="sm" variant="secondary" className="w-full text-xs bg-[#76A771] text-[#062214] hover:bg-[#5e8a5a]">
-                                <FileText className="w-3 h-3 mr-2" /> Prontuário
-                            </Button>
-                        </Link>
-                    </div>
-                )}
-            </div>
+            {/* Se ainda NÃO iniciou (Status WON puro) */}
+            {!isPostConsultationStarted && (
+              <Button
+                size="sm"
+                className="w-full text-xs h-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-0 shadow-lg shadow-emerald-900/20 transition-all"
+                onClick={handlePostConsultation}
+                disabled={isSending}
+              >
+                {isSending ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Send className="w-3 h-3 mr-2" />}
+                {isSending ? "Iniciando..." : "Iniciar Pós-Consulta"}
+              </Button>
+            )}
+
+            {/* Se JÁ iniciou (POS_CONSULTA ou ENVIADO) */}
+            {isPostConsultationStarted && (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1 text-xs border-emerald-800 text-emerald-500 bg-emerald-950/30 cursor-default hover:bg-emerald-950/30">
+                  <CheckCircle2 className="w-3 h-3 mr-2" /> Iniciada
+                </Button>
+                <Link href={`/dashboard/records?query=${encodeURIComponent(lead.name)}`} className="flex-1">
+                  <Button size="sm" variant="secondary" className="w-full text-xs bg-[#76A771] text-[#062214] hover:bg-[#5e8a5a]">
+                    <FileText className="w-3 h-3 mr-2" /> Prontuário
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         ) : (
-            // === LÓGICA PADRÃO PARA OUTRAS COLUNAS ===
-            <>
-                {(['CONTACTED', 'SCHEDULED'].includes(statusKey)) ? (
-                    <Link 
-                    href={`/dashboard/schedule?newPatientName=${encodeURIComponent(lead.name)}`}
-                    className="flex-1 text-xs flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-[#2A5432]/40 text-[#76A771] hover:bg-[#76A771] hover:text-[#062214] border border-[#2A5432] transition-all font-medium"
+          // === LÓGICA PADRÃO PARA OUTRAS COLUNAS ===
+          <>
+            {(['NEW', 'CONTACTED', 'SCHEDULED'].includes(statusKey)) ? (
+              <div className="flex-1">
+                <NewAppointmentDialog
+                  patientId={resolvedPatientId || undefined}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      onClick={handleOpenAppointment}
+                      className="w-full text-xs flex items-center justify-center gap-1.5 py-1.5 h-auto rounded-md bg-[#2A5432]/40 text-[#76A771] hover:bg-[#76A771] hover:text-[#062214] border border-[#2A5432] transition-all font-medium"
                     >
-                    <CalendarCheck className="w-3.5 h-3.5" /> Agendar
-                    </Link>
-                ) : <div className="flex-1"></div>}
+                      <CalendarCheck className="w-3.5 h-3.5" /> Agendar
+                    </Button>
+                  }
+                />
+              </div>
+            ) : <div className="flex-1"></div>}
 
-                <div className="ml-auto">
-                    {statusKey === 'NEW' && (
-                    <Button size="sm" variant="ghost" className="text-xs h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30" onClick={() => onMove(lead.id, 'CONTACTED')}>
-                        Contatar <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                    )}
-                    {statusKey === 'CONTACTED' && (
-                    <Button size="sm" variant="ghost" className="text-xs h-7 text-purple-400 hover:text-purple-300 hover:bg-purple-900/30" onClick={() => onMove(lead.id, 'SCHEDULED')}>
-                        Agendou <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                    )}
-                    {statusKey === 'SCHEDULED' && (
-                    <Button size="sm" variant="ghost" className="text-xs h-7 text-[#76A771] hover:text-[#A4D49E] hover:bg-[#2A5432]/30" onClick={() => onMove(lead.id, 'WON')}>
-                        Virou Paciente <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                    )}
-                </div>
-            </>
+            <div className="ml-auto">
+              {statusKey === 'NEW' && (
+                <Button size="sm" variant="ghost" className="text-xs h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30" onClick={() => onMove(lead.id, 'CONTACTED')}>
+                  Contatar <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              )}
+              {statusKey === 'CONTACTED' && (
+                <Button size="sm" variant="ghost" className="text-xs h-7 text-purple-400 hover:text-purple-300 hover:bg-purple-900/30" onClick={() => onMove(lead.id, 'SCHEDULED')}>
+                  Agendou <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              )}
+              {statusKey === 'SCHEDULED' && (
+                <Button size="sm" variant="ghost" className="text-xs h-7 text-[#76A771] hover:text-[#A4D49E] hover:bg-[#2A5432]/30" onClick={() => onMove(lead.id, 'WON')}>
+                  Virou Paciente <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -238,7 +277,7 @@ const KanbanColumn = ({ statusKey, refreshTrigger, onLeadMoved }: { statusKey: s
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchLeads = useCallback(async (pageNum: number, shouldReset = false) => {
@@ -249,13 +288,20 @@ const KanbanColumn = ({ statusKey, refreshTrigger, onLeadMoved }: { statusKey: s
     const res = await getLeadsPaginated(statusKey, pageNum);
 
     if (res.success && res.data) {
-      setLeads(prev => shouldReset ? res.data : [...prev, ...res.data]);
-      setHasMore(res.data.length === 10); 
+      setLeads(prev => {
+        if (shouldReset) return res.data;
+
+        // Evita duplicatas se a mesma página for carregada duas vezes ou houver overlap
+        const existingIds = new Set(prev.map(l => l.id));
+        const newLeads = res.data.filter(l => !existingIds.has(l.id));
+        return [...prev, ...newLeads];
+      });
+      setHasMore(res.data.length === 10);
     } else {
       setHasMore(false);
     }
     setLoading(false);
-  }, [statusKey]); 
+  }, [statusKey]);
 
   useEffect(() => { fetchLeads(1, true); }, []);
 
@@ -300,21 +346,21 @@ const KanbanColumn = ({ statusKey, refreshTrigger, onLeadMoved }: { statusKey: s
           </span>
         </div>
         <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#F1F1F1]/50 hover:text-[#F1F1F1]" onClick={() => fetchLeads(1, true)}>
-                <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
-            </Button>
-            <Badge variant="outline" className="bg-[#062214] text-[#F1F1F1]/70 border-[#2A5432]/50 text-[10px] h-5">
-               {leads.length}{hasMore ? '+' : ''}
-            </Badge>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-[#F1F1F1]/50 hover:text-[#F1F1F1]" onClick={() => fetchLeads(1, true)}>
+            <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
+          </Button>
+          <Badge variant="outline" className="bg-[#062214] text-[#F1F1F1]/70 border-[#2A5432]/50 text-[10px] h-5">
+            {leads.length}{hasMore ? '+' : ''}
+          </Badge>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar" onScroll={handleScroll} ref={scrollRef}>
         {leads.map((lead) => (
-          <LeadCard 
-            key={lead.id} 
-            lead={lead} 
-            statusKey={statusKey} 
+          <LeadCard
+            key={lead.id}
+            lead={lead}
+            statusKey={statusKey}
             onMove={handleMove}
             onRefresh={() => fetchLeads(1, true)} // Passa função de refresh
           />
