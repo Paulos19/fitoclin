@@ -11,7 +11,9 @@ import { SpecializationSection } from "@/components/home/specialization-section"
 import { CommunitySection } from "@/components/home/community-section";
 import { db } from "@/lib/db";
 
-export const revalidate = 60;
+// CORREÇÃO AQUI: Força a página a ser renderizada dinamicamente no servidor apenas quando é acedida.
+// Isto impede que o Next.js tente conectar à base de dados durante o 'npm run build'.
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   // 1. Buscar Configurações
@@ -59,7 +61,7 @@ export default async function Home() {
 
   const materials = rawMaterials.map(m => ({
     id: m.id,
-    title: m.title, // ou m.title dependendo do seu schema
+    title: m.title,
     courseId: m.module.course.id,
     courseTitle: m.module.course.title,
     courseImage: m.module.course.imageUrl,
