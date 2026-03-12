@@ -16,7 +16,7 @@ interface Course {
   imageUrl: string | null;
   linkUrl: string | null;
   // Campo opcional para definir o tipo de rota interna (pode vir do banco futuramente)
-  category?: 'STANDARD' | 'COMMUNITY' | 'SPECIALIZATION'; 
+  category?: 'STANDARD' | 'COMMUNITY' | 'SPECIALIZATION' | 'MEI';
   _count?: {
     modules: number;
   };
@@ -65,10 +65,10 @@ export function CoursesSection({ courses }: { courses: Course[] }) {
             // Definição da lógica do botão principal
             const internalUrl = getInternalLink(course);
             const externalUrl = course.linkUrl || "/register";
-            
+
             // Se logado: Vai para o curso. Se deslogado: Vai para venda.
             const targetUrl = isAuthenticated ? internalUrl : externalUrl;
-            
+
             // Texto e Ícone dinâmicos
             const buttonText = isAuthenticated ? "Acessar Aula" : "Matricule-se Agora";
             const ButtonIcon = isAuthenticated ? Play : (course.linkUrl ? ExternalLink : ArrowRight);
@@ -84,10 +84,10 @@ export function CoursesSection({ courses }: { courses: Course[] }) {
               >
                 <div className="relative h-52 w-full bg-[#062214] overflow-hidden">
                   {course.imageUrl ? (
-                    <Image 
-                      src={course.imageUrl} 
-                      alt={course.title} 
-                      fill 
+                    <Image
+                      src={course.imageUrl}
+                      alt={course.title}
+                      fill
                       className="object-cover group-hover:scale-105 transition-transform duration-700"
                     />
                   ) : (
@@ -95,52 +95,51 @@ export function CoursesSection({ courses }: { courses: Course[] }) {
                       <ImageIcon className="w-16 h-16 opacity-30" />
                     </div>
                   )}
-                  
+
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0A311D] to-transparent opacity-60" />
 
                   {/* Badge de Preço ou Status */}
                   <div className="absolute top-4 right-4 bg-[#062214]/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[#76A771] text-xs font-bold border border-[#76A771]/30 shadow-xl flex items-center gap-2">
-                     {!isAuthenticated && <Lock className="w-3 h-3" />}
-                     {isAuthenticated 
-                        ? "Disponível" 
-                        : (course.price > 0 
-                           ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(course.price) 
-                           : "Gratuito")
-                     }
+                    {!isAuthenticated && <Lock className="w-3 h-3" />}
+                    {isAuthenticated
+                      ? "Disponível"
+                      : (course.price > 0
+                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(course.price)
+                        : "Gratuito")
+                    }
                   </div>
                 </div>
-                
+
                 <div className="p-6 flex flex-col flex-grow relative">
                   <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#76A771] transition-colors line-clamp-2">
                     {course.title}
                   </h3>
-                  
+
                   <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
                     {course.description || "Sem descrição disponível."}
                   </p>
 
                   <div className="flex items-center gap-4 text-gray-500 text-xs mb-6 border-t border-[#2A5432]/50 pt-4 font-medium uppercase tracking-wide">
                     <div className="flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-[#76A771]" /> 
+                      <BookOpen className="w-3.5 h-3.5 text-[#76A771]" />
                       {course._count?.modules || 0} Módulos
                     </div>
                     <div className="w-1 h-1 bg-[#2A5432] rounded-full" />
                     <div>100% Online</div>
                   </div>
 
-                  <Link 
-                      href={targetUrl} 
-                      target={!isAuthenticated && course.linkUrl ? "_blank" : "_self"}
-                      className="w-full mt-auto"
+                  <Link
+                    href={targetUrl}
+                    target={!isAuthenticated && course.linkUrl ? "_blank" : "_self"}
+                    className="w-full mt-auto"
                   >
-                      <Button className={`w-full font-bold h-12 shadow-lg transition-all ${
-                        isAuthenticated 
-                          ? "bg-[#2A5432] text-white hover:bg-[#76A771] hover:text-[#062214]" 
-                          : "bg-[#76A771] text-[#062214] hover:bg-[#5e8a5a] shadow-[#76A771]/20"
+                    <Button className={`w-full font-bold h-12 shadow-lg transition-all ${isAuthenticated
+                        ? "bg-[#2A5432] text-white hover:bg-[#76A771] hover:text-[#062214]"
+                        : "bg-[#76A771] text-[#062214] hover:bg-[#5e8a5a] shadow-[#76A771]/20"
                       }`}>
-                        {buttonText}
-                        <ButtonIcon className="ml-2 w-4 h-4" />
-                      </Button>
+                      {buttonText}
+                      <ButtonIcon className="ml-2 w-4 h-4" />
+                    </Button>
                   </Link>
                 </div>
               </motion.div>

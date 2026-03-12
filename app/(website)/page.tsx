@@ -7,9 +7,8 @@ import { CoursesSection } from "@/components/home/courses-section";
 import { PricingSection } from "@/components/home/pricing-section";
 import { MaterialsSection } from "@/components/home/materials-section";
 import { ContactSection } from "@/components/home/contact-section";
-import { SpecializationSection } from "@/components/home/specialization-section"; // <--- NOVO
-import { CommunitySection } from "@/components/home/community-section"; // <--- NOVO
-import { Footer } from "@/components/layout/footer";
+import { SpecializationSection } from "@/components/home/specialization-section";
+import { CommunitySection } from "@/components/home/community-section";
 import { db } from "@/lib/db";
 
 export const revalidate = 60;
