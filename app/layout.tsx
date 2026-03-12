@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { Providers } from "@/components/providers"; 
+import { Providers } from "@/components/providers";
 
 const font = Inter({ subsets: ["latin"] });
 
@@ -21,14 +21,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${font.className} antialiased bg-[#F8FAF9]`}>
+      <body className={`${font.className} antialiased bg-[#F8FAF9]`} suppressHydrationWarning>
         {/* O Providers envolve tudo para garantir acesso à Sessão em qualquer lugar */}
         <Providers>
-          
+
           <div className="w-full max-w-full overflow-x-hidden relative flex flex-col min-h-screen">
             {children}
           </div>
-          
+
           <Toaster richColors position="top-right" closeButton />
         </Providers>
       </body>

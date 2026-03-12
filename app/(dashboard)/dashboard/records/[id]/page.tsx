@@ -31,6 +31,7 @@ import { EpigeneticForm } from "@/components/dashboard/epigenetic-form";
 import { PepForm } from "@/components/dashboard/pep-form";
 import { PrescriptionPanel } from "@/components/dashboard/prescription-panel";
 import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog";
+import { PostConsultationForm } from "@/components/dashboard/post-consultation-form";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -258,6 +259,9 @@ export default async function RecordDetailPage({ params }: Props) {
 
         {/* 4. PÓS-CONSULTA */}
         <TabsContent value="post-consultation" className="animate-in slide-in-from-bottom-2">
+
+          <PostConsultationForm patientId={patient.id} />
+
           <div className="grid md:grid-cols-3 gap-6 h-[600px]">
 
             {/* Timeline / Chat */}
@@ -280,8 +284,8 @@ export default async function RecordDetailPage({ params }: Props) {
                     return (
                       <div key={record.id} className={`flex ${isPatientReply ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] rounded-xl p-3 border ${isPatientReply
-                            ? 'bg-[#2A5432]/40 border-[#76A771]/30 rounded-tr-none'
-                            : 'bg-[#062214]/80 border-[#2A5432]/30 rounded-tl-none'
+                          ? 'bg-[#2A5432]/40 border-[#76A771]/30 rounded-tr-none'
+                          : 'bg-[#062214]/80 border-[#2A5432]/30 rounded-tl-none'
                           }`}>
                           <div className="flex items-center gap-2 mb-1">
                             {isPatientReply ? (
