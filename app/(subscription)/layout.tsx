@@ -16,7 +16,7 @@ export default function SubscriptionLayout({
 }) {
   return (
     <div className="relative min-h-screen bg-[#051F12] text-[#F1F1F1] overflow-x-hidden selection:bg-[#D4AF37]/30 selection:text-white font-sans">
-      
+
       {/* --- BACKGROUND AMBIENTE (Otimizado) --- */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         {/* Luz Superior Esquerda (Verde) */}
@@ -29,7 +29,7 @@ export default function SubscriptionLayout({
 
       {/* --- HEADER FLUTUANTE --- */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-6 md:px-12 transition-all duration-300">
-        
+
         {/* Botão Voltar (Estilo Glass) */}
         <Link href="/dashboard" className="group">
           <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:border-white/10 hover:scale-105">
@@ -37,11 +37,6 @@ export default function SubscriptionLayout({
             <span className="text-sm font-medium text-gray-300 group-hover:text-white">Voltar</span>
           </div>
         </Link>
-        
-        {/* Placeholder para balanceamento ou Link de Ajuda */}
-        <div className="w-[100px] hidden md:flex justify-end">
-           <span className="text-xs text-white/20 font-mono tracking-widest">SECURE SSL</span>
-        </div>
       </header>
 
       {/* --- CONTEÚDO --- */}
