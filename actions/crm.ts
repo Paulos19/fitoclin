@@ -206,7 +206,49 @@ export async function updateLeadStatus(id: string, newStatus: string) {
 }
 
 // ==========================================================
-// 3. DISPARO MANUAL (Botão "Iniciar Pós-Consulta")
+// 3. EDITAR LEAD
+// ==========================================================
+export async function updateLeadInfo(id: string, formData: FormData) {
+  const session = await auth();
+  if (!session) return { success: false, message: "Não autorizado" };
+
+  const rawData = {
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    email: formData.get("email")?.toString() || "",
+    source: formData.get("source"),
+    notes: formData.get("notes")?.toString() || "",
+  };
+
+  try {
+    const data = LeadSchema.parse(rawData);
+
+    await db.lead.update({
+      where: { id },
+      data: {
+        name: data.name,
+        phone: data.phone,
+        source: data.source,
+        email: data.email === "" ? null : data.email,
+        notes: data.notes === "" ? null : data.notes,
+      }
+    });
+
+    revalidatePath("/dashboard/crm");
+    revalidatePath("/dashboard/patients");
+    return { success: true, message: "Lead atualizado com sucesso!" };
+
+  } catch (error) {
+    console.error("❌ ERRO ATUALIZAR LEAD:", error);
+    if (error instanceof z.ZodError) {
+      return { success: false, message: `Erro de validação: ${error.message}` };
+    }
+    return { success: false, message: "Erro interno." };
+  }
+}
+
+// ==========================================================
+// 4. DISPARO MANUAL (Botão "Iniciar Pós-Consulta")
 // ==========================================================
 export async function triggerPostConsultationManual(leadId: string) {
   try {
@@ -226,7 +268,7 @@ export async function triggerPostConsultationManual(leadId: string) {
 }
 
 // ==========================================================
-// 4. BUSCAR LEADS FILTRADOS (Lista com Filtros + Paginação)
+// 5. BUSCAR LEADS FILTRADOS (Lista com Filtros + Paginação)
 // ==========================================================
 export async function getLeadsFiltered(page: number = 1, query: string = "", statusFilter: string = "ALL") {
   const session = await auth();
@@ -280,7 +322,7 @@ export async function getLeadsFiltered(page: number = 1, query: string = "", sta
 
 
 // ==========================================================
-// 5. BUSCAR LEADS PAGINADOS (Kanban Otimizado)
+// 6. BUSCAR LEADS PAGINADOS (Kanban Otimizado)
 // ==========================================================
 export async function getLeadsPaginated(status: string, page: number) {
   const session = await auth();
@@ -327,7 +369,7 @@ export async function getLeadsPaginated(status: string, page: number) {
 }
 
 // ==========================================================
-// 6. BUSCAR PACIENTE POR LEAD (Para Agendamento)
+// 7. BUSCAR PACIENTE POR LEAD (Para Agendamento)
 // ==========================================================
 export async function getPatientByLead(leadId: string) {
   try {
@@ -360,7 +402,7 @@ export async function getPatientByLead(leadId: string) {
 }
 
 // ==========================================================
-// 7. ENVIAR CONVITE DE CADASTRO (WhatsApp com Token)
+// 8. ENVIAR CONVITE DE CADASTRO (WhatsApp com Token)
 // ==========================================================
 export async function sendRegistrationInvite(leadId: string) {
   const session = await auth();

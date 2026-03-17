@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog";
+import { EditLeadDialog } from "@/components/dashboard/crm/edit-lead-dialog";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -265,8 +266,23 @@ export function PatientsTable() {
                                                                 className="focus:bg-[#2A5432] cursor-pointer"
                                                                 onClick={() => handleInvite(row.leadId!)}
                                                             >
-                                                                <Send className="mr-2 h-4 w-4 text-blue-400" /> Enviar Convite
+                                                                <Send className="mr-2 h-4 w-4 text-emerald-400" /> Enviar Convite
                                                             </DropdownMenuItem>
+                                                        )}
+                                                        {isLead && row.leadId && (
+                                                            <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                                                                <EditLeadDialog
+                                                                    lead={{
+                                                                        id: row.leadId!,
+                                                                        name: row.name,
+                                                                        phone: row.phone,
+                                                                        email: row.email,
+                                                                        source: "", // Patients-table UnifiedRow doesn't have source, we can leave empty or require fetch, but we pass what we have
+                                                                        notes: ""   // Same here
+                                                                    }}
+                                                                    onSuccess={() => fetchData(page, debouncedQuery)}
+                                                                />
+                                                            </div>
                                                         )}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>

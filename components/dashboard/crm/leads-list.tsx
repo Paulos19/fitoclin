@@ -33,6 +33,7 @@ import {
     MessageCircle,
 } from "lucide-react";
 import { useDebounce } from "use-debounce";
+import { EditLeadDialog } from "@/components/dashboard/crm/edit-lead-dialog";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
     NEW: { label: "Novo", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
@@ -246,6 +247,19 @@ export function LeadsList() {
                                                         {lead.registrationToken ? "Reenviar" : "Convite"}
                                                     </Button>
                                                 )}
+                                                <div className="flex h-7 items-center">
+                                                    <EditLeadDialog
+                                                        lead={{
+                                                            id: lead.id,
+                                                            name: lead.name,
+                                                            phone: lead.phone,
+                                                            email: lead.email,
+                                                            source: lead.source,
+                                                            notes: lead.notes,
+                                                        }}
+                                                        onSuccess={() => fetchData(page, debouncedQuery, statusFilter)}
+                                                    />
+                                                </div>
                                             </div>
                                         </TableCell>
                                     </TableRow>
