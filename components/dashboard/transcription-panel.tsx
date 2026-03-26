@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -16,7 +16,9 @@ import {
     Edit3,
     Download,
     Trash2,
-    Music
+    Music,
+    AlertCircle,
+    XCircle
 } from "lucide-react";
 import {
     saveFinalTranscription,
@@ -122,14 +124,22 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
     };
 
     const handleDelete = async () => {
+        const toastId = toast.loading("Excluindo registro...");
         setIsDeleting(true);
-        const res = await deleteTranscriptionRecord(record.id, record.audioUrl, patientId);
-        setIsDeleting(false);
+        try {
+            const res = await deleteTranscriptionRecord(record.id, record.audioUrl, patientId);
+            setIsDeleting(false);
+            toast.dismiss(toastId);
 
-        if (res.success) {
-            toast.success("Transcrição excluída com sucesso!");
-        } else {
-            toast.error("Erro ao excluir registro.");
+            if (res.success) {
+                toast.success("Transcrição excluída com sucesso!");
+            } else {
+                toast.error("Erro ao excluir registro.");
+            }
+        } catch (e) {
+            setIsDeleting(false);
+            toast.dismiss(toastId);
+            toast.error("Erro inesperado.");
         }
     };
 
@@ -152,7 +162,7 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
             "bg-[#0A311D]/40 border-[#2A5432]/30 overflow-hidden transition-all duration-300",
             isExpanded ? "ring-1 ring-[#76A771]/50 bg-[#0A311D]/60 shadow-xl" : "hover:bg-[#0A311D]/60"
         )}>
-            {/* Header / List Item Summary */}
+            {/* Cabeçalho do Item */}
             <div className="flex items-center justify-between p-4 cursor-pointer group">
                 <div onClick={() => setIsExpanded(!isExpanded)} className="flex items-center gap-4 flex-1">
                     <div className={cn(
@@ -170,59 +180,84 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
                             {isMigrated && <Badge className="bg-[#76A771]/20 text-[#76A771] border-none text-[10px]">No Prontuário</Badge>}
                         </div>
                         <div className="flex gap-2 mt-1">
-                            {isPending && <span className="text-[10px] text-yellow-500 flex items-center animate-pulse tracking-wide uppercase font-bold">Gerando Transcrição...</span>}
+                            {isPending && <span className="text-[10px] text-yellow-500 flex items-center animate-pulse uppercase font-bold tracking-wide">Salvando Áudio/IA...</span>}
                             {!isPending && !isFinalized && <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Aguardando Revisão</span>}
-                            {isFinalized && <span className="text-[10px] text-gray-500 font-medium">Revisado em {new Date(record.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>}
+                            {isFinalized && <span className="text-[10px] text-gray-500 font-medium">Revisado às {new Date(record.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>}
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
-                    {/* Botão de Deletar Rápido (Apenas se não estiver pendente) */}
-                    {!isPending && (
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-900/40 hover:text-red-500 hover:bg-red-500/10 transition-colors">
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-[#0A311D] border-[#2A5432] text-white">
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Excluir Transcrição?</AlertDialogTitle>
-                                    <AlertDialogDescription className="text-gray-400">
-                                        Isso apagará o texto e também o **arquivo de áudio** do servidor permanentemente. Esta ação não pode ser desfeita.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className="bg-transparent border-[#2A5432] text-gray-300 hover:bg-[#2A5432] hover:text-white">Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDelete} className="bg-red-600 text-white hover:bg-red-700 border-none">
-                                        Excluir Permanentemente
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    )}
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-900/40 hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-[#0A311D] border-[#2A5432] text-white">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>{isPending ? "Abortar Transcrição?" : "Excluir Registro?"}</AlertDialogTitle>
+                                <AlertDialogDescription className="text-gray-400">
+                                    {isPending
+                                        ? "A IA parece estar demorando muito. Você pode abortar esta tarefa e excluir o áudio do servidor agora."
+                                        : "Isso apagará o texto e também o arquivo de áudio do servidor permanentemente. Esta ação não pode ser desfeita."
+                                    }
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-transparent border-[#2A5432] text-gray-300">Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} className="bg-red-600 text-white hover:bg-red-700 border-none">
+                                    Confirmar
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
 
-                    <div onClick={() => setIsExpanded(!isExpanded)} className="flex items-center">
+                    <div onClick={() => setIsExpanded(!isExpanded)}>
                         {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500 group-hover:text-[#76A771]" />}
                     </div>
                 </div>
             </div>
 
-            {/* Content / Editor */}
+            {/* Conteúdo Expandido */}
             {isExpanded && (
                 <CardContent className="pt-0 pb-6 px-6 animate-in fade-in slide-in-from-top-2">
                     <div className="h-px w-full bg-[#2A5432]/20 mb-4" />
 
                     {isPending ? (
-                        <div className="py-12 flex flex-col items-center justify-center text-gray-500 bg-[#062214]/30 rounded-lg">
-                            <Loader2 className="w-8 h-8 animate-spin mb-4 text-[#76A771]" />
-                            <p className="font-medium text-white">O Gemini está ouvindo seu áudio...</p>
-                            <p className="text-xs mt-1 opacity-60">Isso leva cerca de 30-60 segundos.</p>
+                        <div className="py-12 flex flex-col items-center justify-center text-gray-500 bg-[#062214]/30 rounded-lg relative overflow-hidden">
+                            <div className="absolute top-4 right-4">
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="text-red-900/40 hover:text-red-400 gap-2 h-8">
+                                            <XCircle className="w-4 h-4" /> Abortar
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="bg-[#0A311D] border-[#2A5432] text-white">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Interromper?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-gray-400">
+                                                O áudio será excluído para evitar cobranças e você poderá gravar novamente.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="bg-transparent border-[#2A5432] text-gray-300">Voltar</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleDelete} className="bg-red-600">Sim, Abortar</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+
+                            <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#76A771]" />
+                            <p className="font-bold text-white text-lg">Processando áudio...</p>
+                            <div className="flex items-center gap-2 mt-2 px-4 py-1.5 bg-[#76A771]/10 rounded-full border border-[#76A771]/20">
+                                <AlertCircle className="w-3.5 h-3.5 text-[#76A771]" />
+                                <span className="text-[11px] text-[#76A771] font-medium">O Gemini está gerando o texto. Aguarde alguns instantes.</span>
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {/* Audio Player & Download */}
+                            {/* Player e Download */}
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                                 {record.audioUrl && (
                                     <div className="flex-1 flex items-center gap-3 bg-[#062214]/50 p-2 rounded-lg border border-[#2A5432]/30">
@@ -237,25 +272,25 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
 
                                 {record.audioUrl && (
                                     <a href={record.audioUrl} target="_blank" rel="noopener noreferrer" className="block">
-                                        <Button variant="outline" className="w-full sm:w-auto h-12 sm:h-12 border-[#2A5432] text-gray-300 hover:bg-[#2A5432]/30 gap-2">
+                                        <Button variant="outline" className="w-full sm:w-auto h-12 border-[#2A5432] text-gray-300 gap-2 font-semibold">
                                             <Download className="w-4 h-4" /> Audio
                                         </Button>
                                     </a>
                                 )}
                             </div>
 
-                            {/* Text Editor */}
+                            {/* Editor de Texto */}
                             <div className="relative">
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="text-xs font-bold text-[#76A771] uppercase tracking-wider flex items-center gap-2">
-                                        Conteúdo da Consulta
-                                        {isFinalized && <CheckCircle2 className="w-3 h-3" />}
+                                <div className="flex items-center justify-between mb-2 px-1">
+                                    <label className="text-xs font-bold text-[#76A771] uppercase tracking-widest flex items-center gap-2">
+                                        Transcrição da Consulta
+                                        {isFinalized && <CheckCircle2 className="w-3.5 h-3.5" />}
                                     </label>
 
                                     <div className="flex items-center gap-2">
                                         {text && (
-                                            <Button variant="ghost" size="sm" onClick={downloadText} className="h-7 text-[10px] text-gray-400 hover:text-white">
-                                                <Download className="w-3 h-3 mr-1" /> Baixar Texto
+                                            <Button variant="ghost" size="sm" onClick={downloadText} className="h-7 text-[10px] text-gray-500 hover:text-[#76A771]">
+                                                <Download className="w-3 w-3 mr-1" /> Baixar TXT
                                             </Button>
                                         )}
                                         {!isEditing && isFinalized && (
@@ -263,9 +298,9 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => setIsEditing(true)}
-                                                className="h-7 text-[10px] text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                                                className="h-7 text-[10px] text-blue-400 hover:bg-blue-400/10"
                                             >
-                                                <Edit3 className="w-3 h-3 mr-1" /> Modificar
+                                                <Edit3 className="w-3.5 h-3.5 mr-1" /> Editar
                                             </Button>
                                         )}
                                     </div>
@@ -282,7 +317,7 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
                                 />
                             </div>
 
-                            {/* Actions */}
+                            {/* Ações */}
                             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#2A5432]/10">
                                 {isEditing ? (
                                     <Button onClick={handleSave} disabled={isSaving || !text} className="bg-blue-600 hover:bg-blue-500 text-white font-bold flex-1 h-12 rounded-xl shadow-lg">
@@ -296,7 +331,7 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
                                         className="bg-[#76A771] hover:bg-[#659160] text-[#062214] font-bold flex-1 h-12 rounded-xl gap-2 shadow-xl shadow-[#76A771]/10 transition-all hover:scale-[1.02]"
                                     >
                                         {isMigrating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                                        Enviar para Investigação no Prontuário
+                                        Mover para Prontuário
                                     </Button>
                                 )}
 
@@ -305,15 +340,9 @@ function TranscriptionItem({ record, patientId }: { record: RecordWithTranscript
                                     onClick={() => setIsExpanded(false)}
                                     className="border-[#2A5432] text-gray-400 h-12 px-6 rounded-xl"
                                 >
-                                    Minimizar
+                                    Recolher
                                 </Button>
                             </div>
-
-                            {!isEditing && isFinalized && (
-                                <p className="text-[10px] text-center text-gray-600 mt-2 bg-[#062214]/40 py-2 rounded-md">
-                                    Dica: Ao enviar no prontuário, a IA usará este texto para sugerir prescrições fitoterápicas personalizadas.
-                                </p>
-                            )}
                         </div>
                     )}
                 </CardContent>
