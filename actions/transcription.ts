@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { utapi } from "@/lib/uploadthing";
+import { utapi, extractFileKey } from "@/lib/uploadthing";
 
 export async function uploadAudioFile(formData: FormData) {
     const file = formData.get("file") as File;
@@ -71,5 +71,61 @@ export async function saveFinalTranscription(recordId: string, text: string, pat
         return { success: true };
     } catch (error) {
         return { success: false, error: "Falha ao salvar transcrição." };
+    }
+}
+
+export async function sendTranscriptionToPEP(recordId: string, text: string, patientId: string) {
+    try {
+        await db.$transaction(async (tx) => {
+            // 1. Cria a evolução no PEP
+            await tx.medicalRecord.create({
+                data: {
+                    patientId,
+                    title: `Evolução via Transcrição (${new Date().toLocaleDateString('pt-BR')})`,
+                    pilar1_investigacao: text,
+                    date: new Date(),
+                    transcriptionStatus: "NONE" // Registros normais do PEP não são transcrições
+                }
+            });
+
+            // 2. Marca a transcrição original como MIGRATED para saber que já foi usada
+            await tx.medicalRecord.update({
+                where: { id: recordId },
+                data: {
+                    transcriptionStatus: "FINALIZED", // Garantimos que está finalizado
+                    notes: "Migrado para o Prontuário em " + new Date().toLocaleString('pt-BR')
+                }
+            });
+        });
+
+        revalidatePath(`/dashboard/records/${patientId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Erro ao enviar para PEP:", error);
+        return { success: false, error: "Falha ao enviar para o prontuário." };
+    }
+}
+
+export async function deleteTranscriptionRecord(recordId: string, audioUrl: string | null, patientId: string) {
+    try {
+        // 1. Deletar áudio físico do UploadThing
+        if (audioUrl) {
+            const key = extractFileKey(audioUrl);
+            if (key) {
+                await utapi.deleteFiles(key).catch(e => console.error("Erro deletar UT:", e));
+            }
+        }
+
+        // 2. Deletar do banco de dados
+        await db.medicalRecord.delete({
+            where: { id: recordId }
+        });
+
+        revalidatePath(`/dashboard/records/${patientId}`);
+        return { success: true };
+
+    } catch (error) {
+        console.error("Erro ao deletar transcrição:", error);
+        return { error: "Ocorreu um erro ao excluir." };
     }
 }
