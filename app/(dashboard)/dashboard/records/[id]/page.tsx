@@ -19,7 +19,8 @@ import {
   Pill,
   MessageCircle,
   Bot,
-  Send
+  Send,
+  Mic
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +33,8 @@ import { PepForm } from "@/components/dashboard/pep-form";
 import { PrescriptionPanel } from "@/components/dashboard/prescription-panel";
 import { NewAppointmentDialog } from "@/components/dashboard/new-appointment-dialog";
 import { PostConsultationForm } from "@/components/dashboard/post-consultation-form";
+import { ConsultationRecorder } from "@/components/dashboard/consultation-recorder";
+import { TranscriptionPanel } from "@/components/dashboard/transcription-panel";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -152,7 +155,10 @@ export default async function RecordDetailPage({ params }: Props) {
             </div>
           </div>
 
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto items-end md:items-center">
+            {/* Novo Gravador de Consulta */}
+            <ConsultationRecorder patientId={patient.id} />
+
             <Link href={`https://wa.me/55${whatsappNumber}`} target="_blank" className="flex-1 md:flex-none">
               <Button variant="outline" className="w-full border-[#2A5432] text-[#76A771] hover:bg-[#2A5432]/20 hover:text-white bg-transparent">
                 <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
@@ -170,9 +176,10 @@ export default async function RecordDetailPage({ params }: Props) {
             <TabsTrigger value="anamnesis" className={tabTriggerStyle}>Pré-Atendimento</TabsTrigger>
             <TabsTrigger value="overview" className={tabTriggerStyle}>Visão Geral</TabsTrigger>
             <TabsTrigger value="evolution" className={tabTriggerStyle}>Evolução</TabsTrigger>
-            <TabsTrigger value="prescription" className={tabTriggerStyle}><Pill className="w-4 h-4" /> Prescrição</TabsTrigger>
-            <TabsTrigger value="post-consultation" className={tabTriggerStyle}><MessageCircle className="w-4 h-4" /> Pós-Consulta</TabsTrigger>
-            <TabsTrigger value="epigenetic" className={tabTriggerStyle}><Dna className="w-4 h-4" /> Epigenética</TabsTrigger>
+            <TabsTrigger value="transcription" className={tabTriggerStyle}><Mic className="w-4 h-4 mr-1" /> Transcrição</TabsTrigger>
+            <TabsTrigger value="prescription" className={tabTriggerStyle}><Pill className="w-4 h-4 mr-1" /> Prescrição</TabsTrigger>
+            <TabsTrigger value="post-consultation" className={tabTriggerStyle}><MessageCircle className="w-4 h-4 mr-1" /> Pós-Consulta</TabsTrigger>
+            <TabsTrigger value="epigenetic" className={tabTriggerStyle}><Dna className="w-4 h-4 mr-1" /> Epigenética</TabsTrigger>
             <TabsTrigger value="history" className={tabTriggerStyle}>Histórico</TabsTrigger>
             <TabsTrigger value="exams" className={tabTriggerStyle}>Exames</TabsTrigger>
           </TabsList>
@@ -240,6 +247,11 @@ export default async function RecordDetailPage({ params }: Props) {
           <EvolutionChart data={evolutionData} />
         </TabsContent>
 
+        {/* 2.5 TRANSCRIÇÃO */}
+        <TabsContent value="transcription" className="space-y-6 animate-in slide-in-from-bottom-2">
+          <TranscriptionPanel records={patient.medicalRecords as any} patientId={patient.id} />
+        </TabsContent>
+
         {/* 3. PRESCRIÇÃO */}
         <TabsContent value="prescription" className="space-y-6 animate-in slide-in-from-bottom-2">
           <PrescriptionPanel
@@ -248,7 +260,7 @@ export default async function RecordDetailPage({ params }: Props) {
             patientDetails={`${calculatedAge} anos`}
 
             // PASSANDO OS DADOS CORRETOS PARA A IA
-            patientAge={calculatedAge}
+            patientAge={calculatedAge as string | number}
             patientGender={patientGender}
 
             patientEmail={patient.user.email}

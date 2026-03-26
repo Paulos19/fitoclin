@@ -121,8 +121,13 @@ model MedicalRecord {
   pilar3_metabolismo  String?
   pilar4_estresse     String?
   pilar5_evolucao     String?
+  notes               String?
 
-  notes String?
+  // --- NOVOS CAMPOS PARA TRANSCRIÇÃO ---
+  audioUrl            String? // URL do Vercel Blob
+  transcription       String? @db.Text // O texto devolvido pelo Gemini
+  transcriptionStatus String  @default("NONE") // PENDING, COMPLETED, ERROR, FINALIZED
+  // -------------------------------------
 
   createdAt DateTime @default(now())
 }

@@ -8,7 +8,19 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'bzbrxkmhdxvh0b4p.public.blob.vercel-storage.com', // Domínio padrão do Vercel Blob
+        hostname: 'bzbrxkmhdxvh0b4p.public.blob.vercel-storage.com', // Domínio padrão do Vercel Blob (legado)
+      },
+      {
+        protocol: 'https',
+        hostname: 'utfs.io', // UploadThing
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ufs.sh', // UploadThing (novo formato)
+      },
+      {
+        protocol: 'https',
+        hostname: 'uploadthing.com',
       },
     ],
   },

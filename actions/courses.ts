@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { del, put } from "@vercel/blob";
+import { utapi, extractFileKey } from "@/lib/uploadthing";
 import { revalidatePath } from "next/cache";
 import { CourseCategory } from "@prisma/client";
 
@@ -99,7 +99,7 @@ export async function toggleLessonProgress(lessonId: string, completed: boolean)
     });
 
     revalidatePath(`/dashboard/courses`);
-    revalidatePath(`/dashboard/courses/[courseId]`, 'page'); 
+    revalidatePath(`/dashboard/courses/[courseId]`, 'page');
     return { success: true };
   } catch (error) {
     return { error: "Erro ao salvar progresso" };
@@ -118,9 +118,12 @@ export async function addModuleMaterial(formData: FormData) {
   if (!moduleId || !file || !title) return { error: "Dados incompletos" };
 
   try {
-    const blob = await put(`courses/materials/${Date.now()}-${file.name}`, file, {
-      access: "public",
-    });
+    const response = await utapi.uploadFiles(file);
+
+    if (response.error) {
+      console.error("Erro UploadThing:", response.error);
+      return { error: "Erro ao fazer upload do material." };
+    }
 
     let type = "OTHER";
     if (file.type.includes("pdf")) type = "PDF";
@@ -129,7 +132,7 @@ export async function addModuleMaterial(formData: FormData) {
     else if (file.type.includes("document") || file.type.includes("word")) type = "DOC";
 
     await db.moduleMaterial.create({
-      data: { moduleId, title, url: blob.url, type },
+      data: { moduleId, title, url: response.data.url, type },
     });
 
     revalidatePath(`/dashboard/courses`);
@@ -146,9 +149,16 @@ export async function deleteModuleMaterial(materialId: string, url: string) {
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
   try {
-    if (url) await del(url);
+    if (url) {
+      const fileKey = extractFileKey(url);
+      if (fileKey) {
+        try { await utapi.deleteFiles(fileKey); } catch (e) {
+          console.warn("Aviso: Não foi possível deletar arquivo do storage:", e);
+        }
+      }
+    }
     await db.moduleMaterial.delete({ where: { id: materialId } });
-    
+
     revalidatePath(`/dashboard/courses`);
     return { success: "Material removido!" };
   } catch (error) {
@@ -165,10 +175,9 @@ export async function uploadCourseImage(formData: FormData) {
   if (!file) return { error: "Arquivo inválido" };
 
   try {
-    const blob = await put(`courses/covers/${Date.now()}-${file.name}`, file, {
-      access: "public",
-    });
-    return { success: true, url: blob.url };
+    const response = await utapi.uploadFiles(file);
+    if (response.error) return { error: "Erro no upload" };
+    return { success: true, url: response.data.url };
   } catch (error) {
     return { error: "Erro no upload" };
   }
@@ -197,21 +206,21 @@ export async function upsertCourse(data: any) {
     // 1. Curso Base
     const course = await db.course.upsert({
       where: { id: id || "new" },
-      create: { 
-        title, 
-        description, 
-        imageUrl, 
-        active, 
+      create: {
+        title,
+        description,
+        imageUrl,
+        active,
         price,
         category: category || "COMMUNITY"
       },
-      update: { 
-        title, 
-        description, 
-        imageUrl, 
-        active, 
+      update: {
+        title,
+        description,
+        imageUrl,
+        active,
         price,
-        category 
+        category
       },
     });
 
@@ -239,12 +248,12 @@ export async function upsertCourse(data: any) {
 
       if (mod.lessons && mod.lessons.length > 0) {
         await db.lesson.createMany({
-            data: mod.lessons.map((l: any, lIndex: number) => ({
-                title: l.title,
-                videoUrl: l.videoUrl || "",
-                order: lIndex,
-                moduleId: currentModule.id
-            }))
+          data: mod.lessons.map((l: any, lIndex: number) => ({
+            title: l.title,
+            videoUrl: l.videoUrl || "",
+            order: lIndex,
+            moduleId: currentModule.id
+          }))
         });
       }
 

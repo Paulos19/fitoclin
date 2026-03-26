@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { put } from "@vercel/blob";
+import { utapi } from "@/lib/uploadthing";
 
 // --- SCHEMAS ---
 const PatientSchema = z.object({
@@ -125,9 +125,12 @@ export async function updatePatientProfile(formData: FormData) {
 
   if (profileImage && profileImage.size > 0) {
     try {
-      const filename = `profiles/${session.user.id}-${Date.now()}.${profileImage.name.split('.').pop()}`;
-      const blob = await put(filename, profileImage, { access: 'public' });
-      newImageUrl = blob.url;
+      const response = await utapi.uploadFiles(profileImage);
+      if (response.error) {
+        console.error("Erro no upload:", response.error);
+        return { error: "Falha ao enviar a foto." };
+      }
+      newImageUrl = response.data.url;
     } catch (err) {
       console.error("Erro no upload:", err);
       return { error: "Falha ao enviar a foto." };

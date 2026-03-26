@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { put, del } from "@vercel/blob";
+import { utapi, extractFileKey } from "@/lib/uploadthing";
 import { revalidatePath } from "next/cache";
 
 // 1. Listar Mentorias
@@ -17,7 +17,7 @@ export async function getMentorships() {
   }
 }
 
-// 2. Upload de Vídeo (Vercel Blob)
+// 2. Upload de Vídeo (UploadThing)
 export async function uploadMentorshipVideo(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
@@ -26,10 +26,14 @@ export async function uploadMentorshipVideo(formData: FormData) {
   if (!file) return { error: "Arquivo inválido" };
 
   try {
-    const blob = await put(`mentorships/${Date.now()}-${file.name}`, file, {
-      access: "public",
-    });
-    return { success: true, url: blob.url };
+    const response = await utapi.uploadFiles(file);
+
+    if (response.error) {
+      console.error("Erro UploadThing:", response.error);
+      return { error: "Erro no upload. Verifique o tamanho do arquivo." };
+    }
+
+    return { success: true, url: response.data.url };
   } catch (error) {
     console.error(error);
     return { error: "Erro no upload. Verifique o tamanho do arquivo." };
@@ -74,13 +78,20 @@ export async function deleteMentorship(id: string, videoUrl: string, sourceType:
   if (session?.user?.role !== "ADMIN") return { error: "Não autorizado" };
 
   try {
-    // Se for upload, deleta do Blob para economizar espaço
-    if (sourceType === "UPLOAD" && videoUrl.includes("public.blob")) {
-        await del(videoUrl);
+    // Se for upload, deleta do UploadThing para economizar espaço
+    if (sourceType === "UPLOAD" && videoUrl) {
+      const fileKey = extractFileKey(videoUrl);
+      if (fileKey) {
+        try {
+          await utapi.deleteFiles(fileKey);
+        } catch (e) {
+          console.warn("Aviso: Não foi possível deletar vídeo do storage:", e);
+        }
+      }
     }
 
     await db.mentorship.delete({ where: { id } });
-    
+
     revalidatePath("/dashboard/mentorships");
     revalidatePath("/specialization/mentorships");
     return { success: "Mentoria removida!" };

@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { put } from "@vercel/blob";
+import { utapi } from "@/lib/uploadthing";
 
 // --- SCHEMAS DE VALIDAÇÃO ---
 
@@ -67,11 +67,9 @@ export async function uploadCourseImage(formData: FormData) {
   if (!file || file.size === 0) return { error: "Arquivo inválido" };
 
   try {
-    const filename = `courses/cover-${Date.now()}-${file.name}`;
-    const blob = await put(filename, file, {
-      access: 'public',
-    });
-    return { success: true, url: blob.url };
+    const response = await utapi.uploadFiles(file);
+    if (response.error) return { error: "Falha no upload da imagem" };
+    return { success: true, url: response.data.url };
   } catch (error) {
     console.error("Erro upload:", error);
     return { error: "Falha no upload da imagem" };
@@ -86,11 +84,9 @@ export async function uploadBannerImage(formData: FormData) {
   if (!file || file.size === 0) return { error: "Arquivo inválido" };
 
   try {
-    const filename = `banners/banner-${Date.now()}-${file.name}`;
-    const blob = await put(filename, file, {
-      access: 'public',
-    });
-    return { success: true, url: blob.url };
+    const response = await utapi.uploadFiles(file);
+    if (response.error) return { error: "Falha no upload da imagem" };
+    return { success: true, url: response.data.url };
   } catch (error) {
     console.error("Erro upload banner:", error);
     return { error: "Falha no upload da imagem" };
