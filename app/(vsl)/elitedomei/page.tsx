@@ -179,7 +179,7 @@ export default function VSLPage() {
 
                             {/* CTA */}
                             <a
-                                href="https://pay.hotmart.com/I104935049E?sck=HOTMART_PRODUCT_PAGE&off=wwd6q5ac&hotfeature=32&_gl=1*vjgz6x*_ga*MTg4NDUyOTg0NC4xNzc0OTYzOTg1*_ga_GQH2V1F11Q*czE3NzUwNTA0OTgkbzQkZzEkdDE3NzUwNTA1MTIkajQ2JGwwJGgzOTUyMjIxODA."
+                                href="/api/checkout"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="cta-button block w-full text-center py-6 rounded-2xl text-white text-xl sm:text-2xl font-black uppercase tracking-wide"
@@ -252,7 +252,7 @@ export default function VSLPage() {
                         </div>
 
                         <a
-                            href="https://pay.hotmart.com/I104935049E?sck=HOTMART_PRODUCT_PAGE&off=wwd6q5ac&hotfeature=32&_gl=1*vjgz6x*_ga*MTg4NDUyOTg0NC4xNzc0OTYzOTg1*_ga_GQH2V1F11Q*czE3NzUwNTA0OTgkbzQkZzEkdDE3NzUwNTA1MTIkajQ2JGwwJGgzOTUyMjIxODA."
+                            href="/api/checkout"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="cta-button block w-full text-center py-8 rounded-2xl text-white text-xl sm:text-3xl font-black uppercase tracking-wide bg-emerald-500"
