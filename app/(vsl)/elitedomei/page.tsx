@@ -23,6 +23,29 @@ const pillars = [
     { icon: "✝", title: "Alinhamento espiritual", text: "Fortaleça sua fé como base para sustentar sua transformação." },
 ];
 
+const modules = [
+    { title: "Módulo 01: Despertar Metabólico + Consciência do Corpo", price: "R$ 997", icon: "🌿" },
+    { title: "Módulo 02: Reorganização Alimentar + Estratégia Antiinflamatória", price: "R$ 997", icon: "🌿" },
+    { title: "Módulo 03: Controle da Ansiedade + Compulsão Alimentar", price: "R$ 797", icon: "🌿" },
+    { title: "Módulo 04: Ativação do Metabolismo + Truques Químicos Naturais", price: "R$ 797", icon: "🌿" },
+    { title: "Módulo 05: Equilíbrio Hormonal + Energia e Disposição", price: "R$ 697", icon: "🌿" },
+    { title: "Módulo 06: Reprogramação Mental + Identidade Magra", price: "R$ 697", icon: "🌿" },
+    { title: "Módulo 07: Rotina Inteligente + Constância Sustentável", price: "R$ 597", icon: "🌿" },
+    { title: "Módulo 08: Uso Estratégico de Plantas Medicinais", price: "R$ 597", icon: "🌿" },
+    { title: "Módulo 09: Saúde Intestinal + Desinflamação Profunda", price: "R$ 497", icon: "🌿" },
+    { title: "Módulo 10: Movimento Estratégico + Corpo Ativo", price: "R$ 497", icon: "🌿" },
+    { title: "Módulo 11: Manutenção do Resultado + Fim do Efeito Sanfona", price: "R$ 497", icon: "🌿" },
+    { title: "Módulo 12: Consolidação da Nova Mulher + Identidade Permanente", price: "R$ 497", icon: "🌿" },
+];
+
+const bonuses = [
+    { title: "Bônus 01: Consulta com Dra Isa Bieski", price: "R$ 597", icon: "🎁" },
+    { title: "Bônus 02: Consulta com Psicóloga Dra Marileide Antunes", price: "R$ 297", icon: "🎁" },
+    { title: "Bônus 03: Encontros ao Vivo por 12 meses", price: "R$ 1.497", icon: "🎁" },
+    { title: "Bônus 04: Grupo Exclusivo + Suporte Diário", price: "R$ 497", icon: "🎁" },
+    { title: "Bônus 05: Planos Alimentares + Receitas + Estratégias", price: "R$ 297", icon: "🎁" },
+];
+
 export default function VSLPage() {
     const [isRevealed, setIsRevealed] = useState(false);
 
@@ -155,26 +178,72 @@ export default function VSLPage() {
                                 <div className="text-left flex-grow">
                                     <h3 className="text-xl font-bold text-[#064e3b] mb-4">💎 O QUE VOCÊ VAI TER:</h3>
                                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 text-slate-700 font-medium">
-                                        <li className="flex items-center gap-2 italic">✔ 6 meses de acompanhamento</li>
-                                        <li className="flex items-center gap-2 italic">✔ 6 aulas ao vivo com Dra. Isa</li>
-                                        <li className="flex items-center gap-2 italic">✔ Direcionamento personalizado</li>
-                                        <li className="flex items-center gap-2 italic">✔ Aplicação dos 5 pilares do MEI</li>
-                                        <li className="flex items-center gap-2 italic">✔ Comunidade de suporte</li>
+                                        <li className="flex items-center gap-2 italic">✔ 12 Meses de Acompanhamento</li>
+                                        <li className="flex items-center gap-2 italic">✔ 12 Módulos de Conteúdo</li>
+                                        <li className="flex items-center gap-2 italic">✔ 5 Super Bônus Exclusivos</li>
+                                        <li className="flex items-center gap-2 italic">✔ Comunidade de Suporte Diário</li>
+                                        <li className="flex items-center gap-2 italic">✔ Encontros Mensais ao Vivo</li>
                                     </ul>
                                 </div>
                             </div>
 
-                            {/* Price */}
-                            <div className="bg-emerald-50 rounded-2xl p-10 mb-10 border-2 border-emerald-200">
-                                <p className="text-slate-500 font-medium mb-2">Pague apenas o valor especial:</p>
-                                <div className="flex flex-col items-center">
-                                    <span className="price-old text-2xl font-bold">R$ 2.997,00</span>
-                                    <div className="flex items-baseline gap-3">
-                                        <span className="text-[#064e3b] text-xl font-bold">Por apenas</span>
-                                        <span className="text-5xl sm:text-7xl font-black text-[#064e3b]">R$ 497,00</span>
-                                    </div>
-                                    <p className="mt-4 text-emerald-800 font-bold bg-emerald-200/50 px-4 py-2 rounded-lg">ou em até 12 x no cartão</p>
+                            {/* Delivery Modeling (Modules) */}
+                            <div className="mb-20 text-left">
+                                <h3 className="text-2xl font-bold text-[#064e3b] mb-10 text-center uppercase tracking-widest">
+                                    🔥 MODELAGEM DA ENTREGA — COMUNIDADE ELITE MEI
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {modules.map((m, idx) => (
+                                        <div key={idx} className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 flex justify-between items-center transition-all hover:shadow-md hover:bg-white group">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-2xl group-hover:scale-125 transition-transform">{m.icon}</span>
+                                                <span className="font-bold text-[#064e3b] text-sm sm:text-base leading-tight">{m.title}</span>
+                                            </div>
+                                            <span className="text-emerald-600 font-black whitespace-nowrap ml-4">{m.price}</span>
+                                        </div>
+                                    ))}
                                 </div>
+                            </div>
+
+                            {/* Bonuses */}
+                            <div className="mb-20 text-left">
+                                <h3 className="text-2xl font-bold text-rose-600 mb-10 text-center uppercase tracking-widest flex items-center justify-center gap-3">
+                                    🎁 BÔNUS EXCLUSIVOS
+                                </h3>
+                                <div className="space-y-4 max-w-3xl mx-auto">
+                                    {bonuses.map((b, idx) => (
+                                        <div key={idx} className="bg-rose-50/30 p-6 rounded-2xl border border-rose-100 flex justify-between items-center transition-all hover:bg-white hover:border-rose-200 group">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-2xl group-hover:animate-bounce">{b.icon}</span>
+                                                <span className="font-bold text-slate-800">{b.title}</span>
+                                            </div>
+                                            <span className="text-rose-500 font-black">{b.price}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Price */}
+                            <div className="bg-emerald-900 rounded-[2.5rem] p-10 sm:p-16 mb-12 text-white relative overflow-hidden shadow-2xl border-4 border-emerald-400/30">
+                                <div className="relative z-10">
+                                    <p className="text-emerald-300 font-bold uppercase tracking-widest mb-4">💰 VALOR TOTAL (CURSO + BÔNUS)</p>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-3xl sm:text-4xl font-bold line-through opacity-50 mb-6">De R$ 9.985,00</span>
+
+                                        <div className="bg-white/10 px-8 py-4 rounded-2xl backdrop-blur-md mb-8">
+                                            <p className="text-emerald-400 font-black text-xl uppercase mb-2">🔥 HOJE POR APENAS:</p>
+                                            <div className="flex items-baseline justify-center gap-2 text-white">
+                                                <span className="text-4xl font-bold">12x</span>
+                                                <span className="text-6xl sm:text-8xl font-black">R$ 49,70</span>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-2xl font-bold">ou R$ 597,00 à vista</p>
+                                        <p className="mt-6 text-emerald-200/70 text-sm font-medium">Aproveite esta condição única de lançamento</p>
+                                    </div>
+                                </div>
+                                {/* Background glow for price card */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-emerald-500/20 to-transparent"></div>
                             </div>
 
                             {/* CTA */}
@@ -249,6 +318,13 @@ export default function VSLPage() {
                             <p className="text-2xl sm:text-3xl italic font-serif text-emerald-200">
                                 “Seu metabolismo responde ao que você repete todos os dias.”
                             </p>
+                        </div>
+
+                        <div className="space-y-6 text-xl text-emerald-100 font-medium">
+                            <p>👉 Isso não é mais uma tentativa</p>
+                            <p>👉 Isso é um processo guiado por 12 meses</p>
+                            <p className="text-white font-bold text-2xl">👉 Onde você deixa de lutar com seu corpo</p>
+                            <p className="text-[#10b981] font-black text-2xl uppercase tracking-wider italic">👉 e aprende a viver em equilíbrio com ele</p>
                         </div>
 
                         <a
