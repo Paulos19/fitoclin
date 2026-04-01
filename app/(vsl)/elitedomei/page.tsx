@@ -179,7 +179,9 @@ export default function VSLPage() {
 
                             {/* CTA */}
                             <a
-                                href="#checkout"
+                                href="https://pay.hotmart.com/I104935049E?sck=HOTMART_PRODUCT_PAGE&off=wwd6q5ac&hotfeature=32&_gl=1*vjgz6x*_ga*MTg4NDUyOTg0NC4xNzc0OTYzOTg1*_ga_GQH2V1F11Q*czE3NzUwNTA0OTgkbzQkZzEkdDE3NzUwNTA1MTIkajQ2JGwwJGgzOTUyMjIxODA."
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="cta-button block w-full text-center py-6 rounded-2xl text-white text-xl sm:text-2xl font-black uppercase tracking-wide"
                             >
                                 👉 QUERO ENTRAR NA COMUNIDADE ELITE MEI AGORA
@@ -195,11 +197,13 @@ export default function VSLPage() {
                 <section className="py-24 px-6 bg-white overflow-hidden">
                     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                         <div className="relative">
-                            <div className="aspect-[4/5] bg-emerald-100 rounded-[4rem] overflow-hidden">
-                                {/* Mock image placeholder if real one not provided */}
-                                <div className="w-full h-full bg-gradient-to-br from-emerald-200 to-emerald-400 flex items-center justify-center">
-                                    <span className="text-white text-9xl font-bold opacity-30">ISA</span>
-                                </div>
+                            <div className="aspect-[4/5] bg-emerald-100 rounded-[4rem] overflow-hidden shadow-2xl relative group">
+                                <img
+                                    src="/WhatsApp%20Image%202026-04-01%20at%2010.25.25.jpeg"
+                                    alt="Dra. Isa"
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#064e3b]/40 to-transparent"></div>
                             </div>
                             <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-emerald-600 rounded-full flex flex-col items-center justify-center text-white p-8 text-center shadow-2xl border-8 border-white">
                                 <span className="text-3xl font-black">7 DIAS</span>
@@ -248,7 +252,9 @@ export default function VSLPage() {
                         </div>
 
                         <a
-                            href="#checkout"
+                            href="https://pay.hotmart.com/I104935049E?sck=HOTMART_PRODUCT_PAGE&off=wwd6q5ac&hotfeature=32&_gl=1*vjgz6x*_ga*MTg4NDUyOTg0NC4xNzc0OTYzOTg1*_ga_GQH2V1F11Q*czE3NzUwNTA0OTgkbzQkZzEkdDE3NzUwNTA1MTIkajQ2JGwwJGgzOTUyMjIxODA."
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="cta-button block w-full text-center py-8 rounded-2xl text-white text-xl sm:text-3xl font-black uppercase tracking-wide bg-emerald-500"
                         >
                             👉 QUERO ENTRAR NA COMUNIDADE ELITE MEI AGORA
