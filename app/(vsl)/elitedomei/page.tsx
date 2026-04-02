@@ -67,7 +67,7 @@ export default function VSLPage() {
 
                     <div className="video-section">
                         <VideoPlayer
-                            url="https://t3gjojcefp.ufs.sh/f/zz8Pp2oohfEPXy8xLDsenj2cfWTRVu43vgHJxatldK6yIz1w"
+                            url="/api/vsl/video"
                             onThresholdReached={() => setIsRevealed(true)}
                         />
                         {!isRevealed && (

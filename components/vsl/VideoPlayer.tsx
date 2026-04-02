@@ -34,7 +34,9 @@ export default function VideoPlayer({
                 className="w-full h-full object-contain"
                 controls
                 onTimeUpdate={handleTimeUpdate}
-                controlsList="nodownload"
+                controlsList="nodownload noplaybackrate"
+                onContextMenu={(e) => e.preventDefault()}
+                disablePictureInPicture
             />
 
             {/* Premium Overlay (Optional) */}
