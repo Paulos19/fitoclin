@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import VideoPlayer from "@/components/vsl/VideoPlayer";
 import "./vsl.css";
 
@@ -48,13 +48,24 @@ const bonuses = [
 
 export default function VSLPage() {
     const [isRevealed, setIsRevealed] = useState(false);
+    const [todayFormatted, setTodayFormatted] = useState("");
+
+    useEffect(() => {
+        // Obter a data atual no fuso horário de Brasília
+        const formatter = new Intl.DateTimeFormat("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            timeZone: "America/Sao_Paulo",
+        });
+        setTodayFormatted(formatter.format(new Date()));
+    }, []);
 
     return (
         <main className="vsl-container overflow-x-hidden">
             {/* Header / Attention Bar */}
             <div className="attention-bar text-white text-center py-4 px-4 font-black text-xs sm:text-lg sticky top-0 z-50 flex items-center justify-center gap-3">
                 <span className="animate-bounce">🚨</span>
-                <span>🌿 ATENÇÃO: ESSA AULA SAI DO AR HOJE, 31/03</span>
+                <span>🌿 ATENÇÃO: ESSA AULA SAI DO AR HOJE, {todayFormatted || "..."}</span>
                 <span className="animate-bounce">🚨</span>
             </div>
 
