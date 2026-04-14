@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { sendEmail, getAnamnesisRequestTemplate } from "@/lib/mail";
 
 // Schema de Validação
 const RegisterSchema = z.object({
@@ -91,6 +92,16 @@ export async function register(prevState: any, formData: FormData) {
       });
     }
 
+    // 8. Enviar E-mail de Boas-vindas / Anamnese (Se for Paciente)
+    if (role === "PATIENT") {
+      const anamnesisLink = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/anamnesis`;
+      await sendEmail({
+        to: email,
+        subject: "Bem-vindo à Fitoclin - Preencha sua Anamnese",
+        html: getAnamnesisRequestTemplate(name, anamnesisLink)
+      });
+    }
+
     return { success: "Conta criada com sucesso!" };
 
   } catch (error) {
@@ -146,6 +157,14 @@ export async function registerWithToken(prevState: any, formData: FormData) {
     await db.lead.update({
       where: { id: lead.id },
       data: { status: "WON", email: email },
+    });
+
+    // 6. Enviar E-mail de Boas-vindas / Anamnese
+    const anamnesisLink = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/anamnesis`;
+    await sendEmail({
+      to: email,
+      subject: "Bem-vindo à Fitoclin - Preencha sua Anamnese",
+      html: getAnamnesisRequestTemplate(lead.name, anamnesisLink)
     });
 
     return { success: "Cadastro realizado com sucesso! Você já pode fazer login." };

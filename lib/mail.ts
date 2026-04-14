@@ -24,7 +24,7 @@ export const sendEmail = async (data: EmailPayload) => {
 
   try {
     await transporter.sendMail({
-      from: `"FitoClin Dra. Isa" <${process.env.EMAIL_FROM}>`, 
+      from: `"FitoClin Dra. Isa" <${process.env.EMAIL_FROM}>`,
       to,
       subject,
       html,
@@ -121,6 +121,36 @@ export const getCRMWelcomeTemplate = (name: string) => `
 
     <p style="font-size: 14px; color: #6b7280; text-align: center;">
       Se precisar de ajuda para configurar, nossa equipe de suporte está à disposição.
+    </p>
+  </div>
+`;
+
+export const getAnamnesisRequestTemplate = (name: string, link: string) => `
+  <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+    
+    <div style="text-align: center; margin-bottom: 20px; background-color: #051F12; padding: 20px; border-radius: 8px;">
+      <img src="${LOGO_URL}" alt="Logo Fitoclin" style="width: 150px; height: auto;" />
+    </div>
+
+    <h2 style="color: #16a34a; text-align: center;">Olá, ${name}! 👋</h2>
+    
+    <p style="font-size: 16px; line-height: 1.5;">Para que possamos realizar um atendimento personalizado e eficiente, pedimos que preencha o nosso <strong>Formulário Pré-Atendimento (Anamnese)</strong>.</p>
+    
+    <p style="font-size: 16px; line-height: 1.5;">Suas respostas ajudam a Dra. Isa a preparar a planta medicinal ideal para o seu momento.</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${link}" style="background-color: #76A771; color: #062214; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 50px; display: inline-block;">
+        Preencher Anamnese Agora
+      </a>
+    </div>
+    
+    <p style="font-size: 14px; color: #666; text-align: center;">Leva apenas cerca de 3 minutos.</p>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
+    
+    <p style="font-size: 12px; color: #888; text-align: center;">
+      Atenciosamente,<br>
+      <strong>Equipa Dra. Isa</strong>
     </p>
   </div>
 `;

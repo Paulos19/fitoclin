@@ -245,7 +245,7 @@ export default function VSLPage() {
                                             <p className="text-emerald-400 font-black text-xl uppercase mb-2">🔥 HOJE POR APENAS:</p>
                                             <div className="flex items-baseline justify-center gap-2 text-white">
                                                 <span className="text-4xl font-bold">12x</span>
-                                                <span className="text-6xl sm:text-8xl font-black">R$ 49,70</span>
+                                                <span className="text-6xl sm:text-8xl font-black">R$ 61,74</span>
                                             </div>
                                         </div>
 
