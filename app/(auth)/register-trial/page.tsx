@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, Suspense } from "react";
 import { registerTrialProfessional } from "@/actions/trial";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2, Crown } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-export default function RegisterTrialPage() {
+function RegisterTrialContent() {
     const searchParams = useSearchParams();
     const token = searchParams.get("token") || "";
 
@@ -90,5 +90,17 @@ export default function RegisterTrialPage() {
                 </Link>
             </div>
         </div>
+    );
+}
+
+export default function RegisterTrialPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+            </div>
+        }>
+            <RegisterTrialContent />
+        </Suspense>
     );
 }
