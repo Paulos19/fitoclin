@@ -71,6 +71,9 @@ model Subscription {
   // [NOVO] Campo para controlar o nível de acesso
   plan SubscriptionPlan @default(COMMUNITY)
 
+  // [NOVO] Flag para indicar se a assinatura é um Trial
+  isTrial Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -524,6 +527,15 @@ enum SubscriptionPlan {
   COMMUNITY
   SPECIALIZATION
   MEI
+  PRO
+}
+
+model TrialInvite {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Quiz {

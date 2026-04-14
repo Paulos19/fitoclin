@@ -36,13 +36,39 @@ export default async function DashboardLayout({
 
   const hasCourses = purchases > 0 || isSpecializationSubscribed;
 
+  // [NOVO] Lógica de Bloqueio PRO / Trial
+  let isTrial = false;
+  let trialDaysLeft = 0;
+
+  if (role === "PROFESSIONAL") {
+    const isProSubscribed = subscription?.plan === "PRO" && subscription?.stripeCurrentPeriodEnd
+      ? subscription.stripeCurrentPeriodEnd.getTime() > Date.now()
+      : false;
+
+    if (!isProSubscribed) {
+      redirect("/subscription/pro");
+    }
+
+    if (subscription?.isTrial && subscription.stripeCurrentPeriodEnd) {
+      isTrial = true;
+      const diff = subscription.stripeCurrentPeriodEnd.getTime() - Date.now();
+      trialDaysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    }
+  }
+
   // Buscar notificações no servidor
   const notifications = await getNotifications().catch(() => []);
 
   return (
     <div className="flex h-screen w-full bg-[#062214] overflow-hidden">
       <aside className="hidden lg:block h-full z-20">
-        <Sidebar role={role} isCommunitySubscribed={isCommunitySubscribed} hasCourses={hasCourses} />
+        <Sidebar
+          role={role}
+          isCommunitySubscribed={isCommunitySubscribed}
+          hasCourses={hasCourses}
+          isTrial={isTrial}
+          trialDaysLeft={trialDaysLeft}
+        />
       </aside>
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">

@@ -1,10 +1,10 @@
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
-import { 
-  Calendar, 
-  Users, 
-  Activity, 
-  Clock, 
+import {
+  Calendar,
+  Users,
+  Activity,
+  Clock,
   TrendingUp,
   Leaf,
   Sparkles,
@@ -22,15 +22,16 @@ import { Badge } from "@/components/ui/badge";
 import { getPatientEvolution } from "@/actions/tracking";
 import { EvolutionChart } from "@/components/dashboard/evolution-chart";
 import { CheckinDialog } from "@/components/dashboard/checkin-dialog";
-import { CourseCard } from "@/components/community/course-card"; 
+import { CourseCard } from "@/components/community/course-card";
+import { TrialDialog } from "@/components/admin/trial-dialog";
 
 const prisma = new PrismaClient();
 
 function getGreeting() {
-  const hour = new Date().toLocaleTimeString("pt-BR", { 
-    hour: "2-digit", 
-    hour12: false, 
-    timeZone: "America/Sao_Paulo" 
+  const hour = new Date().toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    hour12: false,
+    timeZone: "America/Sao_Paulo"
   });
   const h = parseInt(hour);
   if (h >= 5 && h < 12) return "Bom dia";
@@ -51,22 +52,22 @@ export default async function DashboardPage() {
     // 1. Cursos Comprados
     const purchases = await prisma.purchase.findMany({
       where: { userId: user!.id },
-      include: { 
-         course: { 
-            include: { 
-               modules: { include: { lessons: true } },
-               _count: { select: { modules: true } } // Necessário para o card
-            } 
-         } 
+      include: {
+        course: {
+          include: {
+            modules: { include: { lessons: true } },
+            _count: { select: { modules: true } } // Necessário para o card
+          }
+        }
       }
     });
 
     // 2. Todos os Cursos Ativos (Vitrine)
     const allCourses = await prisma.course.findMany({
       where: { active: true }, // CORRIGIDO: active em vez de isPublished
-      include: { 
-         modules: { include: { lessons: true } },
-         _count: { select: { modules: true } }
+      include: {
+        modules: { include: { lessons: true } },
+        _count: { select: { modules: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -76,74 +77,74 @@ export default async function DashboardPage() {
 
     return (
       <div className="space-y-10 animate-in fade-in duration-700">
-         {/* Hero Aluno */}
-         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A311D] to-[#062214] border border-[#2A5432]/30 p-8 shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-[#76A771]/10 blur-3xl" />
-            <div className="relative z-10">
-               <h1 className="text-3xl font-bold text-white mb-2">
-                  {greeting}, <span className="text-[#76A771]">{user?.name}</span>.
-               </h1>
-               <p className="text-gray-400">
-                  Continue sua jornada de aprendizado. Você tem <span className="text-white font-bold">{purchases.length} cursos</span> ativos.
-               </p>
-            </div>
-         </div>
+        {/* Hero Aluno */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A311D] to-[#062214] border border-[#2A5432]/30 p-8 shadow-2xl">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-[#76A771]/10 blur-3xl" />
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {greeting}, <span className="text-[#76A771]">{user?.name}</span>.
+            </h1>
+            <p className="text-gray-400">
+              Continue sua jornada de aprendizado. Você tem <span className="text-white font-bold">{purchases.length} cursos</span> ativos.
+            </p>
+          </div>
+        </div>
 
-         {/* Meus Cursos */}
-         <div>
+        {/* Meus Cursos */}
+        <div>
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <GraduationCap className="w-6 h-6 text-[#76A771]" /> Meus Cursos
+          </h2>
+          {purchases.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {purchases.map((purchase) => (
+                // Mapeamento correto para evitar erro de Decimal e Props
+                <div key={purchase.id} className="h-full">
+                  <CourseCard
+                    course={{
+                      ...purchase.course,
+                      price: Number(purchase.course.price),
+                      _count: purchase.course._count
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-[#0A311D]/20 rounded-xl border border-dashed border-[#2A5432]/50">
+              <p className="text-gray-500">Você ainda não está inscrito em nenhum curso.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Vitrine */}
+        {availableCourses.length > 0 && (
+          <div>
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-               <GraduationCap className="w-6 h-6 text-[#76A771]" /> Meus Cursos
+              <Sparkles className="w-6 h-6 text-yellow-500" /> Explore Novos Conhecimentos
             </h2>
-            {purchases.length > 0 ? (
-               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {purchases.map((purchase) => (
-                     // Mapeamento correto para evitar erro de Decimal e Props
-                     <div key={purchase.id} className="h-full">
-                       <CourseCard 
-                          course={{
-                            ...purchase.course,
-                            price: Number(purchase.course.price),
-                            _count: purchase.course._count
-                          }}
-                       />
-                     </div>
-                  ))}
-               </div>
-            ) : (
-               <div className="text-center py-12 bg-[#0A311D]/20 rounded-xl border border-dashed border-[#2A5432]/50">
-                  <p className="text-gray-500">Você ainda não está inscrito em nenhum curso.</p>
-               </div>
-            )}
-         </div>
-
-         {/* Vitrine */}
-         {availableCourses.length > 0 && (
-            <div>
-               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-yellow-500" /> Explore Novos Conhecimentos
-               </h2>
-               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {availableCourses.map((course) => (
-                     <div key={course.id} className="relative">
-                        <CourseCard 
-                           course={{
-                             ...course,
-                             price: Number(course.price),
-                             _count: course._count
-                           }}
-                           isLocked={true}
-                        />
-                        {/* Overlay visual extra para reforçar o bloqueio */}
-                        <div className="absolute top-4 right-4 z-20">
-                           <div className="bg-black/60 p-1.5 rounded-full backdrop-blur-sm">
-                              <Lock className="w-4 h-4 text-white/90" />
-                           </div>
-                        </div>
-                     </div>
-                  ))}
-               </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {availableCourses.map((course) => (
+                <div key={course.id} className="relative">
+                  <CourseCard
+                    course={{
+                      ...course,
+                      price: Number(course.price),
+                      _count: course._count
+                    }}
+                    isLocked={true}
+                  />
+                  {/* Overlay visual extra para reforçar o bloqueio */}
+                  <div className="absolute top-4 right-4 z-20">
+                    <div className="bg-black/60 p-1.5 rounded-full backdrop-blur-sm">
+                      <Lock className="w-4 h-4 text-white/90" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-         )}
+          </div>
+        )}
       </div>
     );
   }
@@ -158,7 +159,7 @@ export default async function DashboardPage() {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     const appointmentsTodayCount = await prisma.appointment.count({
       where: { date: { gte: today, lt: tomorrow }, status: { not: 'CANCELED' } }
     });
@@ -169,13 +170,13 @@ export default async function DashboardPage() {
       take: 3,
       include: { patient: { include: { user: true } } }
     });
-    
+
     const totalPatients = await prisma.patient.count();
-    const revenueMonth = "R$ 12.450"; 
+    const revenueMonth = "R$ 12.450";
 
     return (
       <div className="space-y-8 animate-in fade-in duration-700">
-        
+
         {/* HERO BANNER ADMIN */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A311D] to-[#062214] border border-[#2A5432]/30 p-8 shadow-2xl">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-[#76A771]/10 blur-3xl" />
@@ -185,7 +186,7 @@ export default async function DashboardPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="text-[#76A771] border-[#76A771] bg-[#76A771]/10">
-                   {userRole === "ADMIN" ? "Admin Mode" : "Gestão"}
+                  {userRole === "ADMIN" ? "Admin Mode" : "Gestão"}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
@@ -195,7 +196,7 @@ export default async function DashboardPage() {
                 Aqui está o resumo da sua clínica hoje. Você tem <span className="text-white font-bold">{appointmentsTodayCount} atendimentos</span> agendados.
               </p>
             </div>
-            
+
             <div className="flex gap-3">
               <Link href="/dashboard/schedule">
                 <Button className="bg-[#76A771] hover:bg-[#5e8a5a] text-[#062214] font-semibold shadow-lg shadow-[#76A771]/20">
@@ -246,60 +247,61 @@ export default async function DashboardPage() {
 
         {/* PRÓXIMOS ATENDIMENTOS */}
         <div className="grid md:grid-cols-3 gap-6">
-           <Card className="col-span-2 bg-[#062214] border-[#2A5432]/30">
-             <CardHeader>
-               <CardTitle className="text-white flex items-center gap-2">
-                 <Clock className="w-5 h-5 text-[#76A771]" /> Próximos na Fila
-               </CardTitle>
-             </CardHeader>
-             <CardContent>
-               <div className="space-y-4">
-                 {nextAppointments.length > 0 ? (
-                   nextAppointments.map((apt) => (
-                     <div key={apt.id} className="flex items-center justify-between p-4 rounded-xl bg-[#0A311D]/50 border border-[#2A5432]/20 hover:bg-[#0A311D] transition-colors">
-                       <div className="flex items-center gap-4">
-                         <div className="h-10 w-10 rounded-full bg-[#2A5432] flex items-center justify-center text-white font-bold">
-                           {apt.patient.user.name.charAt(0)}
-                         </div>
-                         <div>
-                           <p className="text-white font-medium">{apt.patient.user.name}</p>
-                           <p className="text-sm text-gray-400">
-                             {new Date(apt.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})} • {apt.type === 'FIRST_VISIT' ? 'Primeira Consulta' : 'Retorno'}
-                           </p>
-                         </div>
-                       </div>
-                       <Link href={`/dashboard/records/${apt.patient.id}`}>
-                          <Button size="sm" variant="outline" className="border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214]">
-                            Prontuário
-                          </Button>
-                       </Link>
-                     </div>
-                   ))
-                 ) : (
-                   <p className="text-gray-500">Nenhum agendamento próximo.</p>
-                 )}
-               </div>
-             </CardContent>
-           </Card>
+          <Card className="col-span-2 bg-[#062214] border-[#2A5432]/30">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Clock className="w-5 h-5 text-[#76A771]" /> Próximos na Fila
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {nextAppointments.length > 0 ? (
+                  nextAppointments.map((apt) => (
+                    <div key={apt.id} className="flex items-center justify-between p-4 rounded-xl bg-[#0A311D]/50 border border-[#2A5432]/20 hover:bg-[#0A311D] transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-[#2A5432] flex items-center justify-center text-white font-bold">
+                          {apt.patient.user.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{apt.patient.user.name}</p>
+                          <p className="text-sm text-gray-400">
+                            {new Date(apt.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • {apt.type === 'FIRST_VISIT' ? 'Primeira Consulta' : 'Retorno'}
+                          </p>
+                        </div>
+                      </div>
+                      <Link href={`/dashboard/records/${apt.patient.id}`}>
+                        <Button size="sm" variant="outline" className="border-[#76A771] text-[#76A771] hover:bg-[#76A771] hover:text-[#062214]">
+                          Prontuário
+                        </Button>
+                      </Link>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">Nenhum agendamento próximo.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-           {/* Atalhos Rápidos Admin */}
-           <Card className="bg-gradient-to-b from-[#2A5432]/20 to-[#062214] border-[#2A5432]/30">
-              <CardHeader>
-                <CardTitle className="text-white text-sm uppercase tracking-wider">Atalhos</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                  <Link href="/dashboard/patients" className="block">
-                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
-                      <Users className="mr-2 w-4 h-4 text-[#76A771]"/> Novo Paciente
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard/schedule" className="block">
-                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
-                      <Calendar className="mr-2 w-4 h-4 text-[#76A771]"/> Bloquear Horário
-                    </Button>
-                  </Link>
-              </CardContent>
-           </Card>
+          {/* Atalhos Rápidos Admin */}
+          <Card className="bg-gradient-to-b from-[#2A5432]/20 to-[#062214] border-[#2A5432]/30">
+            <CardHeader>
+              <CardTitle className="text-white text-sm uppercase tracking-wider">Atalhos</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Link href="/dashboard/patients" className="block">
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
+                  <Users className="mr-2 w-4 h-4 text-[#76A771]" /> Novo Paciente
+                </Button>
+              </Link>
+              <Link href="/dashboard/schedule" className="block">
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-[#2A5432]/40">
+                  <Calendar className="mr-2 w-4 h-4 text-[#76A771]" /> Bloquear Horário
+                </Button>
+              </Link>
+              <TrialDialog />
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -308,12 +310,12 @@ export default async function DashboardPage() {
   // ==========================================
   // 🟢 VISÃO DO PACIENTE (Fallback)
   // ==========================================
-  
+
   const patient = await prisma.patient.findUnique({
     where: { userId: user?.id },
     include: {
       appointments: {
-        where: { date: { gte: new Date() }, status: { not: 'CANCELED' } }, 
+        where: { date: { gte: new Date() }, status: { not: 'CANCELED' } },
         orderBy: { date: 'asc' },
         take: 1
       },
@@ -330,78 +332,78 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      
+
       {/* HERO BANNER PACIENTE */}
       <div className="relative overflow-hidden rounded-3xl bg-[#0A311D] border border-[#2A5432]/30 p-8 shadow-xl">
-         <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-br from-[#76A771]/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-         
-         <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4">
-               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2A5432]/30 border border-[#2A5432]/50 text-[#76A771] text-xs font-semibold uppercase tracking-wide">
-                  <Leaf className="w-3 h-3" /> Saúde Integrativa
-               </div>
-               <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-                 {greeting}, <br />
-                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-[#76A771]">
-                   {user?.name?.split(' ')[0]}
-                 </span>
-               </h1>
-               <p className="text-gray-400 text-lg leading-relaxed">
-                 Bem-vindo ao seu espaço de cuidado. A fitoterapia conecta você à sua melhor versão natural.
-               </p>
-               
-               <div className="flex flex-wrap gap-3 pt-2">
-                 <Link href="https://wa.me/5511999999999" target="_blank">
-                    <Button className="bg-[#25D366] hover:bg-[#1da851] text-white border-none rounded-full">
-                      WhatsApp da Clínica
-                    </Button>
-                 </Link>
-                 {!nextAppointment && (
-                   <Button variant="outline" className="border-[#76A771] text-[#76A771] hover:bg-[#76A771]/10 rounded-full">
-                     Agendar Consulta
-                   </Button>
-                 )}
-               </div>
-            </div>
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-br from-[#76A771]/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-            <div className="hidden md:flex justify-end relative">
-               <div className="absolute inset-0 bg-[#76A771] blur-[80px] opacity-10 rounded-full" />
-               <Card className="w-64 bg-[#062214]/90 backdrop-blur border-[#2A5432] rotate-3 hover:rotate-0 transition-transform duration-500 shadow-2xl">
-                 <CardContent className="p-6 flex flex-col items-center text-center gap-3">
-                    <div className="p-3 bg-[#76A771]/10 rounded-full">
-                      <Sparkles className="w-6 h-6 text-[#76A771]" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Você sabia?</p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        A consistência no uso dos fitoterápicos é responsável por 70% do sucesso do tratamento.
-                      </p>
-                    </div>
-                 </CardContent>
-               </Card>
+        <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2A5432]/30 border border-[#2A5432]/50 text-[#76A771] text-xs font-semibold uppercase tracking-wide">
+              <Leaf className="w-3 h-3" /> Saúde Integrativa
             </div>
-         </div>
+            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+              {greeting}, <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-[#76A771]">
+                {user?.name?.split(' ')[0]}
+              </span>
+            </h1>
+            <p className="text-gray-400 text-lg leading-relaxed">
+              Bem-vindo ao seu espaço de cuidado. A fitoterapia conecta você à sua melhor versão natural.
+            </p>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link href="https://wa.me/5511999999999" target="_blank">
+                <Button className="bg-[#25D366] hover:bg-[#1da851] text-white border-none rounded-full">
+                  WhatsApp da Clínica
+                </Button>
+              </Link>
+              {!nextAppointment && (
+                <Button variant="outline" className="border-[#76A771] text-[#76A771] hover:bg-[#76A771]/10 rounded-full">
+                  Agendar Consulta
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="hidden md:flex justify-end relative">
+            <div className="absolute inset-0 bg-[#76A771] blur-[80px] opacity-10 rounded-full" />
+            <Card className="w-64 bg-[#062214]/90 backdrop-blur border-[#2A5432] rotate-3 hover:rotate-0 transition-transform duration-500 shadow-2xl">
+              <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+                <div className="p-3 bg-[#76A771]/10 rounded-full">
+                  <Sparkles className="w-6 h-6 text-[#76A771]" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Você sabia?</p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    A consistência no uso dos fitoterápicos é responsável por 70% do sucesso do tratamento.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* SECÇÃO DE EVOLUÇÃO */}
       <div className="space-y-4">
-         <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-[#76A771]" /> Sua Jornada de Evolução
-            </h2>
-            <CheckinDialog />
-         </div>
-         
-         <EvolutionChart data={evolutionData} />
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-[#76A771]" /> Sua Jornada de Evolução
+          </h2>
+          <CheckinDialog />
+        </div>
+
+        <EvolutionChart data={evolutionData} />
       </div>
 
       {/* GRID DE STATUS */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
+
         {/* CARD 1: PRÓXIMA CONSULTA */}
         <Card className="lg:col-span-2 bg-[#062214] border-[#2A5432]/50 shadow-lg relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2A5432]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          
+
           <CardHeader className="border-b border-[#2A5432]/20 pb-4">
             <CardTitle className="flex items-center gap-2 text-white">
               <Calendar className="h-5 w-5 text-[#76A771]" /> Sua Próxima Consulta
@@ -425,24 +427,24 @@ export default async function DashboardPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 w-full md:w-auto">
-                   {nextAppointment.meetLink ? (
-                      <a href={nextAppointment.meetLink} target="_blank" rel="noopener noreferrer" className="w-full">
-                        <Button className="w-full md:w-auto bg-[#76A771] hover:bg-[#659160] text-[#062214] font-bold shadow-lg shadow-[#76A771]/20 animate-pulse-slow">
-                          <Video className="w-4 h-4 mr-2" /> Entrar na Sala Agora
-                        </Button>
-                      </a>
-                    ) : (
-                      <div className="bg-[#0A311D] border border-[#2A5432] p-3 rounded-lg text-xs text-gray-400 flex items-center gap-2 max-w-xs">
-                        <Video className="w-4 h-4 text-gray-500" />
-                        Link disponível 1h antes da consulta.
-                      </div>
-                    )}
+                  {nextAppointment.meetLink ? (
+                    <a href={nextAppointment.meetLink} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button className="w-full md:w-auto bg-[#76A771] hover:bg-[#659160] text-[#062214] font-bold shadow-lg shadow-[#76A771]/20 animate-pulse-slow">
+                        <Video className="w-4 h-4 mr-2" /> Entrar na Sala Agora
+                      </Button>
+                    </a>
+                  ) : (
+                    <div className="bg-[#0A311D] border border-[#2A5432] p-3 rounded-lg text-xs text-gray-400 flex items-center gap-2 max-w-xs">
+                      <Video className="w-4 h-4 text-gray-500" />
+                      Link disponível 1h antes da consulta.
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
               <div className="py-8 flex flex-col items-center justify-center text-center space-y-3">
                 <div className="p-4 rounded-full bg-[#0A311D]">
-                   <Calendar className="w-8 h-8 text-gray-600" />
+                  <Calendar className="w-8 h-8 text-gray-600" />
                 </div>
                 <p className="text-gray-400">Nenhuma consulta agendada no momento.</p>
                 <Link href="https://wa.me/5511999999999">
@@ -470,14 +472,14 @@ export default async function DashboardPage() {
                     {new Date(lastRecord.date).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
-                
+
                 {lastRecord.pilar2_fitoterapia && (
-                   <div className="p-3 rounded-lg bg-[#062214] border border-[#2A5432]/40">
-                      <p className="text-xs text-gray-500 mb-1">Foco Fitoterápico:</p>
-                      <p className="text-sm text-gray-300 line-clamp-3 italic">
-                        "{lastRecord.pilar2_fitoterapia}"
-                      </p>
-                   </div>
+                  <div className="p-3 rounded-lg bg-[#062214] border border-[#2A5432]/40">
+                    <p className="text-xs text-gray-500 mb-1">Foco Fitoterápico:</p>
+                    <p className="text-sm text-gray-300 line-clamp-3 italic">
+                      "{lastRecord.pilar2_fitoterapia}"
+                    </p>
+                  </div>
                 )}
 
                 <Link href="/dashboard/prescriptions" className="block mt-2">

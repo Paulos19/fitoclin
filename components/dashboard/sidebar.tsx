@@ -96,9 +96,11 @@ interface SidebarProps {
   role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
   isCommunitySubscribed?: boolean;
   hasCourses?: boolean;
+  isTrial?: boolean;
+  trialDaysLeft?: number;
 }
 
-export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = false }: SidebarProps) {
+export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = false, isTrial = false, trialDaysLeft = 0 }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<"community" | "specialization">("community");
@@ -357,6 +359,40 @@ export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = fals
                 </TooltipContent>
               </Tooltip>
             </div>
+          )}
+
+          {/* AVISO DE TRIAL PROFISSIONAL */}
+          {role === "PROFESSIONAL" && isTrial && !isCollapsed && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
+              <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-3 flex items-start gap-3 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-orange-500/20 blur-xl rounded-full" />
+                <Crown className="w-5 h-5 text-orange-400 shrink-0" />
+                <div className="flex flex-col relative z-10">
+                  <span className="text-orange-400 font-bold text-xs">Período de Teste</span>
+                  <span className="text-orange-200/80 text-[11px] leading-snug mt-1">
+                    Seu trial expira em <strong className="text-white">{trialDaysLeft} dias</strong>.
+                  </span>
+                  <Link href="/subscription/pro" className="text-orange-300 font-bold text-[10px] uppercase tracking-wider mt-2 hover:text-orange-100 flex items-center gap-1 transition-colors">
+                    Assinar o PRO <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {role === "PROFESSIONAL" && isTrial && isCollapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/subscription/pro" className="flex justify-center w-full mt-4">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                    <Crown className="w-4 h-4" />
+                  </div>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-orange-950 text-orange-200 font-bold border-orange-900 ml-2">
+                Trial: {trialDaysLeft} dias restantes
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
 
