@@ -254,7 +254,7 @@ export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = fals
                 </div>
 
                 {/* Conteúdo do Switch */}
-                <div className="relative h-[4.5rem] overflow-hidden rounded-lg">
+                <div className="relative h-[5rem] overflow-hidden rounded-lg">
                   <AnimatePresence mode="wait">
                     {activeTab === "community" ? (
                       <motion.div
@@ -269,19 +269,19 @@ export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = fals
                           <div className={cn(
                             "h-full flex items-center px-4 transition-all",
                             isCommunitySubscribed
-                              ? "bg-gradient-to-r from-[#D4AF37]/20 to-transparent group-hover/link:from-[#D4AF37]/30"
-                              : "bg-gradient-to-r from-gray-800/80 to-transparent group-hover/link:from-gray-700"
+                              ? "bg-linear-to-r from-[#D4AF37]/20 to-transparent group-hover/link:from-[#D4AF37]/30"
+                              : "bg-linear-to-r from-red-500/10 to-transparent group-hover/link:from-red-500/20"
                           )}>
                             <div className="flex items-center gap-3">
-                              <div className={cn("p-2 rounded-md", isCommunitySubscribed ? "bg-[#D4AF37]/20 text-[#D4AF37]" : "bg-[#062214] border border-[#2A5432] text-gray-500 group-hover/link:text-[#76A771]")}>
+                              <div className={cn("p-2 rounded-md", isCommunitySubscribed ? "bg-[#D4AF37]/20 text-[#D4AF37]" : "bg-red-500/10 border border-red-500/30 text-red-400 group-hover/link:text-red-300")}>
                                 {isCommunitySubscribed ? <Sparkles className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                               </div>
                               <div className="flex flex-col">
-                                <span className={cn("text-xs font-bold leading-none mb-1", isCommunitySubscribed ? "text-[#D4AF37]" : "text-gray-300 group-hover/link:text-white")}>
-                                  Acesso VIP
+                                <span className={cn("text-xs font-bold leading-none mb-1", isCommunitySubscribed ? "text-[#D4AF37]" : "text-red-400 group-hover/link:text-red-300")}>
+                                  Comunidade
                                 </span>
-                                <span className={cn("text-[9px] uppercase tracking-wider", isCommunitySubscribed ? "text-[#F3E5AB]/70" : "text-gray-500 group-hover/link:text-[#76A771]")}>
-                                  {isCommunitySubscribed ? "Mural exclusivo" : "Assinar agora"}
+                                <span className={cn("text-[9px] uppercase tracking-wider", isCommunitySubscribed ? "text-[#F3E5AB]/70" : "text-gray-500 group-hover/link:text-white")}>
+                                  {isCommunitySubscribed ? "Acesso VIP" : "Bloqueado • Assinar"}
                                 </span>
                               </div>
                             </div>
@@ -297,23 +297,23 @@ export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = fals
                         transition={{ duration: 0.2 }}
                         className="absolute inset-0"
                       >
-                        <Link href={hasCourses ? "/specialization" : "/subscription"} className="block h-full cursor-pointer group/link">
+                        <Link href={hasCourses ? "/specialization" : "/subscription/pro"} className="block h-full cursor-pointer group/link">
                           <div className={cn(
                             "h-full flex items-center px-4 transition-all",
                             hasCourses
-                              ? "bg-gradient-to-r from-purple-500/20 to-transparent group-hover/link:from-purple-500/30"
-                              : "bg-gradient-to-r from-gray-800/80 to-transparent group-hover/link:from-gray-700"
+                              ? "bg-linear-to-r from-purple-500/20 to-transparent group-hover/link:from-purple-500/30"
+                              : "bg-linear-to-r from-orange-500/10 to-transparent group-hover/link:from-orange-500/20"
                           )}>
                             <div className="flex items-center gap-3">
-                              <div className={cn("p-2 rounded-md", hasCourses ? "bg-purple-500/20 text-purple-400" : "bg-[#062214] border border-[#2A5432] text-gray-500 group-hover/link:text-purple-400")}>
+                              <div className={cn("p-2 rounded-md", hasCourses ? "bg-purple-500/20 text-purple-400" : "bg-orange-500/10 border border-orange-500/30 text-orange-400 group-hover/link:text-orange-300")}>
                                 {hasCourses ? <Crown className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                               </div>
                               <div className="flex flex-col">
-                                <span className={cn("text-xs font-bold leading-none mb-1", hasCourses ? "text-purple-300" : "text-gray-300 group-hover/link:text-white")}>
-                                  Área do Aluno
+                                <span className={cn("text-xs font-bold leading-none mb-1", hasCourses ? "text-purple-300" : "text-orange-400 group-hover/link:text-orange-300")}>
+                                  Especialização
                                 </span>
-                                <span className={cn("text-[9px] uppercase tracking-wider", hasCourses ? "text-purple-400/80" : "text-gray-500 group-hover/link:text-purple-400")}>
-                                  {hasCourses ? "Assistir aulas" : "Assinar agora"}
+                                <span className={cn("text-[9px] uppercase tracking-wider", hasCourses ? "text-purple-400/80" : "text-gray-500 group-hover/link:text-white")}>
+                                  {hasCourses ? "Área do Aluno" : "Bloqueado • Fator PRO"}
                                 </span>
                               </div>
                             </div>
@@ -332,30 +332,30 @@ export function Sidebar({ role, isCommunitySubscribed = false, hasCourses = fals
                   <Link href={isCommunitySubscribed ? "/community" : "/subscription"} className="flex justify-center w-full">
                     <div className={cn(
                       "h-10 w-10 flex items-center justify-center rounded-xl shadow-lg transition-colors",
-                      isCommunitySubscribed ? "bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30" : "bg-[#0A311D] text-gray-400 border border-[#2A5432]/30 hover:border-[#76A771] hover:text-[#76A771]"
+                      isCommunitySubscribed ? "bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30" : "bg-red-500/10 text-red-400 border border-red-500/30 hover:border-red-300 hover:text-red-300"
                     )}>
                       <Sparkles className="w-4 h-4" />
                     </div>
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="bg-[#D4AF37] text-[#051F12] font-bold border-none ml-2">
-                  {isCommunitySubscribed ? "Acessar Comunidade VIP" : "Desbloquear Comunidade"}
+                <TooltipContent side="right" className={cn("font-bold border-none ml-2", isCommunitySubscribed ? "bg-[#D4AF37] text-[#051F12]" : "bg-red-950 text-red-200")}>
+                  {isCommunitySubscribed ? "Comunidade Fitoclin" : "Comunidade: Bloqueado"}
                 </TooltipContent>
               </Tooltip>
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link href={hasCourses ? "/specialization" : "/subscription"} className="flex justify-center w-full">
+                  <Link href={hasCourses ? "/specialization" : "/subscription/pro"} className="flex justify-center w-full">
                     <div className={cn(
                       "h-10 w-10 flex items-center justify-center rounded-xl shadow-lg transition-colors",
-                      hasCourses ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "bg-[#0A311D] text-gray-400 border border-[#2A5432]/30 hover:border-purple-400 hover:text-purple-400"
+                      hasCourses ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:border-orange-400 hover:text-orange-400"
                     )}>
                       <Crown className="w-4 h-4" />
                     </div>
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="bg-purple-900 text-white font-bold border-none ml-2">
-                  {hasCourses ? "Acessar Especialização" : "Desbloquear Especialização"}
+                <TooltipContent side="right" className={cn("font-bold border-none ml-2", hasCourses ? "bg-purple-900 text-white" : "bg-orange-950 text-orange-200")}>
+                  {hasCourses ? "Especialização Fitoclin" : "Especialização: Bloqueado"}
                 </TooltipContent>
               </Tooltip>
             </div>

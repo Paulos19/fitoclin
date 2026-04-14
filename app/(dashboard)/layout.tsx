@@ -26,15 +26,19 @@ export default async function DashboardLayout({
     prisma.subscription.findUnique({ where: { userId: session.user.id } }).catch(() => null)
   ]);
 
-  const isCommunitySubscribed = subscription?.plan === "COMMUNITY" && subscription?.stripeCurrentPeriodEnd
+  const isCommunitySubscribed = (subscription?.plan === "COMMUNITY" || subscription?.plan === "SPECIALIZATION" || subscription?.plan === "PRO") && subscription?.stripeCurrentPeriodEnd
     ? subscription.stripeCurrentPeriodEnd.getTime() + 86400000 > Date.now()
     : false;
 
-  const isSpecializationSubscribed = subscription?.plan === "SPECIALIZATION" && subscription?.stripeCurrentPeriodEnd
+  const isSpecializationSubscribed = (subscription?.plan === "SPECIALIZATION" || subscription?.plan === "PRO") && subscription?.stripeCurrentPeriodEnd
     ? subscription.stripeCurrentPeriodEnd.getTime() + 86400000 > Date.now()
     : false;
 
-  const hasCourses = purchases > 0 || isSpecializationSubscribed;
+  const hasCourses = purchases > 0 || isSpecializationSubscribed || role === "ADMIN";
+
+  // Garantir que ADMIN veja tudo desbloqueado
+  const sidebarIsCommunitySubscribed = isCommunitySubscribed || role === "ADMIN";
+  const sidebarIsSpecializationSubscribed = isSpecializationSubscribed || role === "ADMIN";
 
   // [NOVO] Lógica de Bloqueio PRO / Trial
   let isTrial = false;
@@ -64,7 +68,7 @@ export default async function DashboardLayout({
       <aside className="hidden lg:block h-full z-20">
         <Sidebar
           role={role}
-          isCommunitySubscribed={isCommunitySubscribed}
+          isCommunitySubscribed={sidebarIsCommunitySubscribed}
           hasCourses={hasCourses}
           isTrial={isTrial}
           trialDaysLeft={trialDaysLeft}
