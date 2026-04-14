@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { sendEmail, getAnamnesisRequestTemplate } from "@/lib/mail";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { utapi } from "@/lib/uploadthing";
 
 const PatientSchema = z.object({
   name: z.string().min(2, "Nome obrigatório"),
@@ -121,7 +122,7 @@ export async function createPatient(formData: FormData) {
   } catch (error) {
     console.error("Erro ao criar paciente:", error);
     if (error instanceof z.ZodError) {
-      return { error: error.errors[0].message };
+      return { error: error.issues[0].message };
     }
     return { error: "Erro interno ao cadastrar paciente." };
   }
@@ -246,5 +247,70 @@ export async function getPatientsForSelect() {
   } catch (error) {
     console.error("Erro ao buscar lista para seleção:", error);
     return [];
+  }
+}
+
+export async function updatePatientProfile(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) return { error: "Não autorizado" };
+
+  try {
+    const phone = formData.get("phone") as string;
+    const birthDateStr = formData.get("birthDate") as string;
+    const gender = formData.get("gender") as string;
+    const occupation = formData.get("occupation") as string;
+    const address = formData.get("address") as string;
+    const city = formData.get("city") as string;
+    const state = formData.get("state") as string;
+    const profileImage = formData.get("profileImage") as File | null;
+
+    let imageUrl: string | undefined;
+
+    // Se houver uma nova imagem, fazemos o upload
+    if (profileImage && profileImage.size > 0 && profileImage.name !== "undefined") {
+      const uploadResult = await utapi.uploadFiles(profileImage);
+
+      if (uploadResult.data) {
+        imageUrl = uploadResult.data.ufsUrl;
+      } else {
+        console.error("Erro no upload:", uploadResult.error);
+        return { error: "Erro ao fazer upload da imagem." };
+      }
+    }
+
+    // Converte a data de nascimento
+    const birthDate = birthDateStr ? new Date(birthDateStr) : null;
+
+    // Usamos uma transação para garantir consistência
+    await db.$transaction(async (tx) => {
+      // 1. Atualiza dados do Usuário (apenas se a imagem mudou)
+      if (imageUrl) {
+        await tx.user.update({
+          where: { id: session.user.id },
+          data: { image: imageUrl }
+        });
+      }
+
+      // 2. Atualiza dados do Paciente
+      await tx.patient.update({
+        where: { userId: session.user.id },
+        data: {
+          phone,
+          gender,
+          occupation,
+          address,
+          city,
+          state,
+          birthDate,
+        }
+      });
+    });
+
+    revalidatePath("/dashboard/profile");
+    return { success: "Perfil atualizado com sucesso!" };
+
+  } catch (error) {
+    console.error("Erro ao atualizar perfil:", error);
+    return { error: "Ocorreu um erro ao atualizar o perfil." };
   }
 }
