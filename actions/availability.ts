@@ -11,7 +11,7 @@ export async function getAvailableSlots(dateStr: string) {
   // 1. Identificar o dia da semana (0 = Domingo, ..., 6 = Sábado)
   // dateStr vem como "YYYY-MM-DD"
   // Adicionamos 'T12:00:00' para garantir que o fuso horário não mude o dia ao converter
-  const selectedDate = new Date(`${dateStr}T12:00:00`); 
+  const selectedDate = new Date(`${dateStr}T12:00:00`);
   const dayOfWeek = selectedDate.getDay();
 
   // 2. Definir de QUAL MÉDICO estamos buscando a agenda
@@ -20,27 +20,33 @@ export async function getAvailableSlots(dateStr: string) {
   const role = session.user.role;
 
   // @ts-ignore: Lidando com a role SECRETARY
-  if (role === "PROFESSIONAL") {
-      // Profissional vê a sua própria agenda
-      targetDoctorId = session.user.id;
-  } else if (role === "ADMIN" || role === "SECRETARY") {
-      // Admin e Secretária veem a agenda da Dra. Principal (Admin)
-      const adminUser = await db.user.findFirst({ where: { role: "ADMIN" } });
-      if (!adminUser) return { error: "Agenda principal não configurada." };
-      targetDoctorId = adminUser.id;
+  if (role === "PROFESSIONAL" || role === "ADMIN") {
+    // Profissional e Admin veem a sua própria agenda
+    targetDoctorId = session.user.id;
+  } else if (role === "SECRETARY") {
+    // Secretária vê a agenda da Dra. Principal (Admin)
+    const adminUser = await db.user.findFirst({
+      where: { role: "ADMIN" },
+      orderBy: { createdAt: "asc" }
+    });
+    if (!adminUser) return { error: "Agenda principal não configurada." };
+    targetDoctorId = adminUser.id;
   } else {
-      // Role: PATIENT
-      // Busca o médico vinculado ao paciente
-      const patient = await db.patient.findUnique({ where: { userId: session.user.id } });
-      
-      if (patient?.professionalId) {
-          targetDoctorId = patient.professionalId;
-      } else {
-          // Fallback: Se não tiver médico vinculado, usa a agenda da Admin (Dra. Isa)
-          const adminUser = await db.user.findFirst({ where: { role: "ADMIN" } });
-          if (!adminUser) return { error: "Médico não encontrado." };
-          targetDoctorId = adminUser.id;
-      }
+    // Role: PATIENT
+    // Busca o médico vinculado ao paciente
+    const patient = await db.patient.findUnique({ where: { userId: session.user.id } });
+
+    if (patient?.professionalId) {
+      targetDoctorId = patient.professionalId;
+    } else {
+      // Fallback: Se não tiver médico vinculado, usa a agenda da Admin (Dra. Isa)
+      const adminUser = await db.user.findFirst({
+        where: { role: "ADMIN" },
+        orderBy: { createdAt: "asc" }
+      });
+      if (!adminUser) return { error: "Médico não encontrado." };
+      targetDoctorId = adminUser.id;
+    }
   }
 
   // 3. Buscar a configuração de horário do médico alvo
@@ -61,7 +67,7 @@ export async function getAvailableSlots(dateStr: string) {
   // 4. Gerar todos os slots possíveis do dia (ex: 09:00, 10:00...)
   const slots: string[] = [];
   const duration = 60; // Duração fixa de 1h
-  
+
   // Converter strings "09:00" para objetos Date auxiliares no dia selecionado
   let currentTime = parse(schedule.startTime, "HH:mm", selectedDate);
   const endTime = parse(schedule.endTime, "HH:mm", selectedDate);
@@ -89,7 +95,7 @@ export async function getAvailableSlots(dateStr: string) {
   });
 
   // 6. Filtrar slots ocupados
-  const busyTimes = existingAppointments.map((apt) => 
+  const busyTimes = existingAppointments.map((apt) =>
     format(apt.date, "HH:mm")
   );
 
@@ -98,9 +104,9 @@ export async function getAvailableSlots(dateStr: string) {
   // Opcional: Filtrar horários passados se o dia for "hoje"
   const now = new Date();
   const isToday = isEqual(startOfDay(now), startOfDay(selectedDate));
-  
+
   let finalSlots = availableSlots;
-  
+
   if (isToday) {
     const currentHourStr = format(now, "HH:mm");
     finalSlots = availableSlots.filter(slot => slot > currentHourStr);

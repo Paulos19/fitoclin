@@ -140,6 +140,15 @@ export async function registerTrialProfessional(prevState: any, formData: FormDa
                         stripeCurrentPeriodEnd: invite.expiresAt,
                         status: "active"
                     }
+                },
+                doctorSchedules: {
+                    create: [
+                        { dayOfWeek: 1, startTime: "09:00", endTime: "18:00", isEnabled: true },
+                        { dayOfWeek: 2, startTime: "09:00", endTime: "18:00", isEnabled: true },
+                        { dayOfWeek: 3, startTime: "09:00", endTime: "18:00", isEnabled: true },
+                        { dayOfWeek: 4, startTime: "09:00", endTime: "18:00", isEnabled: true },
+                        { dayOfWeek: 5, startTime: "09:00", endTime: "18:00", isEnabled: true }
+                    ]
                 }
             }
         });

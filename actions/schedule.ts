@@ -78,7 +78,10 @@ export async function saveScheduleSettings(data: any) {
 
     // @ts-ignore
     if (session.user.role === "SECRETARY") {
-      const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
+      const admin = await db.user.findFirst({
+        where: { role: "ADMIN" },
+        orderBy: { createdAt: "asc" }
+      });
       if (!admin) return { error: "Administrador principal não encontrado." };
       targetUserId = admin.id;
     }
@@ -196,7 +199,10 @@ export async function createAppointment(formData: FormData) {
     // Se for Secretária, o médico é o Admin (Dra.)
     // @ts-ignore
     if (session.user.role === "SECRETARY") {
-      const admin = await db.user.findFirst({ where: { role: "ADMIN" } });
+      const admin = await db.user.findFirst({
+        where: { role: "ADMIN" },
+        orderBy: { createdAt: "asc" }
+      });
       if (!admin) return { error: "Médico não encontrado." };
       doctorId = admin.id;
     } else {
@@ -216,7 +222,10 @@ export async function createAppointment(formData: FormData) {
     if (patientProfile.professionalId) {
       doctorId = patientProfile.professionalId;
     } else {
-      const admin = await db.user.findFirst({ where: { role: 'ADMIN' } });
+      const admin = await db.user.findFirst({
+        where: { role: 'ADMIN' },
+        orderBy: { createdAt: 'asc' }
+      });
       if (!admin) return { error: "Médico não encontrado." };
       doctorId = admin.id;
     }
