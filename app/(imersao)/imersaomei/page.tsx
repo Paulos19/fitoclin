@@ -104,11 +104,11 @@ const premiumFeatures = [
 ];
 
 const pillars = [
-    { icon: Brain, title: "Controle da Mente", description: "Lide com a fome emocional sem culpa e sem guerra com a comida." },
-    { icon: Activity, title: "Metabolismo Organizado", description: "Entenda o que trava seu emagrecimento e destrave de forma natural." },
-    { icon: Salad, title: "Alimentação Estratégica", description: "Sem radicalismo. Sem sofrimento. Com inteligência metabólica." },
-    { icon: Leaf, title: "Plantas Medicinais", description: "Uso inteligente de fitoterápicos validados pela ciência." },
-    { icon: Heart, title: "Alinhamento Interior", description: "Fortaleça sua base emocional e espiritual para sustentar a transformação." },
+    { icon: Heart, title: "Fé", description: "A base espiritual que fortalece sua jornada." },
+    { icon: Salad, title: "Alimentação Estratégica", description: "Inteligência alimentar para emagrecer com equilíbrio." },
+    { icon: Activity, title: "Movimento Organizado", description: "Movimento com estratégia para gerar resultado." },
+    { icon: Brain, title: "Reprogramação Neuroemocional e Motivação", description: "Equilibre emoções, fortaleça a motivação e mantenha a constância." },
+    { icon: Leaf, title: "Fitoterapia Inteligente", description: "Plantas medicinais usadas com estratégia e ciência." },
 ];
 
 /* ───────── HOOKS ───────── */
@@ -175,7 +175,7 @@ export default function ImersaoMEIPage() {
                                 </span>
                                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-[var(--clr-border)] text-[var(--clr-text-muted)]">
                                     <Calendar className="w-3.5 h-3.5" />
-                                    Sábado, 02/05
+                                    Segunda, 11/05
                                 </span>
                             </div>
 
@@ -214,9 +214,9 @@ export default function ImersaoMEIPage() {
                                 style={{ transform: `translateY(${-parallaxY * 0.3}px)` }}
                             >
                                 <img
-                                    src="/WhatsApp%20Image%202026-04-19%20at%2013.42.34.jpeg"
+                                    src="/bannerimersao.jpeg"
                                     alt="Imersão MEI — Método de Emagrecimento Inteligente com a Dra. Isa"
-                                    className="w-full h-auto rounded-2xl shadow-2xl"
+                                    className="w-full h-auto max-h-[450px] lg:max-h-[550px] object-cover object-top rounded-2xl shadow-2xl"
                                     style={{ filter: "brightness(1.02)" }}
                                 />
                                 {/* Decorative border glow */}
@@ -233,7 +233,7 @@ export default function ImersaoMEIPage() {
                 <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[
                         { icon: Calendar, label: "Data", value: "Sábado, 02/05" },
-                        { icon: Clock, label: "Horário", value: "8h às 12h" },
+                        { icon: Clock, label: "Horário", value: "20:07" },
                         { icon: Video, label: "Formato", value: "Ao Vivo no Meet" },
                         { icon: Eye, label: "Atenção", value: "Sem Gravação*" },
                     ].map((item, idx) => (
@@ -256,7 +256,7 @@ export default function ImersaoMEIPage() {
                         </span>
                         <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
                             A Imersão MEI será uma experiência{" "}
-                            <em className="text-[var(--clr-gold)] not-italic">intensa e prática</em>, ao vivo, em 4 horas.
+                            <em className="text-[var(--clr-gold)] not-italic">intensa e prática</em>
                         </h2>
                         <p className="text-lg text-[var(--clr-text-muted)] max-w-2xl mx-auto">
                             Você vai destravar o seu Emagrecimento com direção. Ao final, você terá:
@@ -488,10 +488,10 @@ export default function ImersaoMEIPage() {
                                     <div className="border-t border-[var(--clr-border)] pt-6 space-y-5">
                                         <span className="text-[10px] uppercase tracking-widest font-semibold text-red-400">Por tempo limitado</span>
                                         <p className="text-4xl font-black font-heading text-[var(--clr-text)]">
-                                            R$ 79<span className="text-xl">,90</span>
+                                            R$ 47,00
                                         </p>
                                         <a
-                                            href="#"
+                                            href="/api/checkout/essencial"
                                             className="cta-primary block w-full text-center py-4 rounded-xl text-sm cursor-pointer"
                                         >
                                             Garantir meu acesso Essencial
@@ -528,10 +528,10 @@ export default function ImersaoMEIPage() {
                                     <div className="border-t border-[var(--clr-gold-dark)]/30 pt-6 space-y-5">
                                         <span className="text-[10px] uppercase tracking-widest font-semibold text-[var(--clr-gold)]">Por tempo limitado</span>
                                         <p className="text-4xl font-black font-heading text-[var(--clr-text)]">
-                                            R$ 169<span className="text-xl">,90</span>
+                                            R$ 97,00
                                         </p>
                                         <a
-                                            href="#"
+                                            href="/api/checkout/premium"
                                             className="cta-primary block w-full text-center py-4 rounded-xl text-sm cursor-pointer"
                                         >
                                             Garantir meu acesso Premium
@@ -647,8 +647,8 @@ export default function ImersaoMEIPage() {
                     <RevealSection>
                         <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
                             {[
-                                { icon: Calendar, label: "02 de Maio" },
-                                { icon: Clock, label: "8h às 12h" },
+                                { icon: Calendar, label: "11 de Maio" },
+                                { icon: Clock, label: "20:07" },
                                 { icon: Video, label: "Ao Vivo" },
                             ].map((item, i) => (
                                 <div key={i} className="counter-item">
