@@ -232,7 +232,7 @@ export default function ImersaoMEIPage() {
             <section className="bg-[var(--clr-surface)] py-8 px-4">
                 <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[
-                        { icon: Calendar, label: "Data", value: "Sábado, 02/05" },
+                        { icon: Calendar, label: "Data", value: "Sábado, 11/05" },
                         { icon: Clock, label: "Horário", value: "20:07" },
                         { icon: Video, label: "Formato", value: "Ao Vivo no Meet" },
                         { icon: Eye, label: "Atenção", value: "Sem Gravação*" },
