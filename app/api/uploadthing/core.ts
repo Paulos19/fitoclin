@@ -37,12 +37,14 @@ export const ourFileRouter = {
 
     // 3. Upload de documentos (prescrições, exames, materiais)
     documentUploader: f({
-        pdf: { maxFileSize: "16MB", maxFileCount: 1 },
+        pdf: { maxFileSize: "2GB", maxFileCount: 1 },
         image: { maxFileSize: "8MB", maxFileCount: 1 },
-        "application/msword": { maxFileSize: "16MB", maxFileCount: 1 },
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { maxFileSize: "16MB", maxFileCount: 1 },
-        "application/vnd.ms-excel": { maxFileSize: "16MB", maxFileCount: 1 },
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "16MB", maxFileCount: 1 },
+        "application/msword": { maxFileSize: "2GB", maxFileCount: 1 },
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { maxFileSize: "2GB", maxFileCount: 1 },
+        "application/vnd.ms-excel": { maxFileSize: "2GB", maxFileCount: 1 },
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "2GB", maxFileCount: 1 },
+        video: { maxFileSize: "2GB", maxFileCount: 1 },
+        audio: { maxFileSize: "2GB", maxFileCount: 1 },
     })
         .middleware(async () => {
             const session = await auth();
@@ -55,7 +57,7 @@ export const ourFileRouter = {
 
     // 4. Upload de vídeos (mentorias)
     videoUploader: f({
-        video: { maxFileSize: "256MB", maxFileCount: 1 },
+        video: { maxFileSize: "2GB", maxFileCount: 1 },
     })
         .middleware(async () => {
             const session = await auth();
@@ -70,7 +72,7 @@ export const ourFileRouter = {
 
     // 5. Upload de áudio (gravação de consultas)
     audioUploader: f({
-        audio: { maxFileSize: "64MB", maxFileCount: 1 },
+        audio: { maxFileSize: "2GB", maxFileCount: 1 },
     })
         .middleware(async () => {
             const session = await auth();
@@ -83,12 +85,14 @@ export const ourFileRouter = {
 
     // 6. Upload de materiais de curso (PDF, Docs, XLS, imagens)
     courseMaterialUploader: f({
-        pdf: { maxFileSize: "32MB", maxFileCount: 1 },
+        pdf: { maxFileSize: "2GB", maxFileCount: 1 },
         image: { maxFileSize: "8MB", maxFileCount: 1 },
-        "application/vnd.ms-excel": { maxFileSize: "16MB", maxFileCount: 1 },
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "16MB", maxFileCount: 1 },
-        "application/msword": { maxFileSize: "16MB", maxFileCount: 1 },
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { maxFileSize: "16MB", maxFileCount: 1 },
+        "application/vnd.ms-excel": { maxFileSize: "2GB", maxFileCount: 1 },
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "2GB", maxFileCount: 1 },
+        "application/msword": { maxFileSize: "2GB", maxFileCount: 1 },
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { maxFileSize: "2GB", maxFileCount: 1 },
+        video: { maxFileSize: "2GB", maxFileCount: 1 },
+        audio: { maxFileSize: "2GB", maxFileCount: 1 },
     })
         .middleware(async () => {
             const session = await auth();
