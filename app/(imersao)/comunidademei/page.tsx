@@ -30,6 +30,8 @@ import {
     Flower2,
     Timer,
     BadgeCheck,
+    Instagram,
+    Phone,
 } from "lucide-react";
 import "./comunidade.css";
 
@@ -128,7 +130,7 @@ const faqItems = [
     { q: "Terei acesso a planos alimentares?", a: "Sim. Você receberá planos alimentares, receitas estratégicas e orientações práticas dentro da comunidade." },
     { q: "Posso participar de qualquer lugar?", a: "Sim, tudo é 100% online. Você acessa de onde estiver, no horário das aulas ao vivo ou pelo replay disponível." },
     { q: "Tem garantia?", a: "Sim, garantia incondicional de 7 dias. Se não se identificar com o método, devolvemos 100% do seu investimento." },
-    { q: "Qual é o valor?", a: "O investimento é de 12x de R$ 49,70 ou R$ 597 à vista — uma fração do preço de consultas individuais durante 12 meses." },
+    { q: "Qual é o valor?", a: "O investimento é de 12x de R$ 61,74 ou R$ 697 à vista — uma fração do preço de consultas individuais durante 12 meses." },
     { q: "Quem é a Dra. Isa Bieski?", a: "Farmacêutica Clínica Integrativa com mais de 20 anos de experiência, especialista em Fitoterapia e criadora do Método MEI. Já transformou milhares de mulheres." },
 ];
 
@@ -673,7 +675,7 @@ export default function ComunidadeMEIPage() {
                                     <div className="flex justify-center">
                                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-500/10 to-red-500/5 border border-red-500/20">
                                             <Zap className="w-4 h-4 text-red-400" />
-                                            <span className="text-sm font-bold text-red-400">Economia de R$ 9.388</span>
+                                            <span className="text-sm font-bold text-red-400">Economia de R$ 9.288</span>
                                         </div>
                                     </div>
 
@@ -692,7 +694,7 @@ export default function ComunidadeMEIPage() {
                                             <p className="text-[10px] uppercase tracking-widest text-[var(--clr-gold)] font-semibold mb-2">Parcelado</p>
                                             <p className="text-lg text-[var(--clr-text-muted)] cm-font-heading">12x de</p>
                                             <p className="text-5xl font-black cm-font-heading text-[var(--clr-gold)] leading-tight mt-1">
-                                                R$ 49<span className="text-3xl">,70</span>
+                                                R$ 61<span className="text-3xl">,74</span>
                                             </p>
                                             <p className="text-xs text-[var(--clr-text-dim)] mt-2">no cartão de crédito</p>
                                         </div>
@@ -708,7 +710,7 @@ export default function ComunidadeMEIPage() {
 
                                     {/* CTA */}
                                     <a
-                                        href="#"
+                                        href="https://go.hotmart.com/I104935049E?dp=1"
                                         className="cm-cta-gold block w-full text-center py-5 rounded-2xl text-base cursor-pointer"
                                     >
                                         Garantir Minha Vaga Agora
@@ -835,16 +837,16 @@ export default function ComunidadeMEIPage() {
                             <div className="flex justify-center gap-4 flex-wrap">
                                 <div className="cm-stat px-5 py-3">
                                     <p className="text-2xl font-black cm-font-heading text-[var(--clr-gold)]">12x</p>
-                                    <p className="text-xs text-[var(--clr-text-dim)]">R$ 49,70</p>
+                                    <p className="text-xs text-[var(--clr-text-dim)]">R$ 61,74</p>
                                 </div>
                                 <div className="cm-stat px-5 py-3">
                                     <p className="text-lg font-bold cm-font-heading text-[var(--clr-text)]">ou</p>
-                                    <p className="text-xs text-[var(--clr-text-dim)]">R$ 597 à vista</p>
+                                    <p className="text-xs text-[var(--clr-text-dim)]">R$ 697 à vista</p>
                                 </div>
                             </div>
 
                             <a
-                                href="#"
+                                href="https://go.hotmart.com/I104935049E?dp=1"
                                 className="cm-cta-gold inline-flex items-center gap-3 px-14 py-6 rounded-2xl text-lg sm:text-xl cursor-pointer"
                             >
                                 Entrar na Comunidade Elite
@@ -869,10 +871,15 @@ export default function ComunidadeMEIPage() {
                         <p>Todos os direitos reservados.</p>
                     </div>
 
-                    <div className="flex gap-6">
-                        <a href="#" className="hover:text-[var(--clr-emerald)] transition-colors">Termos de Uso</a>
-                        <a href="#" className="hover:text-[var(--clr-emerald)] transition-colors">Privacidade</a>
-                        <a href="#" className="hover:text-[var(--clr-emerald)] transition-colors">Contato</a>
+                    <div className="flex flex-col sm:flex-row gap-6 items-center">
+                        <a href="https://wa.me/5565998200593" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[var(--clr-emerald)] transition-colors">
+                            <Phone className="w-4 h-4" />
+                            65 99820-0593
+                        </a>
+                        <a href="https://instagram.com/dra.isafito" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[var(--clr-emerald)] transition-colors">
+                            <Instagram className="w-4 h-4" />
+                            @dra.isafito
+                        </a>
                     </div>
 
                     <div className="max-w-xs text-center md:text-right text-[10px] leading-relaxed">
