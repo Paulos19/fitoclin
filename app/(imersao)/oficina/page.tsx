@@ -564,7 +564,32 @@ export default function OficinaRemediosPage() {
                 </div>
             </section>
 
-            {/* ═══════ 8. FINAL ═══════ */}
+            {/* ═══════ 8. PATROCINADORES ═══════ */}
+            <div className="of-line" />
+            <section className="py-24 sm:py-32 px-4 sm:px-6 relative bg-[var(--clr-surface)]/30">
+                <div className="max-w-6xl mx-auto relative z-10 text-center">
+                    <Reveal className="space-y-6 mb-12">
+                        <span className="of-tag mx-auto">Parceiros</span>
+                        <h2 className="of-font-display text-3xl sm:text-4xl font-bold">
+                            Patrocinadores <em className="text-[var(--clr-gold)] not-italic">&</em> Apoio
+                        </h2>
+                        <p className="text-[var(--clr-text-muted)] max-w-2xl mx-auto">
+                            Empresas e instituições que acreditam na nossa missão de levar saúde natural e evangelização para o mundo.
+                        </p>
+                    </Reveal>
+
+                    <Reveal delay={1}>
+                        <div className="of-sponsors-grid flex flex-wrap justify-center items-center gap-12">
+                            {/* Em breve / Espaço reservado */}
+                            <div className="p-8 border border-dashed border-[var(--clr-border)] rounded-2xl flex items-center justify-center min-w-[240px] group hover:border-[var(--clr-gold)] transition-colors duration-500">
+                                <span className="text-[var(--clr-text-dim)] group-hover:text-[var(--clr-gold)] font-medium italic transition-colors">Em breve...</span>
+                            </div>
+                        </div>
+                    </Reveal>
+                </div>
+            </section>
+
+            {/* ═══════ 9. FINAL ═══════ */}
             <div className="of-line" />
             <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden of-noise">
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--clr-emerald-deep)] via-[var(--clr-bg)] to-[var(--clr-surface)]" />

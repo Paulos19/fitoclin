@@ -480,6 +480,20 @@
   border-radius: 20px;
 }
 
+/* ===== SPONSORS ===== */
+.of-sponsors-grid {
+  position: relative;
+}
+
+.of-sponsors-grid::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, var(--clr-emerald-glow) 0%, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .of-hero h1 { font-size: 2rem; line-height: 1.15; }
