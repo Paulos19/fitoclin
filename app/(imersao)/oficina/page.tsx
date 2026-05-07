@@ -156,7 +156,7 @@ export default function OficinaRemediosPage() {
                 {/* Orbs */}
                 <div className="of-orb" style={{ width: 700, height: 700, top: -300, right: -300, background: "radial-gradient(circle, rgba(61,139,110,0.18) 0%, transparent 70%)" }} />
                 <div className="of-orb" style={{ width: 500, height: 500, bottom: -200, left: -200, background: "radial-gradient(circle, rgba(201,169,110,0.1) 0%, transparent 70%)" }} />
-                
+
                 {/* Particles */}
                 {[...Array(6)].map((_, i) => (
                     <div
@@ -216,7 +216,7 @@ export default function OficinaRemediosPage() {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             <p className="text-[var(--clr-emerald-light)] font-medium max-w-xl border-l-2 border-[var(--clr-emerald)] pl-4">
                                 E é exatamente isso que você vai aprender nesta experiência única.
                             </p>
@@ -241,12 +241,12 @@ export default function OficinaRemediosPage() {
                             >
                                 <div className="absolute inset-0 bg-gradient-to-tr from-[var(--clr-emerald-deep)] to-[var(--clr-gold-dark)] rounded-full blur-3xl opacity-30 cm-glow-pulse" />
                                 <img
-                                    src="/santa.png"
+                                    src="/santa.jpeg"
                                     alt="Santa Hildegarda"
                                     className="w-full h-auto object-contain relative z-10 drop-shadow-2xl"
                                     style={{ filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.5))" }}
                                 />
-                                
+
                                 {/* Floating card 1 */}
                                 <div className="of-float absolute -left-4 sm:-left-8 bottom-10 of-glass rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl z-20">
                                     <div className="w-10 h-10 rounded-xl bg-[var(--clr-emerald-deep)] flex items-center justify-center">
@@ -278,7 +278,7 @@ export default function OficinaRemediosPage() {
             <div className="of-line-thick" />
             <section className="py-24 sm:py-32 px-4 sm:px-6 bg-[var(--clr-surface)] relative overflow-hidden">
                 <div className="of-orb" style={{ width: 400, height: 400, top: -100, left: -200, background: "radial-gradient(circle, rgba(61,139,110,0.08) 0%, transparent 70%)" }} />
-                
+
                 <div className="max-w-6xl mx-auto relative z-10">
                     <Reveal className="text-center space-y-5 mb-16">
                         <span className="of-tag">Experiência Única</span>
@@ -315,7 +315,7 @@ export default function OficinaRemediosPage() {
             <div className="of-line" />
             <section className="py-24 sm:py-32 px-4 sm:px-6 of-noise relative">
                 <div className="of-orb" style={{ width: 500, height: 500, top: "50%", right: -250, transform: "translateY(-50%)", background: "radial-gradient(circle, rgba(201,169,110,0.08) 0%, transparent 70%)" }} />
-                
+
                 <div className="max-w-5xl mx-auto relative z-10">
                     <Reveal className="text-center space-y-5 mb-16">
                         <span className="of-tag of-tag-gold">
@@ -348,7 +348,7 @@ export default function OficinaRemediosPage() {
             <div className="of-line-gold" />
             <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-[var(--clr-bg)] via-[var(--clr-surface)]/80 to-[var(--clr-bg)]" />
-                
+
                 <div className="max-w-6xl mx-auto relative z-10">
                     <div className="of-mission-card p-8 sm:p-12 lg:p-16">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -360,7 +360,7 @@ export default function OficinaRemediosPage() {
                                 <h2 className="of-font-display text-3xl sm:text-4xl font-bold leading-tight">
                                     Saúde, fé e propósito unidos em uma <em className="text-[var(--clr-gold)] not-italic">única experiência</em>.
                                 </h2>
-                                
+
                                 <div className="space-y-4 text-lg text-[var(--clr-text-muted)] leading-relaxed">
                                     <p>
                                         Todo o recurso arrecadado nesta oficina será destinado como presente pelos <strong className="text-[var(--clr-text)]">20 anos de missão do Padre Paulo Ricardo</strong>.
@@ -369,7 +369,7 @@ export default function OficinaRemediosPage() {
                                         Mais do que aprender… você também estará ajudando uma missão de evangelização que transforma vidas.
                                     </p>
                                 </div>
-                                
+
                                 <div className="pt-4">
                                     <button
                                         onClick={() => scrollTo("oferta")}
@@ -380,13 +380,13 @@ export default function OficinaRemediosPage() {
                                     </button>
                                 </div>
                             </Reveal>
-                            
+
                             <Reveal delay={2} className="flex justify-center lg:justify-end">
                                 <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-[var(--clr-border-gold)]">
                                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--clr-bg)]/80 via-transparent to-transparent z-10" />
-                                    <img 
-                                        src="/padre.jpeg" 
-                                        alt="Padre Paulo Ricardo" 
+                                    <img
+                                        src="/padre.jpeg"
+                                        alt="Padre Paulo Ricardo"
                                         className="w-full h-auto object-cover"
                                     />
                                 </div>
@@ -491,14 +491,14 @@ export default function OficinaRemediosPage() {
                             <Reveal key={idx} delay={idx + 1} className="h-full">
                                 <div className={`of-pricing h-full flex flex-col ${lote.active ? "of-pricing-featured transform scale-105 z-10" : "opacity-80"}`}>
                                     {lote.active && <div className="of-pricing-ribbon">Lote Atual</div>}
-                                    
+
                                     <div className="p-8 text-center border-b border-[var(--clr-border)] bg-[var(--clr-bg)]">
                                         <h3 className="of-font-heading text-2xl font-black text-[var(--clr-text)] mb-2 mt-4">{lote.name}</h3>
                                         <div className={`of-lote-badge ${lote.active ? "of-lote-active" : "of-lote-future"}`}>
                                             {lote.active ? "Disponível Agora" : "Em Breve"}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="p-8 space-y-6 flex-grow flex flex-col justify-center">
                                         <div className="text-center space-y-2">
                                             <p className="text-sm text-[var(--clr-text-dim)] uppercase tracking-widest font-semibold">Presencial</p>
@@ -507,11 +507,11 @@ export default function OficinaRemediosPage() {
                                                 {lote.presencial}
                                             </p>
                                         </div>
-                                        
+
                                         <div className="h-px w-full bg-[var(--clr-border)] relative">
                                             <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--clr-surface)] px-2 text-xs text-[var(--clr-text-dim)]">OU</div>
                                         </div>
-                                        
+
                                         <div className="text-center space-y-2">
                                             <p className="text-sm text-[var(--clr-text-dim)] uppercase tracking-widest font-semibold">Online</p>
                                             <p className="text-4xl font-black of-font-heading text-[var(--clr-emerald-light)]">
@@ -524,11 +524,11 @@ export default function OficinaRemediosPage() {
                             </Reveal>
                         ))}
                     </div>
-                    
+
                     <Reveal className="max-w-2xl mx-auto">
                         <div className="of-glass rounded-2xl p-8 space-y-6 text-center">
                             <h3 className="of-font-heading text-xl font-bold text-[var(--clr-text)]">O que está incluso?</h3>
-                            
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                                 <div className="flex items-center gap-3 text-sm">
                                     <Award className="w-5 h-5 text-[var(--clr-gold)] flex-shrink-0" />
@@ -579,7 +579,7 @@ export default function OficinaRemediosPage() {
                         <h2 className="of-font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
                             Você não vai sair dessa oficina <em className="text-[var(--clr-emerald-light)] not-italic">apenas</em> com conhecimento.
                         </h2>
-                        
+
                         <div className="flex flex-wrap justify-center gap-3 pt-4">
                             {takeaways.map((item, idx) => (
                                 <span key={idx} className="bg-[var(--clr-surface)] border border-[var(--clr-border-strong)] px-4 py-2 rounded-full text-sm text-[var(--clr-text-muted)]">
