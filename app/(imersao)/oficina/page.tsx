@@ -90,19 +90,25 @@ const lots = [
         name: "1º LOTE",
         presencial: "297,00",
         online: "97,00",
+        linkPresencial: "https://hotm.io/jbk79m",
+        linkOnline: "https://pay.hotmart.com/T105703302A?off=kois9ees",
         active: true
     },
     {
         name: "2º LOTE",
         presencial: "397,00",
         online: "127,00",
-        active: false
+        linkPresencial: "https://pay.hotmart.com/T105703302A?off=4yyyvrht",
+        linkOnline: "https://pay.hotmart.com/T105703302A?off=vx9nda8p",
+        active: true
     },
     {
         name: "3º LOTE",
         presencial: "597,00",
         online: "197,00",
-        active: false
+        linkPresencial: "https://pay.hotmart.com/T105703302A?off=54y1vdqc",
+        linkOnline: "https://pay.hotmart.com/T105703302A?off=61wuns59",
+        active: true
     }
 ];
 
@@ -506,9 +512,15 @@ export default function OficinaRemediosPage() {
                                                 <span className="text-lg text-[var(--clr-text-muted)] font-normal mr-1">R$</span>
                                                 {lote.presencial}
                                             </p>
+                                            <a
+                                                href={lote.active ? lote.linkPresencial : undefined}
+                                                className={`mt-4 w-full py-3 rounded-lg flex justify-center items-center font-bold transition-all ${lote.active ? 'bg-[var(--clr-gold)] text-[var(--clr-bg)] hover:brightness-110' : 'bg-[var(--clr-surface)] text-[var(--clr-text-dim)] cursor-not-allowed pointer-events-none'}`}
+                                            >
+                                                Garantir Presencial
+                                            </a>
                                         </div>
 
-                                        <div className="h-px w-full bg-[var(--clr-border)] relative">
+                                        <div className="h-px w-full bg-[var(--clr-border)] relative my-4">
                                             <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--clr-surface)] px-2 text-xs text-[var(--clr-text-dim)]">OU</div>
                                         </div>
 
@@ -518,6 +530,12 @@ export default function OficinaRemediosPage() {
                                                 <span className="text-lg text-[var(--clr-text-muted)] font-normal mr-1">R$</span>
                                                 {lote.online}
                                             </p>
+                                            <a
+                                                href={lote.active ? lote.linkOnline : undefined}
+                                                className={`mt-4 w-full py-3 rounded-lg flex justify-center items-center font-bold transition-all ${lote.active ? 'bg-[var(--clr-emerald)] text-white hover:brightness-110' : 'bg-[var(--clr-surface)] text-[var(--clr-text-dim)] cursor-not-allowed pointer-events-none'}`}
+                                            >
+                                                Garantir Online
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -549,12 +567,12 @@ export default function OficinaRemediosPage() {
                             </div>
 
                             <div className="pt-6">
-                                <a
-                                    href="https://pay.hotmart.com/T105703302A?bid=1778100546370"
+                                <button
+                                    onClick={() => scrollTo("oferta")}
                                     className="of-cta block w-full py-5 rounded-xl text-base sm:text-lg cursor-pointer"
                                 >
-                                    Garantir Minha Vaga Agora
-                                </a>
+                                    Escolher Meu Lote Acima
+                                </button>
                                 <p className="text-xs text-[var(--clr-text-dim)] mt-4">
                                     Se você deseja aprender fitoterapia de verdade… com profundidade, propósito e aplicação prática, essa pode ser a oportunidade mais especial do ano.
                                 </p>
@@ -616,13 +634,13 @@ export default function OficinaRemediosPage() {
 
                     <Reveal>
                         <div className="space-y-6 pt-6">
-                            <a
-                                href="https://pay.hotmart.com/T105703302A?bid=1778100546370"
+                            <button
+                                onClick={() => scrollTo("oferta")}
                                 className="of-cta-gold inline-flex items-center gap-3 px-10 py-5 rounded-2xl text-lg sm:text-xl cursor-pointer shadow-2xl shadow-[var(--clr-gold)]/20"
                             >
                                 Garantir Minha Vaga
                                 <ArrowRight className="w-6 h-6" />
-                            </a>
+                            </button>
                             <p className="flex items-center justify-center gap-2 text-sm text-[var(--clr-text-dim)]">
                                 <Shield className="w-4 h-4 text-[var(--clr-emerald)]" />
                                 Pagamento 100% seguro via Hotmart
