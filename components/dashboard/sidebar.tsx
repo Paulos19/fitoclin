@@ -25,7 +25,8 @@ import {
   Library,
   Lock,
   Video, // Novo ícone para mentorias
-  Crown  // Novo ícone para área de especialização
+  Crown,  // Novo ícone para área de especialização
+  Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
@@ -50,6 +51,7 @@ const adminLinks = [
 
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },
+  { name: "Backup de Dados", href: "/dashboard/backup", icon: Database },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 
   // Acesso Direto às Áreas (Opcional, mas útil para ver como está ficando)

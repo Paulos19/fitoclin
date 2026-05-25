@@ -7,10 +7,11 @@ declare global {
 // 1. Pega a URL do banco (venha ela de onde vier)
 let dbUrl = process.env.DATABASE_URL || "";
 
-// 2. Injeta à força os parâmetros essenciais para o Neon DB se eles não existirem
+// 2. Injeta à força os parâmetros essenciais para o banco se eles não existirem
 if (dbUrl && !dbUrl.includes("connection_limit")) {
   const separator = dbUrl.includes("?") ? "&" : "?";
-  dbUrl = `${dbUrl}${separator}pgbouncer=true&connection_limit=20&pool_timeout=30`;
+  const pgbouncerParam = dbUrl.includes("pgbouncer") ? "" : "pgbouncer=true&";
+  dbUrl = `${dbUrl}${separator}${pgbouncerParam}connection_limit=20&pool_timeout=30`;
 }
 
 // 3. Inicia o Prisma garantindo que ele usa a URL corrigida
