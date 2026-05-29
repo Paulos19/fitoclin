@@ -62,7 +62,8 @@ export default async function RecordDetailPage({ params }: Props) {
       weeklyCheckins: { orderBy: { createdAt: 'asc' }, take: 20 },
       appointments: { orderBy: { date: 'desc' }, take: 5 },
       medicalRecords: { orderBy: { createdAt: 'desc' }, take: 50 },
-      documents: { orderBy: { createdAt: 'desc' } }
+      documents: { orderBy: { createdAt: 'desc' } },
+      epigeneticAnamneses: { orderBy: { createdAt: 'desc' } }
     }
   });
 
@@ -283,12 +284,12 @@ export default async function RecordDetailPage({ params }: Props) {
         </TabsContent>
 
         {/* 2. EPIGENÉTICA */}
-        <TabsContent value="epigenetic" className="animate-in slide-in-from-bottom-2">
+        <TabsContent value="epigenetic" className="space-y-6 animate-in slide-in-from-bottom-2">
           <div className="bg-[#0A311D]/50 border border-[#2A5432]/30 p-6 rounded-xl backdrop-blur-sm">
             <div className="mb-6 border-b border-[#2A5432]/30 pb-4">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <Dna className="w-5 h-5 text-[#76A771]" />
-                Anamnese Epigenética
+                Nova Anamnese Epigenética
               </h2>
               <p className="text-gray-400 text-sm mt-1">
                 Roteiro detalhado para investigação de fatores ambientais, genéticos e estilo de vida.
@@ -296,6 +297,90 @@ export default async function RecordDetailPage({ params }: Props) {
             </div>
             <EpigeneticForm patientId={patient.id} />
           </div>
+
+          {patient.epigeneticAnamneses && patient.epigeneticAnamneses.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-8">
+                <Dna className="w-5 h-5 text-[#76A771]" /> Histórico Epigenético
+              </h3>
+              {patient.epigeneticAnamneses.map((record) => (
+                <Card key={record.id} className={`${cardStyle} hover:border-[#76A771]/50 transition-colors`}>
+                  <CardHeader className="pb-3 border-b border-[#2A5432]/30">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-md text-white">
+                        Registro de {new Date(record.createdAt).toLocaleDateString('pt-BR')}
+                      </CardTitle>
+                      <Badge variant="outline" className="border-[#76A771] text-[#76A771]">
+                        {new Date(record.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4 grid md:grid-cols-2 gap-6">
+                    {record.familyHistory && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Histórico Familiar</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.familyHistory}</p>
+                      </div>
+                    )}
+                    {record.nutrition && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Nutrição</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.nutrition}</p>
+                      </div>
+                    )}
+                    {record.physicalActivity && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Atividade Física</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.physicalActivity}</p>
+                      </div>
+                    )}
+                    {record.environmentalExposure && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Exposição Ambiental</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.environmentalExposure}</p>
+                      </div>
+                    )}
+                    {record.stressAndMentalHealth && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Estresse e Saúde Mental</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.stressAndMentalHealth}</p>
+                      </div>
+                    )}
+                    {record.healthHistory && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Histórico de Saúde</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.healthHistory}</p>
+                      </div>
+                    )}
+                    {record.substanceUse && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Uso de Substâncias</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.substanceUse}</p>
+                      </div>
+                    )}
+                    {record.sleepQuality && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Qualidade do Sono</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.sleepQuality}</p>
+                      </div>
+                    )}
+                    {record.socialRelationships && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Relações Sociais</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.socialRelationships}</p>
+                      </div>
+                    )}
+                    {record.traumaHistory && (
+                      <div>
+                        <strong className="text-[#76A771] block mb-1 text-xs uppercase">Traumas</strong>
+                        <p className="text-gray-300 text-sm whitespace-pre-wrap">{record.traumaHistory}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* 3. EVOLUÇÃO (PEP) */}
