@@ -92,7 +92,7 @@ const lots = [
         online: "97,00",
         linkPresencial: "https://hotm.io/jbk79m",
         linkOnline: "https://pay.hotmart.com/T105703302A?off=kois9ees",
-        active: true
+        active: false
     },
     {
         name: "2º LOTE",
@@ -100,7 +100,7 @@ const lots = [
         online: "127,00",
         linkPresencial: "https://pay.hotmart.com/T105703302A?off=4yyyvrht",
         linkOnline: "https://pay.hotmart.com/T105703302A?off=vx9nda8p",
-        active: false
+        active: true
     },
     {
         name: "3º LOTE",
