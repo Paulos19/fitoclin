@@ -92,7 +92,8 @@ const lots = [
         online: "97,00",
         linkPresencial: "https://hotm.io/jbk79m",
         linkOnline: "https://pay.hotmart.com/T105703302A?off=kois9ees",
-        active: false
+        active: false,
+        esgotado: true
     },
     {
         name: "2º LOTE",
@@ -100,7 +101,8 @@ const lots = [
         online: "127,00",
         linkPresencial: "https://pay.hotmart.com/T105703302A?off=4yyyvrht",
         linkOnline: "https://pay.hotmart.com/T105703302A?off=vx9nda8p",
-        active: true
+        active: true,
+        esgotado: false
     },
     {
         name: "3º LOTE",
@@ -108,7 +110,8 @@ const lots = [
         online: "197,00",
         linkPresencial: "https://pay.hotmart.com/T105703302A?off=54y1vdqc",
         linkOnline: "https://pay.hotmart.com/T105703302A?off=61wuns59",
-        active: false
+        active: false,
+        esgotado: false
     }
 ];
 
@@ -500,8 +503,8 @@ export default function OficinaRemediosPage() {
 
                                     <div className="p-8 text-center border-b border-[var(--clr-border)] bg-[var(--clr-bg)]">
                                         <h3 className="of-font-heading text-2xl font-black text-[var(--clr-text)] mb-2 mt-4">{lote.name}</h3>
-                                        <div className={`of-lote-badge ${lote.active ? "of-lote-active" : "of-lote-future"}`}>
-                                            {lote.active ? "Disponível Agora" : "Em Breve"}
+                                        <div className={`of-lote-badge ${lote.active ? "of-lote-active" : lote.esgotado ? "of-lote-future text-red-500 border-red-500/30 bg-red-500/10" : "of-lote-future"}`}>
+                                            {lote.active ? "Disponível Agora" : lote.esgotado ? "Esgotado" : "Em Breve"}
                                         </div>
                                     </div>
 
@@ -516,7 +519,7 @@ export default function OficinaRemediosPage() {
                                                 href={lote.active ? lote.linkPresencial : undefined}
                                                 className={`mt-4 w-full py-3 rounded-lg flex justify-center items-center font-bold transition-all ${lote.active ? 'bg-[var(--clr-gold)] text-[var(--clr-bg)] hover:brightness-110' : 'bg-[var(--clr-surface)] text-[var(--clr-text-dim)] cursor-not-allowed pointer-events-none'}`}
                                             >
-                                                Garantir Presencial
+                                                {lote.esgotado ? "Esgotado" : "Garantir Presencial"}
                                             </a>
                                         </div>
 
@@ -534,7 +537,7 @@ export default function OficinaRemediosPage() {
                                                 href={lote.active ? lote.linkOnline : undefined}
                                                 className={`mt-4 w-full py-3 rounded-lg flex justify-center items-center font-bold transition-all ${lote.active ? 'bg-[var(--clr-emerald)] text-white hover:brightness-110' : 'bg-[var(--clr-surface)] text-[var(--clr-text-dim)] cursor-not-allowed pointer-events-none'}`}
                                             >
-                                                Garantir Online
+                                                {lote.esgotado ? "Esgotado" : "Garantir Online"}
                                             </a>
                                         </div>
                                     </div>
