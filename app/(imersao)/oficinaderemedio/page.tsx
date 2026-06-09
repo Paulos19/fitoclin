@@ -455,7 +455,7 @@ export default function OficinaRemediosPage() {
                     <Reveal className="text-center space-y-5 mb-14">
                         <span className="of-tag of-tag-gold">Para quem é?</span>
                         <h2 className="of-font-display text-3xl sm:text-4xl font-bold">
-                            Essa oficina é para você que...
+                            Esta oficina é para quem...
                         </h2>
                     </Reveal>
 
