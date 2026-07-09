@@ -4,52 +4,38 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
     ArrowRight,
     Check,
-    ChevronDown,
     Shield,
-    Star,
     Sparkles,
     Brain,
-    Salad,
     Activity,
-    Leaf,
+    Flame,
     Heart,
     Gift,
-    Users,
-    BookOpen,
-    Calendar,
     Clock,
     CheckCircle2,
-    Flame,
-    Target,
-    Zap,
-    Crown,
-    Award,
-    MessageCircle,
     Video,
-    HeartHandshake,
     Flower2,
-    Timer,
-    BadgeCheck,
     Instagram,
     Phone,
     AlertTriangle,
-    MapPin,
     MonitorPlay,
-    Coffee
+    Award,
+    MessageCircle,
+    BookOpen
 } from "lucide-react";
 import "./oficina.css";
 
 /* ─────────── DATA ─────────── */
 const mistakes = [
     "A planta certa",
-    "A dose certa",
-    "A forma correta de preparo",
-    "O horário ideal",
-    "A estratégia clínica adequada"
+    "A dose adequada",
+    "O preparo correto",
+    "O melhor horário",
+    "A melhor estratégia para cada necessidade"
 ];
 
 const careTopics = [
-    { text: "Ansiedade e Insônia", icon: Brain },
+    { text: "Ansiedade e insônia", icon: Brain },
     { text: "Emagrecimento", icon: Activity },
     { text: "Dores no corpo", icon: Shield },
     { text: "Gastrite", icon: Flame },
@@ -60,11 +46,10 @@ const learningTopics = [
     "Como preparar chás terapêuticos corretamente",
     "Blends funcionais de plantas medicinais",
     "Xaropes naturais estratégicos",
-    "Vinhos, Tinturas e Extratos botânicos artesanais",
+    "Tinturas, extratos e vinhos medicinais artesanais",
     "Óleos medicados naturais para dores",
-    "Preparações inspiradas na tradição de Santa Hildegarda",
-    "Estratégias para potencializar resultados clínicos",
-    "Como evitar os erros que fazem as plantas “não funcionarem”",
+    "Preparações inspiradas nos ensinamentos de Santa Hildegarda",
+    "Como evitar erros que fazem as plantas “não funcionarem”",
 ];
 
 const targetAudience = [
@@ -74,45 +59,7 @@ const targetAudience = [
     "Terapeutas",
     "Mulheres que desejam aprender remédios caseiros com estratégia",
     "Pessoas apaixonadas por plantas medicinais",
-    "Quem busca unir fé, ciência e cuidado integral"
-];
-
-const takeaways = [
-    "Direção",
-    "Estratégia",
-    "Consciência",
-    "Prática",
-    "Nova visão sobre o cuidado natural"
-];
-
-const lots = [
-    {
-        name: "1º LOTE",
-        presencial: "297,00",
-        online: "97,00",
-        linkPresencial: "https://hotm.io/jbk79m",
-        linkOnline: "https://pay.hotmart.com/T105703302A?off=kois9ees",
-        active: false,
-        esgotado: true
-    },
-    {
-        name: "2º LOTE",
-        presencial: "397,00",
-        online: "127,00",
-        linkPresencial: "https://pay.hotmart.com/T105703302A?off=4yyyvrht",
-        linkOnline: "https://pay.hotmart.com/T105703302A?off=vx9nda8p",
-        active: false,
-        esgotado: true
-    },
-    {
-        name: "3º LOTE",
-        presencial: "597,00",
-        online: "197,00",
-        linkPresencial: "https://pay.hotmart.com/T105703302A?off=54y1vdqc",
-        linkOnline: "https://pay.hotmart.com/T105703302A?off=61wuns59",
-        active: true,
-        esgotado: false
-    }
+    "Quem busca unir ciência, tradição, fé e cuidado integral"
 ];
 
 /* ─────────── HOOKS ─────────── */
@@ -180,19 +127,19 @@ export default function OficinaRemediosPage() {
                     />
                 ))}
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 pt-20 pb-16 lg:py-0">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 pt-36 pb-24 lg:py-20">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                         {/* LEFT — COPY */}
                         <div className="space-y-8 order-2 lg:order-1">
                             {/* Tags */}
-                            <div className="flex items-center gap-3 flex-wrap">
+                            <div className="flex items-center gap-3 flex-wrap mt-4 lg:mt-0">
                                 <span className="of-tag of-tag-gold">
-                                    <Leaf className="w-3.5 h-3.5" />
-                                    Oficina Prática
+                                    <Video className="w-3.5 h-3.5" />
+                                    Aulas Gravadas
                                 </span>
                                 <span className="of-tag">
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                    Inédito
+                                    <Clock className="w-3.5 h-3.5" />
+                                    Acesso por 6 meses
                                 </span>
                             </div>
 
@@ -210,10 +157,13 @@ export default function OficinaRemediosPage() {
                             {/* Context */}
                             <div className="space-y-4 max-w-xl text-[var(--clr-text-muted)] text-lg leading-relaxed">
                                 <p>
-                                    Você já percebeu que muitas pessoas usam plantas medicinais… mas não têm resultado?
+                                    A oficina ao vivo já aconteceu, mas <strong className="text-[var(--clr-text)]">agora você pode ter acesso à gravação completa</strong> e estudar no seu ritmo, de onde estiver.
                                 </p>
-                                <p className="font-semibold text-[var(--clr-text)]">
-                                    Porque não utilizam a “planta certa”.
+                                <p>
+                                    Durante 6 meses, você poderá assistir às aulas quantas vezes quiser pela Hotmart e aprender como preparar remédios caseiros com mais segurança, conhecimento e estratégia.
+                                </p>
+                                <p className="pt-2">
+                                    Muitas pessoas usam plantas medicinais, mas não alcançam resultado porque não sabem escolher:
                                 </p>
                             </div>
 
@@ -221,14 +171,10 @@ export default function OficinaRemediosPage() {
                                 {mistakes.map((m, i) => (
                                     <div key={i} className="flex items-center gap-2 text-sm text-[var(--clr-text-dim)]">
                                         <AlertTriangle className="w-4 h-4 text-[var(--clr-gold)] flex-shrink-0" />
-                                        <span>Existe {m.toLowerCase()}</span>
+                                        <span>{m}</span>
                                     </div>
                                 ))}
                             </div>
-
-                            <p className="text-[var(--clr-emerald-light)] font-medium max-w-xl border-l-2 border-[var(--clr-emerald)] pl-4">
-                                E é exatamente isso que você vai aprender nesta experiência única.
-                            </p>
 
                             {/* CTA */}
                             <div className="space-y-4 pt-4">
@@ -236,7 +182,7 @@ export default function OficinaRemediosPage() {
                                     onClick={() => scrollTo("oferta")}
                                     className="of-cta inline-flex items-center gap-3 px-10 py-5 rounded-2xl text-base sm:text-lg cursor-pointer"
                                 >
-                                    Quero Garantir Minha Vaga
+                                    Quero Acessar as Aulas
                                     <ArrowRight className="w-5 h-5" />
                                 </button>
                             </div>
@@ -259,22 +205,22 @@ export default function OficinaRemediosPage() {
                                 {/* Floating card 1 */}
                                 <div className="of-float absolute -left-4 sm:-left-8 bottom-10 of-glass rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl z-20">
                                     <div className="w-10 h-10 rounded-xl bg-[var(--clr-emerald-deep)] flex items-center justify-center">
-                                        <MapPin className="w-5 h-5 text-[var(--clr-emerald-light)]" />
+                                        <MonitorPlay className="w-5 h-5 text-[var(--clr-emerald-light)]" />
                                     </div>
                                     <div>
-                                        <p className="of-font-heading font-bold text-sm text-[var(--clr-text)]">Presencial</p>
-                                        <p className="text-[10px] text-[var(--clr-text-dim)] uppercase tracking-wider">Vagas Limitadas</p>
+                                        <p className="of-font-heading font-bold text-sm text-[var(--clr-text)]">Gravação Completa</p>
+                                        <p className="text-[10px] text-[var(--clr-text-dim)] uppercase tracking-wider">Estude no seu ritmo</p>
                                     </div>
                                 </div>
 
                                 {/* Floating card 2 */}
                                 <div className="of-float-slow absolute -right-2 sm:-right-6 top-1/4 of-glass rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl z-20" style={{ animationDelay: "2s" }}>
                                     <div className="w-10 h-10 rounded-xl bg-[var(--clr-gold)]/10 flex items-center justify-center">
-                                        <MonitorPlay className="w-5 h-5 text-[var(--clr-gold)]" />
+                                        <Clock className="w-5 h-5 text-[var(--clr-gold)]" />
                                     </div>
                                     <div>
-                                        <p className="of-font-heading font-bold text-sm text-[var(--clr-text)]">Online</p>
-                                        <p className="text-[10px] text-[var(--clr-text-dim)] uppercase tracking-wider">Qualquer Lugar</p>
+                                        <p className="of-font-heading font-bold text-sm text-[var(--clr-text)]">Acesso Estendido</p>
+                                        <p className="text-[10px] text-[var(--clr-text-dim)] uppercase tracking-wider">Por 6 Meses</p>
                                     </div>
                                 </div>
                             </div>
@@ -290,19 +236,10 @@ export default function OficinaRemediosPage() {
 
                 <div className="max-w-6xl mx-auto relative z-10">
                     <Reveal className="text-center space-y-5 mb-16">
-                        <span className="of-tag">Experiência Única</span>
+                        <span className="of-tag">O que você vai aprender</span>
                         <h2 className="of-font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-                            Uma oficina diferente de <em className="text-[var(--clr-emerald-light)] not-italic">tudo</em> o que você já viu
+                            Preparações naturais aplicadas ao cuidado de:
                         </h2>
-                        <p className="text-lg text-[var(--clr-text-muted)] max-w-3xl mx-auto leading-relaxed">
-                            Inspirada nos ensinamentos de <strong className="text-[var(--clr-gold)] font-medium">Santa Hildegarda de Bingen</strong> e unindo ciência, tradição e prática clínica moderna, esta oficina foi criada para ensinar como utilizar plantas medicinais de forma inteligente, segura e estratégica.
-                        </p>
-                    </Reveal>
-
-                    <Reveal delay={1} className="max-w-4xl mx-auto text-center mb-10">
-                        <h3 className="of-font-heading font-bold text-xl text-[var(--clr-text)] mb-8">
-                            Você vai aprender preparações naturais utilizadas no cuidado de:
-                        </h3>
                     </Reveal>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
@@ -332,7 +269,7 @@ export default function OficinaRemediosPage() {
                             Conteúdo Prático
                         </span>
                         <h2 className="of-font-display text-3xl sm:text-4xl font-bold">
-                            O que você vai aprender na Oficina
+                            Nesta oficina, você vai aprender:
                         </h2>
                     </Reveal>
 
@@ -353,61 +290,9 @@ export default function OficinaRemediosPage() {
                 </div>
             </section>
 
-            {/* ═══════ 4. UM EVENTO COM PROPÓSITO ═══════ */}
-            <div className="of-line-gold" />
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-[var(--clr-bg)] via-[var(--clr-surface)]/80 to-[var(--clr-bg)]" />
-
-                <div className="max-w-6xl mx-auto relative z-10">
-                    <div className="of-mission-card p-8 sm:p-12 lg:p-16">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                            <Reveal className="space-y-6">
-                                <span className="of-tag of-tag-gold">
-                                    <Gift className="w-3.5 h-3.5" />
-                                    Evento com Propósito
-                                </span>
-                                <h2 className="of-font-display text-3xl sm:text-4xl font-bold leading-tight">
-                                    Saúde, fé e propósito unidos em uma <em className="text-[var(--clr-gold)] not-italic">única experiência</em>.
-                                </h2>
-
-                                <div className="space-y-4 text-lg text-[var(--clr-text-muted)] leading-relaxed">
-                                    <p>
-                                        Todo o recurso arrecadado nesta oficina será destinado como presente pelos <strong className="text-[var(--clr-text)]">20 anos de missão do Padre Paulo Ricardo</strong>.
-                                    </p>
-                                    <p className="border-l-2 border-[var(--clr-gold)] pl-4 italic">
-                                        Mais do que aprender… você também estará ajudando uma missão de evangelização que transforma vidas.
-                                    </p>
-                                </div>
-
-                                <div className="pt-4">
-                                    <button
-                                        onClick={() => scrollTo("oferta")}
-                                        className="of-cta-gold inline-flex items-center gap-3 px-8 py-4 rounded-xl text-sm sm:text-base cursor-pointer"
-                                    >
-                                        Quero Participar e Ajudar
-                                        <Heart className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </Reveal>
-
-                            <Reveal delay={2} className="flex justify-center lg:justify-end">
-                                <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-[var(--clr-border-gold)]">
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--clr-bg)]/80 via-transparent to-transparent z-10" />
-                                    <img
-                                        src="/padre.jpeg"
-                                        alt="Padre Paulo Ricardo"
-                                        className="w-full h-auto object-cover"
-                                    />
-                                </div>
-                            </Reveal>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ═══════ 5. QUEM É A DRA ISA ═══════ */}
+            {/* ═══════ 4. QUEM É A DRA ISA ═══════ */}
             <div className="of-line" />
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
+            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
                 <div className="max-w-6xl mx-auto relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                         {/* Image */}
@@ -425,7 +310,7 @@ export default function OficinaRemediosPage() {
                         {/* Bio */}
                         <Reveal className="order-1 lg:order-2 space-y-8">
                             <div className="space-y-3">
-                                <span className="of-tag">A Mentora</span>
+                                <span className="of-tag">A Professora</span>
                                 <h2 className="of-font-display text-3xl sm:text-4xl font-bold">
                                     Com quem você vai aprender?
                                 </h2>
@@ -434,13 +319,13 @@ export default function OficinaRemediosPage() {
 
                             <div className="space-y-5 text-[var(--clr-text-muted)] leading-relaxed">
                                 <p>
-                                    A oficina será conduzida por <strong className="text-[var(--clr-text)]">Dra. Isa Bieski (@dra.isafito)</strong>, farmacêutica clínica integrativa, pesquisadora e especialista em fitoterapia baseada em evidências.
+                                    A oficina será conduzida por <strong className="text-[var(--clr-text)]">Dra. Isa Bieski (@dra.isafito)</strong>.
                                 </p>
                                 <p>
-                                    Com <strong className="text-[var(--clr-text)]">mais de 10 anos de prática clínica</strong> e milhares de pacientes atendidos.
+                                    Ela é farmacêutica clínica integrativa, <strong className="text-[var(--clr-text)]">doutora em Ciências da Saúde</strong>, pesquisadora e professora.
                                 </p>
                                 <p>
-                                    Criadora de um método próprio baseado em <strong className="text-[var(--clr-emerald-light)]">epigenética, neuroplasticidade e fitoneuromodulação</strong>.
+                                    Possui ampla experiência clínica em fitoterapia baseada em evidências e <strong className="text-[var(--clr-emerald-light)]">cuidado integral</strong>, unindo ciência rigorosa e a tradição no uso das plantas medicinais.
                                 </p>
                             </div>
                         </Reveal>
@@ -448,9 +333,9 @@ export default function OficinaRemediosPage() {
                 </div>
             </section>
 
-            {/* ═══════ 6. PARA QUEM É ═══════ */}
+            {/* ═══════ 5. PARA QUEM É ═══════ */}
             <div className="of-line" />
-            <section className="py-24 sm:py-32 px-4 sm:px-6 bg-[var(--clr-surface)] relative">
+            <section className="py-24 sm:py-32 px-4 sm:px-6 relative">
                 <div className="max-w-4xl mx-auto">
                     <Reveal className="text-center space-y-5 mb-14">
                         <span className="of-tag of-tag-gold">Para quem é?</span>
@@ -472,182 +357,74 @@ export default function OficinaRemediosPage() {
                 </div>
             </section>
 
-            {/* ═══════ 7. OFERTA + LOTES ═══════ */}
+            {/* ═══════ 6. OFERTA ═══════ */}
             <div className="of-line-thick" />
-            <section id="oferta" className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
+            <section id="oferta" className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
                 <div className="absolute inset-0 bg-gradient-to-b from-[var(--clr-bg)] via-[var(--clr-surface)]/50 to-[var(--clr-bg)]" />
                 <div className="of-orb" style={{ width: 500, height: 500, top: -150, right: -150, background: "radial-gradient(circle, rgba(201,169,110,0.1) 0%, transparent 70%)" }} />
 
-                <div className="max-w-5xl mx-auto relative z-10">
-                    <Reveal className="text-center space-y-6 mb-16">
-                        <span className="of-tag cm-tag-gold">
-                            <MonitorPlay className="w-3.5 h-3.5" />
-                            Presencial & Online
+                <div className="max-w-3xl mx-auto relative z-10">
+                    <Reveal className="text-center space-y-6 mb-12">
+                        <span className="of-tag cm-tag-gold mx-auto">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Acesso Imediato
                         </span>
                         <h2 className="of-font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-                            Modalidades e Lotes Oficiais
+                            Garanta seu acesso agora
                         </h2>
-                        <div className="of-urgency-strip max-w-2xl mx-auto rounded-lg p-3 mt-4 flex items-center justify-center gap-3">
-                            <AlertTriangle className="w-5 h-5 text-[var(--clr-red-alert)]" />
-                            <p className="text-sm font-semibold text-[var(--clr-red-alert)]">
-                                ATENÇÃO: As vagas presenciais serão extremamente limitadas. Os valores aumentam conforme os lotes avançam.
-                            </p>
-                        </div>
-                    </Reveal>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-16">
-                        {lots.map((lote, idx) => (
-                            <Reveal key={idx} delay={idx + 1} className="h-full">
-                                <div className={`of-pricing h-full flex flex-col ${lote.active ? "of-pricing-featured transform scale-105 z-10" : "opacity-80"}`}>
-                                    {lote.active && <div className="of-pricing-ribbon">Lote Atual</div>}
-
-                                    <div className="p-8 text-center border-b border-[var(--clr-border)] bg-[var(--clr-bg)]">
-                                        <h3 className="of-font-heading text-2xl font-black text-[var(--clr-text)] mb-2 mt-4">{lote.name}</h3>
-                                        <div className={`of-lote-badge ${lote.active ? "of-lote-active" : lote.esgotado ? "of-lote-future text-red-500 border-red-500/30 bg-red-500/10" : "of-lote-future"}`}>
-                                            {lote.active ? "Disponível Agora" : lote.esgotado ? "Esgotado" : "Em Breve"}
-                                        </div>
-                                    </div>
-
-                                    <div className="p-8 space-y-6 flex-grow flex flex-col justify-center">
-                                        <div className="text-center space-y-2">
-                                            <p className="text-sm text-[var(--clr-text-dim)] uppercase tracking-widest font-semibold">Presencial</p>
-                                            <p className="text-4xl font-black of-font-heading text-[var(--clr-gold)]">
-                                                <span className="text-lg text-[var(--clr-text-muted)] font-normal mr-1">R$</span>
-                                                {lote.presencial}
-                                            </p>
-                                            <a
-                                                href={lote.active ? lote.linkPresencial : undefined}
-                                                className={`mt-4 w-full py-3 rounded-lg flex justify-center items-center font-bold transition-all ${lote.active ? 'bg-[var(--clr-gold)] text-[var(--clr-bg)] hover:brightness-110' : 'bg-[var(--clr-surface)] text-[var(--clr-text-dim)] cursor-not-allowed pointer-events-none'}`}
-                                            >
-                                                {lote.esgotado ? "Esgotado" : "Garantir Presencial"}
-                                            </a>
-                                        </div>
-
-                                        <div className="h-px w-full bg-[var(--clr-border)] relative my-4">
-                                            <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--clr-surface)] px-2 text-xs text-[var(--clr-text-dim)]">OU</div>
-                                        </div>
-
-                                        <div className="text-center space-y-2">
-                                            <p className="text-sm text-[var(--clr-text-dim)] uppercase tracking-widest font-semibold">Online</p>
-                                            <p className="text-4xl font-black of-font-heading text-[var(--clr-emerald-light)]">
-                                                <span className="text-lg text-[var(--clr-text-muted)] font-normal mr-1">R$</span>
-                                                {lote.online}
-                                            </p>
-                                            <a
-                                                href={lote.active ? lote.linkOnline : undefined}
-                                                className={`mt-4 w-full py-3 rounded-lg flex justify-center items-center font-bold transition-all ${lote.active ? 'bg-[var(--clr-emerald)] text-white hover:brightness-110' : 'bg-[var(--clr-surface)] text-[var(--clr-text-dim)] cursor-not-allowed pointer-events-none'}`}
-                                            >
-                                                {lote.esgotado ? "Esgotado" : "Garantir Online"}
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Reveal>
-                        ))}
-                    </div>
-
-                    <Reveal className="max-w-2xl mx-auto">
-                        <div className="of-glass rounded-2xl p-8 space-y-6 text-center">
-                            <h3 className="of-font-heading text-xl font-bold text-[var(--clr-text)]">O que está incluso?</h3>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                                <div className="flex items-center gap-3 text-sm">
-                                    <Award className="w-5 h-5 text-[var(--clr-gold)] flex-shrink-0" />
-                                    <span className="text-[var(--clr-text-muted)]">Certificado de Participação</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-sm">
-                                    <MessageCircle className="w-5 h-5 text-[var(--clr-emerald-light)] flex-shrink-0" />
-                                    <span className="text-[var(--clr-text-muted)]">Grupo no WhatsApp para dúvidas com a Dra. Isa (30 dias)</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-sm">
-                                    <Video className="w-5 h-5 text-[var(--clr-emerald-light)] flex-shrink-0" />
-                                    <span className="text-[var(--clr-text-muted)]">Sala de aula na HOTMART (Acesso por 6 meses)</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-sm">
-                                    <Heart className="w-5 h-5 text-[var(--clr-gold)] flex-shrink-0" />
-                                    <span className="text-[var(--clr-text-muted)]">Apoio à missão do Pe. Paulo Ricardo</span>
-                                </div>
-                            </div>
-
-                            <div className="pt-6">
-                                <button
-                                    onClick={() => scrollTo("oferta")}
-                                    className="of-cta block w-full py-5 rounded-xl text-base sm:text-lg cursor-pointer"
-                                >
-                                    Escolher Meu Lote Acima
-                                </button>
-                                <p className="text-xs text-[var(--clr-text-dim)] mt-4">
-                                    Se você deseja aprender fitoterapia de verdade… com profundidade, propósito e aplicação prática, essa pode ser a oportunidade mais especial do ano.
-                                </p>
-                            </div>
-                        </div>
-                    </Reveal>
-                </div>
-            </section>
-
-            {/* ═══════ 8. PATROCINADORES ═══════ */}
-            <div className="of-line" />
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative bg-[var(--clr-surface)]/30">
-                <div className="max-w-6xl mx-auto relative z-10 text-center">
-                    <Reveal className="space-y-6 mb-12">
-                        <span className="of-tag mx-auto">Parceiros</span>
-                        <h2 className="of-font-display text-3xl sm:text-4xl font-bold">
-                            Patrocinadores <em className="text-[var(--clr-gold)] not-italic">&</em> Apoio
-                        </h2>
-                        <p className="text-[var(--clr-text-muted)] max-w-2xl mx-auto">
-                            Empresas e instituições que acreditam na nossa missão de levar saúde natural e evangelização para o mundo.
+                        <p className="text-[var(--clr-text-muted)] text-lg">
+                            Aprenda a usar as plantas medicinais com mais consciência, segurança e propósito.
                         </p>
                     </Reveal>
 
                     <Reveal delay={1}>
-                        <div className="of-sponsors-grid flex flex-wrap justify-center items-center gap-12">
-                            {/* Em breve / Espaço reservado */}
-                            <div className="p-8 border border-dashed border-[var(--clr-border)] rounded-2xl flex items-center justify-center min-w-[240px] group hover:border-[var(--clr-gold)] transition-colors duration-500">
-                                <span className="text-[var(--clr-text-dim)] group-hover:text-[var(--clr-gold)] font-medium italic transition-colors">Em breve...</span>
+                        <div className="of-pricing of-pricing-featured p-1 lg:p-2 bg-gradient-to-b from-[var(--clr-gold)] to-[var(--clr-emerald-deep)] rounded-3xl">
+                            <div className="bg-[var(--clr-bg)] rounded-2xl p-8 sm:p-12 h-full flex flex-col items-center text-center">
+                                <h3 className="of-font-heading text-2xl font-black text-[var(--clr-text)] mb-6">Oficina de Remédios Caseiros</h3>
+                                
+                                <div className="text-center space-y-2 mb-8">
+                                    <p className="text-sm text-[var(--clr-text-dim)] uppercase tracking-widest font-semibold">Investimento</p>
+                                    <p className="text-5xl sm:text-6xl font-black of-font-heading text-[var(--clr-gold)]">
+                                        <span className="text-2xl text-[var(--clr-text-muted)] font-normal mr-1">R$</span>
+                                        197,00
+                                    </p>
+                                    <p className="text-sm text-[var(--clr-emerald-light)] font-medium pt-2">
+                                        Acesso por 6 meses na Hotmart.
+                                    </p>
+                                </div>
+
+                                <div className="w-full space-y-4 text-left border-t border-[var(--clr-border)] pt-8 mb-8">
+                                    <h4 className="font-bold text-[var(--clr-text)] text-lg mb-4 text-center">Ao adquirir, você recebe:</h4>
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <Video className="w-5 h-5 text-[var(--clr-gold)] flex-shrink-0" />
+                                        <span className="text-[var(--clr-text-muted)]">Acesso à gravação completa por 6 meses</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <Award className="w-5 h-5 text-[var(--clr-emerald-light)] flex-shrink-0" />
+                                        <span className="text-[var(--clr-text-muted)]">Certificado de participação</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <MessageCircle className="w-5 h-5 text-[var(--clr-gold)] flex-shrink-0" />
+                                        <span className="text-[var(--clr-text-muted)]">Grupo exclusivo no WhatsApp por 30 dias para tirar dúvidas com a Dra. Isa</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <BookOpen className="w-5 h-5 text-[var(--clr-emerald-light)] flex-shrink-0" />
+                                        <span className="text-[var(--clr-text-muted)]">E-book exclusivo com 50 receitas de remédios caseiros</span>
+                                    </div>
+                                </div>
+
+                                <a
+                                    href="https://pay.hotmart.com/T105703302A?off=61wuns59"
+                                    className="of-cta-gold w-full py-5 rounded-xl text-lg font-bold flex justify-center items-center gap-2 hover:scale-105 transition-transform"
+                                >
+                                    Quero Acessar Agora
+                                    <ArrowRight className="w-5 h-5" />
+                                </a>
+                                <p className="flex items-center justify-center gap-2 text-xs text-[var(--clr-text-dim)] mt-4">
+                                    <Shield className="w-4 h-4 text-[var(--clr-emerald)]" />
+                                    Pagamento 100% seguro via Hotmart
+                                </p>
                             </div>
-                        </div>
-                    </Reveal>
-                </div>
-            </section>
-
-            {/* ═══════ 9. FINAL ═══════ */}
-            <div className="of-line" />
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden of-noise">
-                <div className="absolute inset-0 bg-gradient-to-br from-[var(--clr-emerald-deep)] via-[var(--clr-bg)] to-[var(--clr-surface)]" />
-                <div className="of-orb" style={{ width: 600, height: 600, top: -200, right: -200, background: "radial-gradient(circle, rgba(61,139,110,0.12) 0%, transparent 70%)" }} />
-
-                <div className="max-w-3xl mx-auto relative z-10 text-center space-y-10">
-                    <Reveal className="space-y-6">
-                        <span className="of-tag of-tag-gold mx-auto">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Transformação
-                        </span>
-                        <h2 className="of-font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-                            Você não vai sair dessa oficina <em className="text-[var(--clr-emerald-light)] not-italic">apenas</em> com conhecimento.
-                        </h2>
-
-                        <div className="flex flex-wrap justify-center gap-3 pt-4">
-                            {takeaways.map((item, idx) => (
-                                <span key={idx} className="bg-[var(--clr-surface)] border border-[var(--clr-border-strong)] px-4 py-2 rounded-full text-sm text-[var(--clr-text-muted)]">
-                                    {item}
-                                </span>
-                            ))}
-                        </div>
-                    </Reveal>
-
-                    <Reveal>
-                        <div className="space-y-6 pt-6">
-                            <button
-                                onClick={() => scrollTo("oferta")}
-                                className="of-cta-gold inline-flex items-center gap-3 px-10 py-5 rounded-2xl text-lg sm:text-xl cursor-pointer shadow-2xl shadow-[var(--clr-gold)]/20"
-                            >
-                                Garantir Minha Vaga
-                                <ArrowRight className="w-6 h-6" />
-                            </button>
-                            <p className="flex items-center justify-center gap-2 text-sm text-[var(--clr-text-dim)]">
-                                <Shield className="w-4 h-4 text-[var(--clr-emerald)]" />
-                                Pagamento 100% seguro via Hotmart
-                            </p>
                         </div>
                     </Reveal>
                 </div>
