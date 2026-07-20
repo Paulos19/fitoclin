@@ -553,18 +553,21 @@ export default function DesafioMEI7DiasPage() {
                             </div>
 
                             <div className="space-y-5 text-[var(--clr-text-muted)] leading-relaxed">
-                                <ul className="space-y-2 list-disc list-inside text-[var(--clr-text)] font-medium">
-                                    <li>Farmacêutica Clínica Integrativa.</li>
-                                    <li>Bióloga.</li>
-                                    <li>Química.</li>
-                                    <li>Doutora em Ciências da Saúde.</li>
-                                    <li>Pós-doutora em Plantas Medicinais.</li>
-                                </ul>
-                                <p>
-                                    Mais de 20 anos dedicados ao cuidado integral da saúde. Mais de mil mulheres acompanhadas com resultados reais.
+                                <p className="text-[var(--clr-text)] font-medium">
+                                    Farmacêutica Clínica Integrativa • Bióloga • Química<br/>
+                                    Doutora em Ciências da Saúde • Pós-doutora em Plantas Medicinais
                                 </p>
                                 <p>
-                                    Criadora do Método de Emagrecimento Inteligente (MEI), que integra ciência, fitoterapia, alimentação inteligente, movimento, motivação e espiritualidade para promover uma transformação sustentável.
+                                    Depois de enfrentar a própria luta contra a obesidade e emagrecer 34 kg, transformou sua experiência em um método baseado em ciência e prática clínica.
+                                </p>
+                                <p>
+                                    Criou o Método de Emagrecimento Inteligente (MEI), uma abordagem integrativa que une ciência, fitoterapia, alimentação inteligente, movimento, motivação e espiritualidade para promover um emagrecimento sustentável.
+                                </p>
+                                <p>
+                                    Com mais de 20 anos de experiência clínica, já ajudou mais de 1.000 mulheres a emagrecerem, recuperarem a saúde, melhorarem a autoestima e conquistarem uma nova relação com o próprio corpo.
+                                </p>
+                                <p>
+                                    Agora, no Desafio MEI 7 Dias, ela vai mostrar a você o mesmo caminho que transformou a sua vida e a de centenas de mulheres: um método que ensina a entender o corpo, destravar o metabolismo e emagrecer sem viver presa às dietas da moda.
                                 </p>
                             </div>
                         </RevealSection>
