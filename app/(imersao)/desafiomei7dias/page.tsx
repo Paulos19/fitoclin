@@ -234,7 +234,7 @@ export default function DesafioMEI7DiasPage() {
                                 style={{ transform: `translateY(${-parallaxY * 0.3}px)` }}
                             >
                                 <img
-                                    src="/bannerimersao.jpeg"
+                                    src="/WhatsApp%20Image%202026-07-20%20at%2018.23.30.jpeg"
                                     alt="Desafio MEI 7 Dias — Dra. Isa Bieski"
                                     className="w-full h-auto max-h-[450px] lg:max-h-[550px] object-cover object-top rounded-2xl shadow-2xl"
                                     style={{ filter: "brightness(1.02)" }}
@@ -477,7 +477,7 @@ export default function DesafioMEI7DiasPage() {
                                     <div className="border-t border-[var(--clr-border)] pt-6 space-y-5">
                                         <span className="text-[10px] uppercase tracking-widest font-semibold text-[var(--clr-text-dim)]">Investimento</span>
                                         <p className="text-4xl font-black font-heading text-[var(--clr-text)]">
-                                            R$ 97,00
+                                            R$ 47,00
                                         </p>
                                         <a
                                             href="/api/checkout/essencial"
@@ -518,7 +518,7 @@ export default function DesafioMEI7DiasPage() {
                                     <div className="border-t border-[var(--clr-gold-dark)]/30 pt-6 space-y-5">
                                         <span className="text-[10px] uppercase tracking-widest font-semibold text-[var(--clr-gold)]">Investimento</span>
                                         <p className="text-4xl font-black font-heading text-[var(--clr-text)]">
-                                            R$ 147,00
+                                            R$ 97,00
                                         </p>
                                         <a
                                             href="/api/checkout/premium"
@@ -531,6 +531,15 @@ export default function DesafioMEI7DiasPage() {
                             </div>
                         </RevealSection>
                     </div>
+
+                    {/* ═══════════ BÔNUS ═══════════ */}
+                    <RevealSection className="mt-16 flex justify-center px-4">
+                        <img
+                            src="/WhatsApp%20Image%202026-07-20%20at%2019.36.24.jpeg"
+                            alt="Bônus: Sorteio Cafeteira MEI"
+                            className="w-full max-w-4xl h-auto rounded-3xl shadow-2xl border border-[var(--clr-gold)]/30"
+                        />
+                    </RevealSection>
                 </div>
             </section>
             <div className="gold-line" />
@@ -576,7 +585,7 @@ export default function DesafioMEI7DiasPage() {
                         <RevealSection className="order-2 lg:order-2">
                             <div className="about-image-mask rounded-2xl overflow-hidden shadow-2xl">
                                 <img
-                                    src="/WhatsApp%20Image%202026-04-01%20at%2010.25.25.jpeg"
+                                    src="/WhatsApp%20Image%202026-07-20%20at%2019.36.52.jpeg"
                                     alt="Dra. Isa Bieski"
                                     className="w-full h-auto"
                                     style={{ transform: `translateY(${parallaxY * 0.1}px)`, transition: "transform 0.1s linear" }}
