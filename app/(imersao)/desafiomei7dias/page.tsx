@@ -25,7 +25,9 @@ import {
     BookOpen,
     Heart,
     CheckCircle2,
-    Target
+    Target,
+    FileText,
+    Compass
 } from "lucide-react";
 import "./imersao.css";
 
@@ -78,6 +80,56 @@ const testimonials = [
     },
 ];
 
+const deliverables = [
+    {
+        icon: Video,
+        title: "Aula ao vivo com a Dra. Isa",
+        description: "Uma aula especial para você entender por que tantas mulheres não conseguem emagrecer, mesmo tentando de tudo, e o que realmente precisa ser ajustado na sua realidade.",
+        tag: "Encontro ao Vivo"
+    },
+    {
+        icon: Calendar,
+        title: "Cronograma Emagrecimento Inteligente",
+        description: "Você vai aprender os principais fatores que podem estar travando seus resultados, como inflamação, ansiedade, intestino, sono, hormônios e hábitos e o que fazer no seu dia a dia para organizar seu organismo.",
+        tag: "Organização Passo a Passo"
+    },
+    {
+        icon: Salad,
+        title: "Estratégia Alimentar Inteligente",
+        description: "Orientações práticas e personalizadas, com chás e dieta, para ajudar você a reduzir o inchaço, controlar a fome, diminuir a vontade de comer doces e fazer escolhas mais inteligentes.",
+        tag: "Nutrição & Fitoterapia"
+    },
+    {
+        icon: Sparkles,
+        title: "Pílulas de Transformação Alimentar",
+        description: "Conteúdos curtos e poderosos para fortalecer sua mentalidade, melhorar sua relação com a comida e aumentar sua constância no processo.",
+        tag: "Mentalidade & Hábitos"
+    },
+    {
+        icon: Target,
+        title: "Plano de Ação Inicial",
+        description: "Ao final da aula, você terá direcionamentos claros e aplicáveis para começar sua mudança com mais segurança, consciência e estratégia.",
+        tag: "Direcionamento Prático"
+    }
+];
+
+const bonuses = [
+    {
+        badge: "BÔNUS 1",
+        title: "Kit Rotina Leve e Saudável",
+        icon: BookOpen,
+        description: "Você receberá o e-book “Os 30 Chás que Transformam sua Rotina”, com orientações práticas para inserir os chás no dia a dia, além de um planner mensal para organizar seus hábitos e acompanhar sua evolução.",
+        tag: "E-book + Planner Mensal"
+    },
+    {
+        badge: "BÔNUS 2",
+        title: "Mapa da Sua Situação Atual",
+        icon: Compass,
+        description: "A partir das suas respostas, será realizada uma análise inicial dos seus hábitos, dificuldades e principais fatores que podem estar interferindo no seu emagrecimento, para que você tenha mais clareza sobre por onde começar.",
+        tag: "Análise Inicial Personalizada"
+    }
+];
+
 const learningItems = [
     "Como despertar seu metabolismo.",
     "Como reduzir inflamação.",
@@ -103,29 +155,9 @@ const faqItems = [
     { q: "O que é o Desafio MEI 7 Dias?", a: "É um programa intensivo criado pela Dra. Isa Bieski para ajudar mulheres que desejam emagrecer com saúde, equilíbrio e estratégia." },
     { q: "Para quem é o Desafio?", a: "Para mulheres que já tentaram dieta, jejum, e receitas, mas sempre recuperam o peso. Um método para tratar a causa e não apenas a balança." },
     { q: "Onde vai acontecer?", a: "Online, para você participar de qualquer lugar. No dia 08 de agosto, sábado, às 10h (horário de Brasília)." },
-    { q: "Vai ter gravação?", a: "Se você optar pelo ingresso PREMIUM, terá acesso ao replay da aula para assistir quantas vezes quiser." },
-    { q: "Como faço para me inscrever?", a: "Basta clicar em qualquer botão desta página, escolher seu ingresso e concluir o pagamento." },
-    { q: "Quais as formas de pagamento?", a: "Você pode pagar no cartão de crédito, PIX ou boleto. As opções estão na página de checkout." },
-];
-
-const essentialFeatures = [
-    "Aula ao vivo",
-    "Participação no Desafio MEI 7 Dias",
-    "Material digital",
-    "Acesso durante a transmissão",
-];
-
-const premiumFeatures = [
-    "Aula ao vivo + Participação no Desafio",
-    "Replay da aula para assistir quantas vezes quiser",
-    "Sete encontros ao vivo após o desafio",
-    "Clube ISA MEI exclusivo no WhatsApp",
-    "Acompanhamento da Dra. Isa",
-    "Correção de dúvidas",
-    "Receitas funcionais",
-    "Planner exclusivo e Materiais complementares",
-    "Comunidade exclusiva e Certificado",
-    "Participação no sorteio: 1 Cafeteira Francesa e 1 Consulta completa com a Dra. Isa",
+    { q: "Como terei acesso?", a: "Após a confirmação da sua inscrição, você receberá no seu e-mail e WhatsApp o link exclusivo de acesso à sala da aula e todos os materiais." },
+    { q: "Como faço para me inscrever?", a: "Basta clicar em qualquer botão desta página, garantir sua vaga e concluir o pagamento único de R$ 47,00." },
+    { q: "Quais as formas de pagamento?", a: "Você pode pagar via Cartão de Crédito (em até 12x), PIX ou Boleto." },
 ];
 
 const pillars = [
@@ -183,14 +215,14 @@ export default function DesafioMEI7DiasPage() {
         <main className="imersao-container">
 
             {/* ═══════════ HERO ═══════════ */}
-            <section className="hero-section noise-overlay relative min-h-[90vh] flex items-center">
+            <section className="hero-section noise-overlay relative min-h-[90vh] flex items-center py-20 sm:py-28 lg:py-36">
                 <div className="hero-gradient-orb" style={{ width: 600, height: 600, top: -200, right: -200, background: "radial-gradient(circle, rgba(201,169,110,0.12) 0%, transparent 70%)" }} />
                 <div className="hero-gradient-orb" style={{ width: 400, height: 400, bottom: -100, left: -100, background: "radial-gradient(circle, rgba(74,124,92,0.15) 0%, transparent 70%)" }} />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
                         {/* LEFT — COPY */}
-                        <div className="space-y-8 py-12 lg:py-0 order-2 lg:order-1">
+                        <div className="space-y-8 py-6 lg:py-0 order-2 lg:order-1">
                             <div className="flex items-center gap-3">
                                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-[var(--clr-border-strong)] text-[var(--clr-gold)]">
                                     <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -199,7 +231,7 @@ export default function DesafioMEI7DiasPage() {
                             </div>
 
                             <p className="text-xl sm:text-2xl font-semibold text-[var(--clr-gold)] leading-relaxed italic border-l-2 border-[var(--clr-gold-dark)] pl-4">
-                                "Você não precisa de mais uma dieta. Você precisa de um método que ensine seu corpo a voltar a emagrecer."
+                                &ldquo;Você não precisa de mais uma dieta. Você precisa de um método que ensine seu corpo a voltar a emagrecer.&rdquo;
                             </p>
 
                             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
@@ -248,8 +280,8 @@ export default function DesafioMEI7DiasPage() {
 
             {/* ═══════════ EVENT DETAILS BAR ═══════════ */}
             <div className="gold-line" />
-            <section className="bg-[var(--clr-surface)] py-8 px-4">
-                <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <section className="bg-[var(--clr-surface)] py-12 sm:py-16 px-4">
+                <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6">
                     {[
                         { icon: Calendar, label: "Data", value: "08 de agosto (sábado)" },
                         { icon: Clock, label: "Horário", value: "10h (Brasília)" },
@@ -266,14 +298,14 @@ export default function DesafioMEI7DiasPage() {
             <div className="gold-line" />
 
             {/* ═══════════ TALVEZ O PROBLEMA NUNCA TENHA SIDO VOCÊ ═══════════ */}
-            <section className="py-24 sm:py-32 px-4 sm:px-6 noise-overlay relative">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 noise-overlay relative">
                 <div className="max-w-4xl mx-auto relative z-10 text-center space-y-8">
                     <RevealSection>
                         <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
                             Talvez o problema <em className="text-[var(--clr-gold)] not-italic">nunca tenha sido você…</em>
                         </h2>
                     </RevealSection>
-                    
+
                     <RevealSection delay={1} className="text-lg text-[var(--clr-text-muted)] space-y-4 max-w-2xl mx-auto text-left">
                         <p>Você já tentou dieta.</p>
                         <p>Já começou na segunda-feira.</p>
@@ -299,7 +331,7 @@ export default function DesafioMEI7DiasPage() {
             </section>
 
             {/* ═══════════ O QUE É O DESAFIO ═══════════ */}
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
                 <div className="max-w-6xl mx-auto relative z-10">
                     <RevealSection className="text-center space-y-5 mb-16">
                         <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest border border-[var(--clr-border-strong)] text-[var(--clr-gold)]">
@@ -319,9 +351,9 @@ export default function DesafioMEI7DiasPage() {
                                 Durante sete dias você receberá orientações práticas para reorganizar sua alimentação, reduzir a inflamação, controlar a fome emocional, estimular o metabolismo e construir hábitos sustentáveis.
                             </p>
                             <ul className="space-y-3 font-medium text-[var(--clr-text)] pt-4">
-                                <li className="flex items-center gap-3"><X className="text-red-400 w-5 h-5"/> Não é uma dieta.</li>
-                                <li className="flex items-center gap-3"><X className="text-red-400 w-5 h-5"/> Não é uma promessa milagrosa.</li>
-                                <li className="flex items-center gap-3"><Check className="text-[var(--clr-green)] w-5 h-5"/> É um método construído com mais de 20 anos de prática clínica e aplicado em mais de mil mulheres.</li>
+                                <li className="flex items-center gap-3"><X className="text-red-400 w-5 h-5" /> Não é uma dieta restritiva.</li>
+                                <li className="flex items-center gap-3"><X className="text-red-400 w-5 h-5" /> Não é uma promessa milagrosa.</li>
+                                <li className="flex items-center gap-3"><Check className="text-[var(--clr-green)] w-5 h-5" /> É um método construído com mais de 20 anos de prática clínica e aplicado em mais de mil mulheres.</li>
                             </ul>
                         </RevealSection>
 
@@ -344,8 +376,110 @@ export default function DesafioMEI7DiasPage() {
                 </div>
             </section>
 
+            {/* ═══════════ O QUE VOCÊ VAI RECEBER ═══════════ */}
+            <div className="gold-line-thick" />
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-bg)]">
+                <div className="hero-gradient-orb" style={{ width: 500, height: 500, top: "20%", left: "-10%", background: "radial-gradient(circle, rgba(201,169,110,0.08) 0%, transparent 70%)" }} />
+
+                <div className="max-w-6xl mx-auto relative z-10">
+                    <RevealSection className="text-center space-y-5 mb-16">
+                        <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest border border-[var(--clr-border-strong)] text-[var(--clr-gold)]">
+                            Conteúdo Completo
+                        </span>
+                        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold">
+                            O que você vai receber
+                        </h2>
+                        <p className="text-lg text-[var(--clr-text-muted)] max-w-2xl mx-auto">
+                            Tudo o que está incluso no seu acesso para transformar seu corpo, metabolismo e rotina.
+                        </p>
+                    </RevealSection>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {deliverables.map((item, idx) => (
+                            <RevealSection key={idx} delay={(idx % 3) + 1}>
+                                <div className="deliverable-card h-full">
+                                    <div className="flex items-center justify-between">
+                                        <div className="deliverable-icon-wrapper">
+                                            <item.icon className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[var(--clr-gold)]/10 text-[var(--clr-gold)] border border-[var(--clr-gold)]/20">
+                                            {item.tag}
+                                        </span>
+                                    </div>
+                                    <h3 className="font-heading font-bold text-xl text-[var(--clr-text)] pt-2">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-sm text-[var(--clr-text-muted)] leading-relaxed">
+                                        {item.description}
+                                    </p>
+                                </div>
+                            </RevealSection>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ═══════════ BÔNUS EXCLUSIVOS ═══════════ */}
+            <div className="gold-line" />
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
+                <div className="hero-gradient-orb" style={{ width: 400, height: 400, bottom: "10%", right: "-5%", background: "radial-gradient(circle, rgba(74,124,92,0.15) 0%, transparent 70%)" }} />
+
+                <div className="max-w-5xl mx-auto relative z-10">
+                    <RevealSection className="text-center space-y-5 mb-16">
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest border border-[var(--clr-gold-dark)] text-[var(--clr-gold)] bg-[var(--clr-gold)]/10">
+                            <Sparkles className="w-4 h-4 text-[var(--clr-gold)]" />
+                            Presentes Especiais
+                        </span>
+                        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold">
+                            Bônus Exclusivos
+                        </h2>
+                        <p className="text-lg text-[var(--clr-text-muted)] max-w-2xl mx-auto">
+                            Ao se inscrever hoje, você recebe gratuitamente estes dois bônus desenvolvidos para acelerar e facilitar o seu processo.
+                        </p>
+                    </RevealSection>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {bonuses.map((bonus, idx) => (
+                            <RevealSection key={idx} delay={idx + 1}>
+                                <div className="bonus-card h-full flex flex-col justify-between">
+                                    <div className="space-y-5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="bonus-badge">
+                                                <Gift className="w-3.5 h-3.5" />
+                                                {bonus.badge}
+                                            </span>
+                                            <span className="text-xs font-semibold text-[var(--clr-gold-light)] bg-[var(--clr-surface)] px-3 py-1 rounded-full border border-[var(--clr-border-strong)]">
+                                                {bonus.tag}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 pt-2">
+                                            <div className="w-10 h-10 rounded-xl bg-[var(--clr-gold)]/15 flex items-center justify-center text-[var(--clr-gold)] border border-[var(--clr-gold)]/30">
+                                                <bonus.icon className="w-5 h-5" />
+                                            </div>
+                                            <h3 className="font-heading font-bold text-2xl text-[var(--clr-text)]">
+                                                {bonus.title}
+                                            </h3>
+                                        </div>
+
+                                        <p className="text-sm text-[var(--clr-text-muted)] leading-relaxed pt-2">
+                                            {bonus.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-6 border-t border-[var(--clr-border)] mt-6 flex items-center justify-between text-xs text-[var(--clr-gold)] font-medium">
+                                        <span>Incluso 100% Grátis na sua inscrição</span>
+                                        <CheckCircle2 className="w-4 h-4 text-[var(--clr-green)]" />
+                                    </div>
+                                </div>
+                            </RevealSection>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ═══════════ COMO SERÃO OS 7 DIAS ═══════════ */}
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative">
                 <div className="max-w-5xl mx-auto relative z-10">
                     <RevealSection className="text-center space-y-5 mb-16">
                         <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest border border-[var(--clr-border-strong)] text-[var(--clr-green-light)]">
@@ -372,7 +506,7 @@ export default function DesafioMEI7DiasPage() {
             </section>
 
             {/* ═══════════ 5 PILARES ═══════════ */}
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
                 <div className="absolute inset-0 bg-gradient-to-b from-[var(--clr-bg)] via-[var(--clr-green-deep)]/10 to-[var(--clr-bg)]" />
                 <div className="max-w-6xl mx-auto relative z-10">
                     <RevealSection className="text-center space-y-5 mb-16">
@@ -401,7 +535,7 @@ export default function DesafioMEI7DiasPage() {
             </section>
 
             {/* ═══════════ DEPOIMENTOS ═══════════ */}
-            <section className="py-24 sm:py-32 px-4 sm:px-6 noise-overlay relative">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 noise-overlay relative">
                 <div className="max-w-6xl mx-auto relative z-10">
                     <RevealSection className="text-center space-y-5 mb-16">
                         <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest border border-[var(--clr-border-strong)] text-[var(--clr-gold)]">
@@ -437,115 +571,106 @@ export default function DesafioMEI7DiasPage() {
                 </div>
             </section>
 
-            {/* ═══════════ INGRESSOS ═══════════ */}
+            {/* ═══════════ INGRESSO / INVESTIMENTO (PLANO ESSENCIAL ÚNICO) ═══════════ */}
             <div className="gold-line-thick" />
-            <section id="ingressos" className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
+            <section id="ingressos" className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative overflow-hidden bg-[var(--clr-surface)]">
                 <div className="absolute inset-0 bg-gradient-to-b from-[var(--clr-bg)] via-[var(--clr-surface)]/50 to-[var(--clr-bg)]" />
 
-                <div className="max-w-5xl mx-auto relative z-10">
+                <div className="max-w-4xl mx-auto relative z-10">
                     <RevealSection className="text-center space-y-6 mb-16 max-w-3xl mx-auto">
                         <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest border border-[var(--clr-border-strong)] text-[var(--clr-gold)]">
-                            Escolha Sua Experiência
+                            Inscrição Aberta
                         </span>
                         <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-                            DESAFIO MEI 7 DIAS
+                            GARANTA SUA VAGA NO DESAFIO MEI 7 DIAS
                         </h2>
+                        <p className="text-lg text-[var(--clr-text-muted)]">
+                            Acesso completo a todas as aulas, estratégias e bônus pelo valor promocional de lançamento.
+                        </p>
                     </RevealSection>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                        {/* ESSENCIAL */}
-                        <RevealSection delay={1}>
-                            <div className="pricing-card p-8 sm:p-10">
-                                <div className="space-y-8">
-                                    <div className="space-y-2">
-                                        <h3 className="font-heading text-xl font-bold text-[var(--clr-text)]">ESSENCIAL</h3>
-                                        <p className="text-sm text-[var(--clr-text-dim)]">
-                                            Para quem deseja participar da aula e realizar o desafio de forma independente.
-                                        </p>
-                                    </div>
+                    <RevealSection>
+                        <div className="single-pricing-card glow-gold-strong">
+                            <div className="single-pricing-header space-y-3">
+                                <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[var(--clr-gold)] bg-[var(--clr-gold)]/10 px-4 py-1.5 rounded-full border border-[var(--clr-gold)]/30">
+                                    <Star className="w-3.5 h-3.5 fill-[var(--clr-gold)]" />
+                                    PLANO COMPLETO — ESSENCIAL
+                                </span>
+                                <h3 className="font-heading text-2xl sm:text-3xl font-extrabold text-[var(--clr-text)]">
+                                    DESAFIO MEI 7 DIAS
+                                </h3>
+                                <p className="text-sm text-[var(--clr-text-muted)] max-w-lg mx-auto">
+                                    Tudo o que você precisa para destravar seu metabolismo e reorganizar sua saúde com a Dra. Isa Bieski.
+                                </p>
+                            </div>
 
-                                    <ul className="space-y-3">
-                                        <li className="font-semibold text-[var(--clr-text)] text-sm mb-4">Você recebe:</li>
-                                        {essentialFeatures.map((f, i) => (
-                                            <li key={i} className="flex items-start gap-3 text-sm">
-                                                <Check className="w-4 h-4 text-[var(--clr-green)] mt-0.5 flex-shrink-0" />
-                                                <span className="text-[var(--clr-text-muted)]">{f}</span>
-                                            </li>
+                            <div className="p-8 sm:p-12 space-y-10">
+                                <div className="space-y-4">
+                                    <h4 className="font-semibold text-xs uppercase tracking-widest text-[var(--clr-gold)]">
+                                        Tudo o que você vai receber:
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {[
+                                            "Aula ao vivo com a Dra. Isa Bieski",
+                                            "Cronograma Emagrecimento Inteligente",
+                                            "Estratégia Alimentar Inteligente (dieta e chás)",
+                                            "Pílulas de Transformação Alimentar",
+                                            "Plano de Ação Inicial",
+                                            "BÔNUS 1: Kit Rotina Leve e Saudável (E-book + Planner)",
+                                            "BÔNUS 2: Mapa da Sua Situação Atual (Análise inicial)",
+                                            "7 Dias de Garantia Incondicional"
+                                        ].map((feature, i) => (
+                                            <div key={i} className="flex items-center gap-3 text-sm">
+                                                <CheckCircle2 className="w-5 h-5 text-[var(--clr-gold)] flex-shrink-0" />
+                                                <span className="text-[var(--clr-text)] font-medium">{feature}</span>
+                                            </div>
                                         ))}
-                                    </ul>
-
-                                    <div className="border-t border-[var(--clr-border)] pt-6 space-y-5">
-                                        <span className="text-[10px] uppercase tracking-widest font-semibold text-[var(--clr-text-dim)]">Investimento</span>
-                                        <p className="text-4xl font-black font-heading text-[var(--clr-text)]">
-                                            R$ 47,00
-                                        </p>
-                                        <a
-                                            href="/api/checkout/essencial"
-                                            className="cta-primary block w-full text-center py-4 rounded-xl text-sm cursor-pointer"
-                                        >
-                                            QUERO O ESSENCIAL
-                                        </a>
                                     </div>
                                 </div>
-                            </div>
-                        </RevealSection>
 
-                        {/* PREMIUM */}
-                        <RevealSection delay={2}>
-                            <div className="pricing-card premium p-8 sm:p-10 pt-14 sm:pt-16 glow-gold-strong">
-                                <div className="pricing-ribbon">A Experiência Completa</div>
-                                <div className="space-y-8">
+                                <div className="border-t border-[var(--clr-border-strong)] pt-8 text-center space-y-6">
                                     <div className="space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <Star className="w-5 h-5 text-[var(--clr-gold)]" />
-                                            <h3 className="font-heading text-xl font-bold text-[var(--clr-text)]">PREMIUM</h3>
+                                        <span className="text-xs uppercase tracking-widest font-semibold text-[var(--clr-text-dim)]">
+                                            Valor Promocional Único
+                                        </span>
+                                        <div className="flex items-baseline justify-center gap-2">
+                                            <span className="text-xl text-[var(--clr-text-muted)]">R$</span>
+                                            <span className="text-5xl sm:text-6xl font-black font-heading text-[var(--clr-gold-light)]">
+                                                47,00
+                                            </span>
                                         </div>
-                                        <p className="text-sm text-[var(--clr-text-dim)]">
-                                            A experiência completa para quem deseja resultados com acompanhamento.
+                                        <p className="text-xs text-[var(--clr-text-dim)]">
+                                            ou em até 12x no cartão de crédito
                                         </p>
                                     </div>
 
-                                    <ul className="space-y-3">
-                                        <li className="font-semibold text-[var(--clr-text)] text-sm mb-4">Você recebe tudo do Essencial e ainda:</li>
-                                        {premiumFeatures.map((f, i) => (
-                                            <li key={i} className="flex items-start gap-3 text-sm">
-                                                <Check className="w-4 h-4 text-[var(--clr-gold)] mt-0.5 flex-shrink-0" />
-                                                <span className="text-[var(--clr-text-muted)]">{f}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <a
+                                        href="/api/checkout/essencial"
+                                        className="cta-primary block w-full py-5 rounded-xl text-base sm:text-lg font-bold cursor-pointer text-center"
+                                    >
+                                        QUERO GARANTIR MINHA VAGA AGORA
+                                    </a>
 
-                                    <div className="border-t border-[var(--clr-gold-dark)]/30 pt-6 space-y-5">
-                                        <span className="text-[10px] uppercase tracking-widest font-semibold text-[var(--clr-gold)]">Investimento</span>
-                                        <p className="text-4xl font-black font-heading text-[var(--clr-text)]">
-                                            R$ 97,00
-                                        </p>
-                                        <a
-                                            href="/api/checkout/premium"
-                                            className="cta-primary block w-full text-center py-4 rounded-xl text-sm cursor-pointer"
-                                        >
-                                            QUERO O PREMIUM
-                                        </a>
+                                    <div className="flex flex-wrap items-center justify-center gap-6 pt-2 text-xs text-[var(--clr-text-dim)]">
+                                        <span className="flex items-center gap-1.5">
+                                            <Shield className="w-4 h-4 text-[var(--clr-green)]" />
+                                            Pagamento 100% Seguro
+                                        </span>
+                                        <span className="flex items-center gap-1.5">
+                                            <Check className="w-4 h-4 text-[var(--clr-gold)]" />
+                                            Acesso Imediato por E-mail & WhatsApp
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-                        </RevealSection>
-                    </div>
-
-                    {/* ═══════════ BÔNUS ═══════════ */}
-                    <RevealSection className="mt-16 flex justify-center px-4">
-                        <img
-                            src="/WhatsApp%20Image%202026-07-20%20at%2019.36.24.jpeg"
-                            alt="Bônus: Sorteio Cafeteira MEI"
-                            className="w-full max-w-4xl h-auto rounded-3xl shadow-2xl border border-[var(--clr-gold)]/30"
-                        />
+                        </div>
                     </RevealSection>
                 </div>
             </section>
             <div className="gold-line" />
 
             {/* ═══════════ QUEM É A DRA ISA ═══════════ */}
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--clr-bg)] via-transparent to-[var(--clr-bg)]" />
                 <div className="max-w-6xl mx-auto relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -563,7 +688,7 @@ export default function DesafioMEI7DiasPage() {
 
                             <div className="space-y-5 text-[var(--clr-text-muted)] leading-relaxed">
                                 <p className="text-[var(--clr-text)] font-medium">
-                                    Farmacêutica Clínica Integrativa • Bióloga • Química<br/>
+                                    Farmacêutica Clínica Integrativa • Bióloga • Química<br />
                                     Doutora em Ciências da Saúde • Pós-doutora em Plantas Medicinais
                                 </p>
                                 <p>
@@ -580,7 +705,7 @@ export default function DesafioMEI7DiasPage() {
                                 </p>
                             </div>
                         </RevealSection>
-                        
+
                         {/* Image */}
                         <RevealSection className="order-2 lg:order-2">
                             <div className="about-image-mask rounded-2xl overflow-hidden shadow-2xl">
@@ -597,20 +722,20 @@ export default function DesafioMEI7DiasPage() {
             </section>
 
             {/* ═══════════ GARANTIA ═══════════ */}
-            <section className="py-20 sm:py-24 px-4 sm:px-6">
+            <section className="py-24 sm:py-32 lg:py-40 px-4 sm:px-6">
                 <div className="max-w-2xl mx-auto">
                     <RevealSection>
                         <div className="guarantee-seal p-8 sm:p-12 text-center space-y-6">
                             <Shield className="w-12 h-12 text-[var(--clr-green)] mx-auto" />
-                            <h3 className="font-display text-2xl sm:text-3xl font-bold">GARANTIA</h3>
+                            <h3 className="font-display text-2xl sm:text-3xl font-bold">GARANTIA INCONDICIONAL</h3>
                             <p className="text-[var(--clr-text-muted)] leading-relaxed">
-                                Sua inscrição é totalmente segura. Você terá sete dias de garantia.
+                                Sua inscrição é totalmente segura. Você terá sete dias de garantia incondicional.
                             </p>
                             <p className="text-[var(--clr-text-muted)] leading-relaxed">
-                                Se entender que o desafio não era o que esperava, basta solicitar o reembolso dentro desse período.
+                                Se entender que o desafio não era o que esperava, basta solicitar o reembolso dentro desse período que devolvemos 100% do seu dinheiro.
                             </p>
                             <p className="text-xl font-bold text-[var(--clr-text)]">
-                                Risco zero para você.<br/>Compromisso total com sua satisfação.
+                                Risco zero para você.<br />Compromisso total com sua satisfação.
                             </p>
                         </div>
                     </RevealSection>
@@ -619,7 +744,7 @@ export default function DesafioMEI7DiasPage() {
 
             {/* ═══════════ FAQ ═══════════ */}
             <div className="gold-line" />
-            <section className="py-24 sm:py-32 px-4 sm:px-6 bg-[var(--clr-surface)]">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 bg-[var(--clr-surface)]">
                 <div className="max-w-3xl mx-auto">
                     <RevealSection className="text-center space-y-4 mb-14">
                         <h2 className="font-display text-3xl sm:text-4xl font-bold">
@@ -650,7 +775,7 @@ export default function DesafioMEI7DiasPage() {
             </section>
 
             {/* ═══════════ FINAL CTA ═══════════ */}
-            <section className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden noise-overlay">
+            <section className="py-28 sm:py-36 lg:py-44 px-4 sm:px-6 relative overflow-hidden noise-overlay">
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--clr-green-deep)] via-[var(--clr-bg)] to-[var(--clr-surface)]" />
                 <div className="hero-gradient-orb" style={{ width: 500, height: 500, top: -100, right: -100, background: "radial-gradient(circle, rgba(201,169,110,0.08) 0%, transparent 70%)" }} />
 
@@ -664,8 +789,8 @@ export default function DesafioMEI7DiasPage() {
                             <p>Você pode continuar adiando.</p>
                             <p>Ou pode escolher que 08 de agosto, às 10h (horário de Brasília), será o primeiro dia da sua nova história.</p>
                             <p className="font-bold text-[var(--clr-text)]">
-                                Seu metabolismo pode mudar. <br/>
-                                Sua saúde pode melhorar. <br/>
+                                Seu metabolismo pode mudar. <br />
+                                Sua saúde pode melhorar. <br />
                                 Sua autoestima pode voltar.
                             </p>
                             <p className="text-xl text-[var(--clr-gold)]">Mas a decisão precisa ser tomada hoje.</p>
