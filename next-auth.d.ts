@@ -6,15 +6,16 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      // 👇 Adicionado USER explicitamente
-      role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER"; 
+      role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
       stripeCustomerId: string | null;
+      cpf: string | null;
     } & DefaultSession["user"];
   }
 
   interface User {
     role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
     stripeCustomerId: string | null;
+    cpf: string | null;
   }
 }
 
@@ -23,5 +24,6 @@ declare module "next-auth/jwt" {
     id: string;
     role: "ADMIN" | "PATIENT" | "PROFESSIONAL" | "SECRETARY" | "USER";
     stripeCustomerId: string | null;
+    cpf: string | null;
   }
 }

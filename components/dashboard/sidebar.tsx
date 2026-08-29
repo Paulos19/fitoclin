@@ -25,6 +25,7 @@ import {
   Library,
   Lock,
   Video, // Novo ícone para mentorias
+  Play, // Novo ícone para biblioteca de vídeos
   Crown,  // Novo ícone para área de especialização
   Database
 } from "lucide-react";
@@ -48,6 +49,7 @@ const adminLinks = [
   // Seção Acadêmica
   { name: "Gestão de Cursos", href: "/dashboard/courses", icon: Library },
   { name: "Gestão de Mentorias", href: "/dashboard/mentorships", icon: Video }, // [NOVO]
+  { name: "Biblioteca de Vídeos", href: "/dashboard/video-courses", icon: Play }, // [NOVO]
 
   { name: "CRM", href: "/dashboard/crm", icon: BarChart3 },
   { name: "Financeiro", href: "/dashboard/financial", icon: DollarSign },

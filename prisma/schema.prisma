@@ -33,6 +33,7 @@ model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
+  cpf       String?  @unique
   password  String
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
@@ -480,6 +481,23 @@ model Mentorship {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model VideoCourse {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?  @db.Text
+  youtubeUrl    String
+  coverImageUrl String?
+  releaseAt     DateTime // Quando o vídeo fica disponível (armazenado em UTC)
+  order         Int      @default(0)
+  active        Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, releaseAt])
+  @@index([order])
 }
 
 model Certificate {
