@@ -12,7 +12,6 @@ import BonusesSection from "@/components/desinflama360/BonusesSection";
 import GamificationAndPrizes from "@/components/desinflama360/GamificationAndPrizes";
 import NotForWhoSection from "@/components/desinflama360/NotForWhoSection";
 import AuthorityDraIsa from "@/components/desinflama360/AuthorityDraIsa";
-import TransformationStories from "@/components/desinflama360/TransformationStories";
 import PricingOfferSection from "@/components/desinflama360/PricingOfferSection";
 import GuaranteeSection from "@/components/desinflama360/GuaranteeSection";
 import FaqSection from "@/components/desinflama360/FaqSection";
@@ -40,9 +39,9 @@ export const metadata: Metadata = {
       "Seu corpo não está falhando. Ele está pedindo um novo caminho de cuidado. Assista à aula e conheça a jornada de 6 meses.",
     images: [
       {
-        url: "/isa.png",
-        width: 800,
-        height: 600,
+        url: "/banner-desinflama360.jpeg",
+        width: 1080,
+        height: 1080,
         alt: "Dra. Isa Bieski - Clube Desinflama 360",
       },
     ],
@@ -69,7 +68,7 @@ export default function ClubeDesinflama360Page() {
       {/* 2. Conexão com a dor ("Para quem é o Clube?") */}
       <PainPointsSection checkoutUrl="#oferta" />
 
-      {/* 3. Prova social ("Veja o que falam sobre o Clube") */}
+      {/* 3. Prova social ("Depoimentos Reais em Vídeo & Prints") */}
       <TestimonialsSection />
 
       {/* 4. Conteúdo do Clube + Os 5 Pilares do Método FITOCLIN® */}
@@ -98,9 +97,6 @@ export default function ClubeDesinflama360Page() {
 
       {/* 18. Apresentação da Dra. Isa Bieski (Autoridade & Biografia) */}
       <AuthorityDraIsa />
-
-      {/* 19. Histórias de Transformação Reais */}
-      <TransformationStories checkoutUrl="#oferta" />
 
       {/* 20. Apresentação da Oferta (Preço, Parcelamento e Checkout) */}
       <PricingOfferSection checkoutUrl={CHECKOUT_URL} />

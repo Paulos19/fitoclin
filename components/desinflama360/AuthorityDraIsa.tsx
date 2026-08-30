@@ -45,12 +45,12 @@ export default function AuthorityDraIsa() {
               transition={{ duration: 0.7 }}
               className="relative w-full max-w-md rounded-3xl overflow-hidden bg-gradient-to-b from-emerald-950/80 via-[#041a10] to-[#021008] border border-emerald-500/40 p-4 shadow-2xl group"
             >
-              <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-emerald-950/40">
+              <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-emerald-950/40">
                 <Image
-                  src="/isa.png"
-                  alt="Dra. Isa Bieski - Criadora do Método FITOCLIN"
+                  src="/banner-desinflama360.jpeg"
+                  alt="Dra. Isa Bieski - Clube Desinflama 360 - Criadora do Método FITOCLIN"
                   fill
-                  className="object-cover object-top group-hover:scale-105 transition-transform duration-700"
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#021008] via-transparent to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4 bg-emerald-950/90 backdrop-blur-md p-4 rounded-xl border border-emerald-500/30 text-center">

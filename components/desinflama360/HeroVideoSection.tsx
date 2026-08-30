@@ -65,8 +65,39 @@ export default function HeroVideoSection({
           <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-950/70 border border-emerald-500/40 shadow-lg shadow-emerald-950/50 backdrop-blur-md">
             <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-emerald-300">
-              Aula Exclusiva & Gratuita • Dra. Isa Bieski
+              Inscrições Abertas • Clube Desinflama 360
             </span>
+          </div>
+        </motion.div>
+
+        {/* Banner Oficial da Página - Dra. Isa Bieski & Clube Desinflama 360 */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="relative max-w-xl mx-auto mb-10 group"
+        >
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/40 via-amber-400/40 to-teal-500/40 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-700" />
+          <div className="relative rounded-3xl overflow-hidden bg-[#03170d] border border-emerald-500/40 shadow-2xl">
+            <div className="relative w-full aspect-square sm:aspect-[4/3] max-h-[420px] overflow-hidden">
+              <Image
+                src="/banner-desinflama360.jpeg"
+                alt="Clube Desinflama 360 - Dra. Isa Bieski - Método FITOCLIN"
+                fill
+                priority
+                className="object-cover object-center group-hover:scale-102 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#020e07] via-transparent to-transparent opacity-60" />
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md border border-emerald-500/30 text-xs">
+                <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  Método FITOCLIN®
+                </span>
+                <span className="text-emerald-100/80 text-[11px]">
+                  Jornada de 6 Meses com Dra. Isa Bieski
+                </span>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -74,7 +105,7 @@ export default function HeroVideoSection({
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
+          transition={{ duration: 0.7, delay: 0.15 }}
           className="text-center font-serif text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight leading-[1.18] mb-6 text-white"
         >
           SEU CORPO NÃO ESTÁ FALHANDO.{" "}
@@ -92,7 +123,7 @@ export default function HeroVideoSection({
         >
           Intestino desregulado, sono ruim, dores, ansiedade, cansaço e falta de disposição{" "}
           <strong className="text-white font-medium">não devem ser tratados como problemas completamente separados</strong>.
-          Assista à aula gratuita e descubra por que desinflamar hábitos pode ser o primeiro passo para recuperar seu equilíbrio.
+          Assista à aula gratuita abaixo e descubra por que desinflamar hábitos pode ser o primeiro passo para recuperar seu equilíbrio.
         </motion.p>
 
         {/* 1. Vídeo Principal (VSL Frame) */}
