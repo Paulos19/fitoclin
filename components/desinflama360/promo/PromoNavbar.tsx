@@ -38,7 +38,7 @@ export default function PromoNavbar({ whatsappUrl }: PromoNavbarProps) {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo Dra. Isa / FITOCLIN */}
-          <Link href="/desinflama360/promocao" className="flex items-center gap-3 group">
+          <Link href="/grupooferta" className="flex items-center gap-3 group">
             <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden bg-emerald-950 border border-emerald-500/40 flex items-center justify-center group-hover:border-emerald-400 transition-colors shadow-md">
               <Image
                 src="/logo.png"

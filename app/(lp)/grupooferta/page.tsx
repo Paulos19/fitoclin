@@ -42,13 +42,13 @@ export const metadata: Metadata = {
 const WHATSAPP_URL =
   process.env.NEXT_PUBLIC_WHATSAPP_GROUP_DESINFLAMA_URL ||
   process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL ||
-  "https://wa.me/5565998200593?text=Ol%C3%A1%2C%20quero%20entrar%20no%20grupo%20VIP%20do%20Clube%20Desinflama%20360%20e%20receber%20meu%20e-book%20de%20ch%C3%A1s%20gratuito!";
+  "https://chat.whatsapp.com/GWNMBPvBJKlGEBs74sdcwu?s=cl&p=i&mlu=4&ilr=4";
 
 const CHECKOUT_HOTMART_URL =
   process.env.NEXT_PUBLIC_CHECKOUT_DESINFLAMA_URL ||
   "https://pay.hotmart.com/I104935049E?off=gmttdcyq";
 
-export default function Desinflama360PromoPage() {
+export default function GrupoOfertaPage() {
   return (
     <main className="min-h-screen bg-[#020d07] text-[#f0fdf4] font-sans antialiased selection:bg-emerald-500/30 selection:text-white">
       {/* 1. Navbar com Barra de Aviso Superior */}
