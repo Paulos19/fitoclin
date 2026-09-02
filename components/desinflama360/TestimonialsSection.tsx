@@ -8,6 +8,7 @@ import {
   Play,
   Video,
   FileText,
+  MessageSquareQuote,
   CheckCircle2,
   ExternalLink,
   ShieldCheck,
@@ -19,9 +20,10 @@ import {
   Flame,
   Award,
 } from "lucide-react";
+import WhatsAppPrintsGallery from "./WhatsAppPrintsGallery";
 
 export default function TestimonialsSection() {
-  const [activeTab, setActiveTab] = useState<"videos" | "confissoes">("videos");
+  const [activeTab, setActiveTab] = useState<"prints" | "videos" | "confissoes">("prints");
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
@@ -203,11 +205,22 @@ export default function TestimonialsSection() {
             Histórias reais de mulheres que desinflamaram hábitos, recuperaram o sono, o intestino e a energia diária com a orientação da Dra. Isa Bieski.
           </p>
 
-          {/* Abas: Vídeos Reais e Confissões das Alunas */}
+          {/* Abas: Prints do WhatsApp, Vídeos Reais e Confissões das Alunas */}
           <div className="mt-8 inline-flex flex-wrap justify-center p-1.5 rounded-2xl bg-emerald-950/70 border border-emerald-500/30 gap-1.5">
             <button
+              onClick={() => setActiveTab("prints")}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                activeTab === "prints"
+                  ? "bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
+                  : "text-emerald-300/70 hover:text-white"
+              }`}
+            >
+              <MessageSquareQuote className="w-4 h-4" />
+              <span>Prints do WhatsApp (10)</span>
+            </button>
+            <button
               onClick={() => setActiveTab("videos")}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                 activeTab === "videos"
                   ? "bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
                   : "text-emerald-300/70 hover:text-white"
@@ -218,7 +231,7 @@ export default function TestimonialsSection() {
             </button>
             <button
               onClick={() => setActiveTab("confissoes")}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                 activeTab === "confissoes"
                   ? "bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
                   : "text-emerald-300/70 hover:text-white"
@@ -229,6 +242,13 @@ export default function TestimonialsSection() {
             </button>
           </div>
         </div>
+
+        {/* Tab 1: Galeria de Prints do WhatsApp */}
+        {activeTab === "prints" && (
+          <div className="mt-2">
+            <WhatsAppPrintsGallery showHeading={false} />
+          </div>
+        )}
 
         {/* Tab 1: Carrossel Horizontal Scroll de Vídeos */}
         {activeTab === "videos" && (
