@@ -130,6 +130,13 @@ export default function PricingOfferSection({ checkoutUrl }: PricingOfferSection
                 Investimento Promocional
               </span>
 
+              <h4 className="text-xl sm:text-2xl font-serif font-black text-white uppercase tracking-tight mt-1">
+                CLUBE DESINFLAMA 360
+              </h4>
+              <p className="text-xs text-emerald-300/80 uppercase tracking-wider font-semibold mt-0.5 mb-3">
+                Autor: INSTITUTO ISA
+              </p>
+
               {/* De */}
               <div className="text-sm text-emerald-400/60 line-through mb-2 font-medium">
                 De R$ 797,00
@@ -138,16 +145,18 @@ export default function PricingOfferSection({ checkoutUrl }: PricingOfferSection
               {/* Por */}
               <div className="mb-2">
                 <span className="text-xs text-emerald-300 block font-medium">
-                  Por apenas 12x de
+                  Por apenas
                 </span>
                 <div className="flex items-baseline justify-center gap-1 mt-1">
+                  <span className="text-base sm:text-lg font-bold text-emerald-300">12x de</span>
                   <span className="text-xl font-bold text-emerald-400">R$</span>
                   <span className="text-4xl sm:text-5xl font-extrabold font-serif text-white tracking-tight">
-                    33,90
+                    41,06
                   </span>
+                  <span className="text-lg font-bold text-amber-300 ml-0.5">*</span>
                 </div>
-                <span className="text-xs sm:text-sm text-emerald-200/90 font-medium block mt-1">
-                  ou <strong className="text-amber-300 font-bold">R$ 397,00</strong> à vista
+                <span className="text-xs sm:text-sm text-emerald-200/90 font-medium block mt-1.5">
+                  Ou <strong className="text-amber-300 font-bold">R$ 397,00</strong> à vista
                 </span>
               </div>
 

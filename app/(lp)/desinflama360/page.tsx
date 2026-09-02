@@ -51,6 +51,7 @@ export const metadata: Metadata = {
 const CHECKOUT_URL =
   process.env.NEXT_PUBLIC_CHECKOUT_DESINFLAMA_URL ||
   process.env.NEXT_PUBLIC_CHECKOUT_URL ||
+  process.env.CHECKOUT_URL ||
   "https://pay.hotmart.com/I104935049E?off=gmttdcyq";
 
 const VIDEO_URL =
