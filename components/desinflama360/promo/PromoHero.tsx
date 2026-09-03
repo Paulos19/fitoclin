@@ -64,24 +64,17 @@ export default function PromoHero({ whatsappUrl }: PromoHeroProps) {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-center max-w-4xl mx-auto mb-6"
         >
-          <span className="text-xs sm:text-sm md:text-base font-bold tracking-[0.25em] text-emerald-400 uppercase block mb-3">
-            CLUBE DESINFLAMA 360
-          </span>
-
-          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.12]">
-            ENTRE GRATUITAMENTE NO GRUPO E RECEBA UM{" "}
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
+            Dia 10 de setembro:{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-emerald-300 to-teal-200">
-              E-BOOK ESPECIAL SOBRE CHÁS
-            </span>
+              50% de desconto no Clube Desinflama 360,
+            </span>{" "}
+            somente dentro do grupo de WhatsApp.
           </h1>
 
-          {/* Destaque de Desconto */}
-          <div className="mt-5 inline-flex items-center gap-2 sm:gap-3 px-5 py-2 rounded-2xl bg-gradient-to-r from-amber-500/20 via-emerald-500/20 to-teal-500/20 border border-amber-400/40 backdrop-blur-md">
-            <Tag className="w-5 h-5 text-amber-400" />
-            <span className="text-sm sm:text-lg font-black text-amber-300 uppercase tracking-wide">
-              30% a 50% de desconto. Prepare-se!
-            </span>
-          </div>
+          <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-emerald-100/90 max-w-2xl mx-auto font-medium leading-relaxed">
+            Entre no grupo para receber a condição especial e ainda ganhar o e-book de chás como presente.
+          </p>
         </motion.div>
 
         {/* Card Principal: Mockup do E-book + Conteúdo dos 4 Tópicos */}

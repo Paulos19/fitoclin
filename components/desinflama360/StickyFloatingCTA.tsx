@@ -38,7 +38,7 @@ export default function StickyFloatingCTA({ checkoutUrl }: StickyFloatingCTAProp
               Clube Desinflama 360 • 6 Meses de Acompanhamento
             </p>
             <p className="text-[11px] text-emerald-300">
-              12x de R$ 41,06* ou R$ 397,00 à vista • Garantia de 7 dias
+              12x de R$ 30,72* ou R$ 297,00 à vista • Garantia de 7 dias
             </p>
           </div>
         </div>

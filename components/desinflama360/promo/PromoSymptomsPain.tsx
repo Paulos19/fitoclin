@@ -4,17 +4,13 @@ import React from "react";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
-  Moon,
   Activity,
   Brain,
   ShieldAlert,
   TrendingDown,
   BatteryLow,
   RotateCcw,
-  Sparkles,
   HeartCrack,
-  CheckCircle2,
-  ArrowRight,
 } from "lucide-react";
 
 export default function PromoSymptomsPain() {
@@ -54,13 +50,6 @@ export default function PromoSymptomsPain() {
       desc: "A sensação incômoda de estar refém de remédios pontuais para tentar mascarar cada sintoma.",
       icon: RotateCcw,
     },
-  ];
-
-  const failedAttempts = [
-    "Começou dietas restritivas e difíceis de sustentar",
-    "Tomou chás sem saber a planta certa e a dose correta",
-    "Comprou suplementos caros sem orientação individual",
-    "Tentou mudar tudo de uma vez só e se sobrecarregou",
   ];
 
   return (
@@ -120,7 +109,7 @@ export default function PromoSymptomsPain() {
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-950/80 via-[#042415] to-emerald-950/80 border-2 border-emerald-500/40 text-center max-w-3xl mx-auto mb-20 shadow-xl"
+          className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-950/80 via-[#042415] to-emerald-950/80 border-2 border-emerald-500/40 text-center max-w-3xl mx-auto shadow-xl"
         >
           <p className="text-base sm:text-xl font-medium text-emerald-100 leading-relaxed">
             Esses sinais <strong className="text-amber-300 underline underline-offset-4 font-bold">não devem ser ignorados ou tratados de maneira isolada</strong>.
@@ -129,51 +118,6 @@ export default function PromoSymptomsPain() {
             Seu corpo pode estar pedindo uma mudança nos hábitos.
           </p>
         </motion.div>
-
-        {/* Bloco 2: Quebra de Objeções & Por que falhou antes */}
-        <div className="rounded-3xl bg-gradient-to-b from-[#031d10] to-[#011107] border border-emerald-500/30 p-6 sm:p-10 lg:p-12">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-8">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-950/60 border border-amber-500/30 text-amber-300 text-xs font-semibold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>O Real Motivo</span>
-            </div>
-
-            <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight uppercase">
-              VOCÊ JÁ TENTOU MUDAR, MAS NÃO CONSEGUIU MANTER?
-            </h2>
-
-            <p className="text-sm sm:text-base text-emerald-100/80 font-light leading-relaxed">
-              Talvez você já tenha começado dietas, tomado chás, comprado suplementos ou tentado mudar tudo de uma vez.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-3.5 max-w-2xl mx-auto mb-8">
-            {failedAttempts.map((attempt, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs sm:text-sm text-emerald-200/80"
-              >
-                <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                <span>{attempt}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center max-w-2xl mx-auto space-y-4 pt-4 border-t border-emerald-500/20">
-            <p className="text-sm sm:text-base text-emerald-100 font-light leading-relaxed">
-              Mas, sem compreender o que o seu corpo precisa e sem uma estratégia possível de seguir, a frustração volta.
-            </p>
-            <p className="text-base sm:text-lg font-bold text-amber-300">
-              O problema não é apenas falta de força de vontade.
-            </p>
-            <div className="inline-flex flex-wrap justify-center items-center gap-2 p-3 sm:p-4 rounded-2xl bg-emerald-950/80 border border-emerald-400/40 text-sm sm:text-base font-bold text-white">
-              <span>Você precisa de:</span>
-              <span className="px-3 py-1 rounded-lg bg-emerald-600/40 text-emerald-200">🌿 Orientação</span>
-              <span className="px-3 py-1 rounded-lg bg-emerald-600/40 text-emerald-200">🤝 Acompanhamento</span>
-              <span className="px-3 py-1 rounded-lg bg-emerald-600/40 text-emerald-200">⏳ Constância</span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

@@ -13,7 +13,7 @@ import PromoFloatingCTA from "@/components/desinflama360/promo/PromoFloatingCTA"
 export const metadata: Metadata = {
   title: "Clube Desinflama 360 | Oferta Especial 10 de Setembro • Dra. Isa Bieski",
   description:
-    "Entre gratuitamente no grupo do WhatsApp e receba um E-book especial sobre chás. Condição exclusiva de 30% a 50% de desconto em 10 de setembro.",
+    "Dia 10 de setembro: 50% de desconto no Clube Desinflama 360, somente dentro do grupo de WhatsApp. Entre no grupo para receber a condição especial e ainda ganhar o e-book de chás como presente.",
   keywords: [
     "Clube Desinflama 360",
     "Oferta Especial 10 de Setembro",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Clube Desinflama 360 | Oferta Especial 10 de Setembro",
     description:
-      "Garanta seu E-book gratuito sobre chás e prepare-se para a condição especial de 30% a 50% de desconto somente no grupo do WhatsApp.",
+      "Dia 10 de setembro: 50% de desconto no Clube Desinflama 360, somente dentro do grupo de WhatsApp. Entre e ganhe o e-book de chás como presente.",
     images: [
       {
         url: "/banner-desinflama360.jpeg",

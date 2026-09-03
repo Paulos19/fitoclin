@@ -28,73 +28,31 @@ export interface WhatsAppPrintItem {
 export const WHATSAPP_PRINTS: WhatsAppPrintItem[] = [
   {
     id: "print-1",
-    src: "/testemunhos/WhatsApp Image 2026-08-31 at 17.04.33.jpeg",
-    title: "Relato de Desinchaço e Leveza",
-    tag: "Desinflamação Real",
-    highlight: "Aluna compartilhando a evolução rápida com a estratégia do método.",
+    src: "/testemunhos/WhatsApp Image 2026-09-02 at 13.35.03.jpeg",
+    title: "Sono Regulado e Noites Tranquilas",
+    tag: "Sono Reparador",
+    highlight: "Aluna dormindo a noite toda sem acordar e com o ciclo de sono regulado.",
   },
   {
     id: "print-2",
-    src: "/testemunhos/WhatsApp Image 2026-08-31 at 17.04.35.jpeg",
-    title: "Recuperação do Bem-Estar Diário",
-    tag: "Energia & Disposição",
-    highlight: "Sensação de disposição e alívio das dores e desconfortos matinais.",
+    src: "/testemunhos/WhatsApp Image 2026-09-02 at 13.35.04.jpeg",
+    title: "Glicemia Normalizada e Mais Saúde",
+    tag: "Controle da Glicemia",
+    highlight: "Glicemia que estava acima de 200 normalizou para 100 com o direcionamento e chás.",
   },
   {
     id: "print-3",
-    src: "/testemunhos/WhatsApp Image 2026-08-31 at 17.04.48.jpeg",
-    title: "Equilíbrio Intestinal e Digestão",
-    tag: "Saúde Intestinal",
-    highlight: "Digestão mais leve e intestino funcionando com regularidade.",
+    src: "/testemunhos/WhatsApp Image 2026-09-02 at 13.35.30.jpeg",
+    title: "Desinflamação Diária e Equilíbrio dos Pilares",
+    tag: "Transformação de Vida",
+    highlight: "Corpo, mente e fé em equilíbrio, aplicando os cinco pilares e desinflamando diariamente.",
   },
   {
     id: "print-4",
-    src: "/testemunhos/WhatsApp Image 2026-08-31 at 17.39.46.jpeg",
-    title: "Mudança Visível no Corpo",
-    tag: "Menos Medidas",
-    highlight: "Redução de inchaço abdominal e roupas mais soltas em poucos dias.",
-  },
-  {
-    id: "print-5",
-    src: "/testemunhos/WhatsApp Image 2026-08-31 at 17.39.47.jpeg",
-    title: "Noites de Sono Tranquilo",
-    tag: "Sono Reparador",
-    highlight: "Sono profundo e acordando com vitalidade renovada.",
-  },
-  {
-    id: "print-6",
-    src: "/testemunhos/WhatsApp Image 2026-09-01 at 09.50.54.jpeg",
-    title: "Constância e Transformação",
-    tag: "Método FITOCLIN®",
-    highlight: "Orientação clara e acolhimento que facilitam seguir a rotina.",
-  },
-  {
-    id: "print-7",
-    src: "/testemunhos/WhatsApp Image 2026-09-01 at 09.54.49.jpeg",
-    title: "Gratidão e Resultados Concretos",
-    tag: "Autoestima Renovada",
-    highlight: "Mensagem emocionante agradecendo a Dra. Isa pelo direcionamento.",
-  },
-  {
-    id: "print-8",
-    src: "/testemunhos/WhatsApp Image 2026-09-01 at 10.38.13.jpeg",
-    title: "Alívio de Sintomas Inflamatórios",
-    tag: "Fim do Inchaço",
-    highlight: "Redução clara da retenção de líquidos e dores articulares.",
-  },
-  {
-    id: "print-9",
-    src: "/testemunhos/WhatsApp Image 2026-09-01 at 10.50.12.jpeg",
-    title: "Paz Mental e Menos Ansiedade",
-    tag: "Ansiedade Controlada",
-    highlight: "Uso consciente das plantas trazendo equilíbrio e serenidade diária.",
-  },
-  {
-    id: "print-10",
-    src: "/testemunhos/WhatsApp Image 2026-09-01 at 11.51.59.jpeg",
-    title: "Comemoração de Nova Vida",
-    tag: "Transformação Total",
-    highlight: "Depoimento completo de superação e reconexão com a saúde.",
+    src: "/testemunhos/WhatsApp Image 2026-09-02 at 13.36.03.jpeg",
+    title: "Pressão, Metabolismo e Vitalidade",
+    tag: "Saúde Integral",
+    highlight: "Qualidade de vida no controle da pressão, metabolismo ativo e redução de medicamentos.",
   },
 ];
 
@@ -164,21 +122,21 @@ export default function WhatsAppPrintsGallery({
         </div>
       )}
 
-      {/* Grid de Prints Estilo Masonry / Card Elegante */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+      {/* Grid de Prints Estilo Card Elegante */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         {WHATSAPP_PRINTS.map((item, idx) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: (idx % 5) * 0.06 }}
+            transition={{ duration: 0.4, delay: idx * 0.08 }}
             onClick={() => handleOpenLightbox(idx)}
             className="group relative cursor-pointer rounded-2xl overflow-hidden bg-gradient-to-b from-[#041d11] to-[#020f08] border border-emerald-500/30 hover:border-emerald-400/80 shadow-lg hover:shadow-emerald-900/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
           >
             {/* Top Bar do Card com Tag */}
             <div className="p-3 pb-2 flex items-center justify-between border-b border-emerald-500/20 bg-[#02130a]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30">
                 {item.tag}
               </span>
               <span className="text-[11px] text-emerald-400/80 font-mono">
@@ -187,22 +145,24 @@ export default function WhatsAppPrintsGallery({
             </div>
 
             {/* Imagem do Print */}
-            <div className="relative w-full aspect-[9/16] max-h-[340px] bg-black overflow-hidden">
-              <Image
-                src={item.src}
-                alt={item.title}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw"
-                className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-              />
+            <div className="relative w-full aspect-[4/5] bg-[#020c06] overflow-hidden p-2 flex items-center justify-center">
+              <div className="relative w-full h-full">
+                <Image
+                  src={item.src}
+                  alt={item.title}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-contain rounded-lg group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
 
               {/* Overlay suave com ícone de ampliar */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity pointer-events-none" />
 
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
                 <div className="px-3.5 py-2 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-emerald-950/80 scale-95 group-hover:scale-100 transition-transform">
                   <Maximize2 className="w-4 h-4" />
-                  <span>Clique para ler</span>
+                  <span>Clique para ampliar</span>
                 </div>
               </div>
             </div>

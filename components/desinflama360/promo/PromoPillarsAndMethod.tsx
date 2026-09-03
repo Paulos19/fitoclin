@@ -123,7 +123,7 @@ export default function PromoPillarsAndMethod({ whatsappUrl }: PromoPillarsAndMe
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="rounded-3xl bg-gradient-to-b from-[#031d10] via-[#02180d] to-[#010e07] border-2 border-emerald-500/35 p-6 sm:p-10 lg:p-12 shadow-2xl mb-20"
+          className="rounded-3xl bg-gradient-to-b from-[#031d10] via-[#02180d] to-[#010e07] border-2 border-emerald-500/35 p-6 sm:p-10 lg:p-12 shadow-2xl"
         >
           <div className="text-center max-w-2xl mx-auto mb-10">
             <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 block mb-2">
@@ -168,36 +168,6 @@ export default function PromoPillarsAndMethod({ whatsappUrl }: PromoPillarsAndMe
             </p>
           </div>
         </motion.div>
-
-        {/* Bloco 3: Filosofia Sustentável ("Você não precisa continuar cuidando apenas dos sintomas") */}
-        <div className="rounded-3xl bg-gradient-to-r from-emerald-950/80 via-[#032314] to-emerald-950/80 border border-emerald-500/30 p-8 sm:p-12 text-center max-w-4xl mx-auto">
-          <h3 className="font-serif text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight uppercase mb-4">
-            VOCÊ NÃO PRECISA CONTINUAR CUIDANDO APENAS DOS SINTOMAS
-          </h3>
-
-          <p className="text-sm sm:text-base md:text-lg text-emerald-100/90 font-light max-w-2xl mx-auto leading-relaxed mb-8">
-            No Clube Desinflama 360, você aprenderá a construir hábitos mais saudáveis sem tentar mudar tudo de uma vez.
-          </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto">
-            <div className="p-4 rounded-2xl bg-[#02120a] border border-emerald-500/25 text-center">
-              <span className="text-2xl mb-1 block">👣</span>
-              <span className="text-xs sm:text-sm font-bold text-white">Um passo de cada vez.</span>
-            </div>
-            <div className="p-4 rounded-2xl bg-[#02120a] border border-emerald-500/25 text-center">
-              <span className="text-2xl mb-1 block">🧭</span>
-              <span className="text-xs sm:text-sm font-bold text-white">Com orientação.</span>
-            </div>
-            <div className="p-4 rounded-2xl bg-[#02120a] border border-emerald-500/25 text-center">
-              <span className="text-2xl mb-1 block">📚</span>
-              <span className="text-xs sm:text-sm font-bold text-white">Com conhecimento.</span>
-            </div>
-            <div className="p-4 rounded-2xl bg-[#02120a] border border-emerald-500/25 text-center">
-              <span className="text-2xl mb-1 block">⏳</span>
-              <span className="text-xs sm:text-sm font-bold text-white">Com constância.</span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

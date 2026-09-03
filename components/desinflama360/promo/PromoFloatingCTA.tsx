@@ -32,7 +32,7 @@ export default function PromoFloatingCTA({ whatsappUrl }: PromoFloatingCTAProps)
           </div>
           <div>
             <p className="text-xs sm:text-sm font-bold text-white leading-tight">
-              Oferta Especial em 10 de Setembro • 30% a 50% OFF
+              Oferta Especial em 10 de Setembro • 50% OFF
             </p>
             <p className="text-[11px] text-emerald-300">
               Entre gratuitamente no grupo e ganhe o e-book sobre chás.
