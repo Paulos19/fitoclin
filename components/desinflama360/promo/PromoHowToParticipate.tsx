@@ -132,11 +132,11 @@ export default function PromoHowToParticipate({ whatsappUrl }: PromoHowToPartici
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-base sm:text-lg tracking-wide uppercase shadow-[0_0_40px_-5px_rgba(16,185,129,0.6)] hover:shadow-[0_0_50px_-5px_rgba(16,185,129,0.9)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 border border-emerald-300/40"
+            className="group relative inline-flex items-center justify-center w-full max-w-2xl px-6 py-4 sm:px-8 sm:py-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base md:text-lg tracking-wide uppercase shadow-[0_0_40px_-5px_rgba(16,185,129,0.6)] hover:shadow-[0_0_50px_-5px_rgba(16,185,129,0.9)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 border border-emerald-300/40 text-center leading-snug"
           >
-            <span className="flex items-center gap-2.5">
+            <span className="flex items-center justify-center gap-2.5">
               <MessageCircle className="w-5 h-5 fill-white shrink-0" />
-              <span>QUERO ENTRAR NO GRUPO E RECEBER MEU E-BOOK</span>
+              <span>ENTRE NO GRUPO PARA RECEBER A CONDIÇÃO ESPECIAL E AINDA GANHAR O E-BOOK DE CHÁS COMO PRESENTE</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform shrink-0" />
             </span>
           </a>
