@@ -15,6 +15,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  ArrowUpRight,
 } from "lucide-react";
 
 export interface WhatsAppPrintItem {
@@ -63,8 +64,8 @@ interface WhatsAppPrintsGalleryProps {
 }
 
 export default function WhatsAppPrintsGallery({
-  title = "Prints e Mensagens Reais de Alunas no WhatsApp",
-  subtitle = "Veja conversas espontâneas compartilhadas diretamente em nossos grupos e atendimentos.",
+  title = "Veja os Resultados e Relatos de Quem Já Aplica o Método",
+  subtitle = "Conversas reais e espontâneas de mulheres que desinflamaram o corpo, recuperaram a energia e o sono com o direcionamento da Dra. Isa Bieski.",
   showHeading = true,
 }: WhatsAppPrintsGalleryProps) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
@@ -108,44 +109,44 @@ export default function WhatsAppPrintsGallery({
   return (
     <div className="w-full">
       {showHeading && (
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3">
-            <MessageCircle className="w-4 h-4 text-emerald-400" />
-            <span>Mensagens Espontâneas</span>
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-900 text-xs sm:text-sm font-semibold tracking-wide mb-3.5">
+            <MessageCircle className="w-4 h-4 text-emerald-700" />
+            <span>Mensagens Espontâneas de Alunas</span>
           </div>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white tracking-tight">
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0A1C12] tracking-tight">
             {title}
           </h3>
-          <p className="mt-3 text-sm sm:text-base text-emerald-100/80 font-light">
+          <p className="mt-3 text-sm sm:text-base text-neutral-600 font-normal max-w-2xl mx-auto leading-relaxed">
             {subtitle}
           </p>
         </div>
       )}
 
-      {/* Grid de Prints Estilo Card Elegante */}
+      {/* Grid de Prints em Cartões Elevados Claros */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         {WHATSAPP_PRINTS.map((item, idx) => (
           <motion.div
             key={item.id}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: idx * 0.08 }}
+            transition={{ duration: 0.45, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => handleOpenLightbox(idx)}
-            className="group relative cursor-pointer rounded-2xl overflow-hidden bg-gradient-to-b from-[#041d11] to-[#020f08] border border-emerald-500/30 hover:border-emerald-400/80 shadow-lg hover:shadow-emerald-900/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+            className="group relative cursor-pointer rounded-2xl overflow-hidden bg-white border border-neutral-200/90 hover:border-emerald-500/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_16px_36px_-10px_rgba(5,150,105,0.15)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
           >
-            {/* Top Bar do Card com Tag */}
-            <div className="p-3 pb-2 flex items-center justify-between border-b border-emerald-500/20 bg-[#02130a]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30">
+            {/* Top Bar do Card com Tag & Número */}
+            <div className="p-3 pb-2.5 flex items-center justify-between border-b border-neutral-100 bg-[#F9FAF9]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/70">
                 {item.tag}
               </span>
-              <span className="text-[11px] text-emerald-400/80 font-mono">
-                #{idx + 1}
+              <span className="text-xs font-mono font-bold text-neutral-400">
+                0{idx + 1}
               </span>
             </div>
 
-            {/* Imagem do Print */}
-            <div className="relative w-full aspect-[4/5] bg-[#020c06] overflow-hidden p-2 flex items-center justify-center">
+            {/* Imagem do Print em Fundo Claro */}
+            <div className="relative w-full aspect-[4/5] bg-neutral-50/60 overflow-hidden p-2.5 flex items-center justify-center">
               <div className="relative w-full h-full">
                 <Image
                   src={item.src}
@@ -156,23 +157,24 @@ export default function WhatsAppPrintsGallery({
                 />
               </div>
 
-              {/* Overlay suave com ícone de ampliar */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity pointer-events-none" />
-
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
-                <div className="px-3.5 py-2 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-emerald-950/80 scale-95 group-hover:scale-100 transition-transform">
-                  <Maximize2 className="w-4 h-4" />
+              {/* Overlay suave com botão de zoom */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#0A1C12]/40 backdrop-blur-[2px]">
+                <div className="px-4 py-2 rounded-full bg-white text-[#0A1C12] text-xs font-bold flex items-center gap-1.5 shadow-xl scale-95 group-hover:scale-100 transition-transform">
+                  <Maximize2 className="w-3.5 h-3.5 text-emerald-700" />
                   <span>Clique para ampliar</span>
                 </div>
               </div>
             </div>
 
             {/* Rodapé do Card */}
-            <div className="p-3 bg-[#021008] border-t border-emerald-500/20">
-              <h4 className="text-xs font-bold text-white truncate mb-1">
-                {item.title}
-              </h4>
-              <p className="text-[11px] text-emerald-200/70 line-clamp-2 leading-relaxed font-light">
+            <div className="p-3.5 bg-white border-t border-neutral-100">
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <h4 className="text-xs font-extrabold text-[#0A1C12] truncate">
+                  {item.title}
+                </h4>
+                <ArrowUpRight className="w-3.5 h-3.5 text-neutral-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
+              </div>
+              <p className="text-[11px] text-neutral-600 line-clamp-2 leading-relaxed font-normal">
                 {item.highlight}
               </p>
             </div>
@@ -181,8 +183,8 @@ export default function WhatsAppPrintsGallery({
       </div>
 
       {/* Selo de Verificação de Prova Social */}
-      <div className="mt-8 text-center text-xs text-emerald-300/80 flex items-center justify-center gap-2 bg-emerald-950/40 border border-emerald-500/20 py-2.5 px-4 rounded-xl max-w-xl mx-auto">
-        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+      <div className="mt-8 text-center text-xs text-neutral-600 flex items-center justify-center gap-2 bg-white border border-neutral-200/80 py-3 px-5 rounded-2xl shadow-sm max-w-xl mx-auto">
+        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
         <span>Prints 100% reais retirados de conversas com participantes do Método FITOCLIN®.</span>
       </div>
 
@@ -193,7 +195,7 @@ export default function WhatsAppPrintsGallery({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-6"
+            className="fixed inset-0 z-50 bg-neutral-950/90 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-6"
             onClick={handleCloseLightbox}
           >
             {/* Header do Lightbox */}
@@ -202,7 +204,7 @@ export default function WhatsAppPrintsGallery({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-300 text-xs font-bold">
+                <div className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-emerald-400 text-xs font-bold">
                   {selectedIdx + 1}/{WHATSAPP_PRINTS.length}
                 </div>
                 <div>
@@ -218,87 +220,83 @@ export default function WhatsAppPrintsGallery({
               {/* Controles de Zoom e Fechar */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setZoomLevel((z) => Math.min(z + 0.3, 2.5))}
+                  onClick={() => setZoomLevel((prev) => Math.min(prev + 0.25, 2.5))}
                   title="Aumentar Zoom"
-                  className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-300 hover:text-white transition-colors"
                 >
                   <ZoomIn className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setZoomLevel((z) => Math.max(z - 0.3, 0.8))}
+                  onClick={() => setZoomLevel((prev) => Math.max(prev - 0.25, 0.75))}
                   title="Diminuir Zoom"
-                  className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-300 hover:text-white transition-colors"
                 >
                   <ZoomOut className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setZoomLevel(1)}
-                  title="Resetar Zoom"
-                  className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 hover:text-white transition-colors"
+                  title="Redefinir Zoom"
+                  className="p-2 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-300 hover:text-white transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleCloseLightbox}
                   title="Fechar (Esc)"
-                  className="p-2 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-500/40 text-red-300 hover:text-white transition-colors ml-2"
+                  className="p-2 rounded-lg bg-red-950/80 border border-red-500/40 text-red-300 hover:text-white hover:bg-red-900 transition-colors ml-2"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Container Central da Imagem com Zoom */}
+            {/* Imagem Ampliada com Controles Laterais */}
             <div
-              className="relative flex-1 w-full max-w-4xl flex items-center justify-center overflow-auto my-3 p-2"
+              className="relative w-full max-w-4xl h-[70vh] flex items-center justify-center overflow-hidden my-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Botão Anterior */}
+              <motion.div
+                animate={{ scale: zoomLevel }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+              >
+                <Image
+                  src={WHATSAPP_PRINTS[selectedIdx].src}
+                  alt={WHATSAPP_PRINTS[selectedIdx].title}
+                  fill
+                  sizes="100vw"
+                  className="object-contain"
+                  priority
+                />
+              </motion.div>
+
+              {/* Botões Próximo / Anterior */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="absolute left-2 sm:left-4 z-30 p-3 rounded-full bg-emerald-950/90 hover:bg-emerald-800 border border-emerald-400/40 text-white shadow-2xl transition-transform hover:scale-110"
-                aria-label="Print anterior"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-neutral-900/80 border border-neutral-700 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
-
-              {/* Imagem Ampliada */}
-              <div
-                className="relative max-h-[78vh] w-auto transition-transform duration-200"
-                style={{ transform: `scale(${zoomLevel})` }}
-              >
-                <img
-                  src={WHATSAPP_PRINTS[selectedIdx].src}
-                  alt={WHATSAPP_PRINTS[selectedIdx].title}
-                  className="max-h-[78vh] w-auto max-w-full rounded-2xl shadow-2xl object-contain border border-emerald-500/30"
-                />
-              </div>
-
-              {/* Botão Próximo */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-2 sm:right-4 z-30 p-3 rounded-full bg-emerald-950/90 hover:bg-emerald-800 border border-emerald-400/40 text-white shadow-2xl transition-transform hover:scale-110"
-                aria-label="Próximo print"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-neutral-900/80 border border-neutral-700 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Rodapé do Lightbox com Legenda e Dica */}
+            {/* Footer do Lightbox */}
             <div
-              className="w-full max-w-2xl text-center z-20 text-xs text-emerald-200/80 bg-emerald-950/60 border border-emerald-500/20 py-2 px-4 rounded-xl"
+              className="w-full max-w-3xl text-center text-xs text-neutral-400 bg-neutral-900/60 backdrop-blur-sm p-3 rounded-xl border border-neutral-800"
               onClick={(e) => e.stopPropagation()}
             >
-              <span>{WHATSAPP_PRINTS[selectedIdx].highlight}</span>
-              <span className="hidden sm:inline text-emerald-400/60 ml-2">
-                • Use as setas do teclado (← / →) para navegar ou Esc para fechar
-              </span>
+              <p>{WHATSAPP_PRINTS[selectedIdx].highlight}</p>
             </div>
           </motion.div>
         )}

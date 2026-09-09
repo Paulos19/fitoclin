@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Gift, ArrowRight } from "lucide-react";
 
 interface PromoFloatingCTAProps {
@@ -12,45 +13,59 @@ export default function PromoFloatingCTA({ whatsappUrl }: PromoFloatingCTAProps)
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsVisible(window.scrollY > 500);
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // Oculta a barra ao se aproximar do final da página para não cobrir o rodapé
+      const nearBottom = scrollY + windowHeight >= documentHeight - 160;
+
+      setIsVisible(scrollY > 400 && !nearBottom);
     };
-    window.addEventListener("scroll", handleScroll);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (!isVisible) return null;
-
   return (
-    <aside
-      aria-label="Aviso de entrada no grupo VIP"
-      className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-[#03150c]/95 backdrop-blur-lg border-t border-emerald-500/30 shadow-[0_-10px_30px_rgba(0,0,0,0.6)] animate-in slide-in-from-bottom duration-300"
-    >
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 px-2 sm:px-4">
-        <div className="hidden sm:flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <Gift className="w-5 h-5 text-amber-400" />
-          </div>
-          <div>
-            <p className="text-xs sm:text-sm font-bold text-white leading-tight">
-              Oferta Especial em 10 de Setembro • 50% OFF
-            </p>
-            <p className="text-[11px] text-emerald-300">
-              Entre gratuitamente no grupo e ganhe o e-book sobre chás.
-            </p>
-          </div>
-        </div>
-
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/40 hover:scale-105 active:scale-95 transition-all text-center"
+    <AnimatePresence>
+      {isVisible && (
+        <motion.aside
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          aria-label="Aviso de entrada no grupo VIP"
+          className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-white/95 backdrop-blur-xl border-t border-neutral-200/90 shadow-[0_-10px_35px_rgba(0,0,0,0.08)]"
         >
-          <MessageCircle className="w-4 h-4 fill-white" />
-          <span>Entrar no Grupo e Receber E-book</span>
-          <ArrowRight className="w-4 h-4" />
-        </a>
-      </div>
-    </aside>
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 px-2 sm:px-4">
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 shadow-sm shrink-0">
+                <Gift className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-extrabold text-[#0A1C12] leading-tight">
+                  Oferta Especial em 17 de Setembro • 50% OFF
+                </p>
+                <p className="text-[11px] text-neutral-500 font-medium">
+                  Entre gratuitamente no grupo e garanta seu e-book de chás como presente.
+                </p>
+              </div>
+            </div>
+
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#0A1C12] hover:bg-[#064E3B] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-center shrink-0"
+            >
+              <MessageCircle className="w-4 h-4 fill-white" />
+              <span>Entrar no Grupo e Receber E-book</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
   );
 }

@@ -37,6 +37,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '5mb', // Aumentando para 5MB para suportar uploads de imagem
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/grupoofertas',
+        destination: '/grupooferta',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
