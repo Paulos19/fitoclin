@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Sparkles, MessageCircle, Clock, ArrowUpRight } from "lucide-react";
+import { trackLead } from "@/lib/fpixel";
 
 interface PromoNavbarProps {
   whatsappUrl: string;
@@ -73,6 +74,7 @@ export default function PromoNavbar({ whatsappUrl }: PromoNavbarProps) {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead({ button_location: "navbar" })}
               className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-[#0A1C12] hover:bg-[#064E3B] text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm hover:shadow-[0_10px_20px_-5px_rgba(6,78,59,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group"
             >
               <MessageCircle className="w-4 h-4 fill-white" />

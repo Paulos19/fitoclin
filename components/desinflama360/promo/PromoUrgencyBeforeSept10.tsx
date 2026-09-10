@@ -12,6 +12,7 @@ import {
   Calendar,
   ExternalLink,
 } from "lucide-react";
+import { trackLead } from "@/lib/fpixel";
 
 interface PromoUrgencyBeforeSept10Props {
   whatsappUrl: string;
@@ -153,6 +154,7 @@ export default function PromoUrgencyBeforeSept10({
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackLead({ button_location: "urgency_whatsapp" })}
             className="group relative inline-flex items-center justify-center w-full max-w-2xl px-6 py-4 sm:px-8 sm:py-5 rounded-2xl bg-[#0A1C12] hover:bg-[#064E3B] text-white font-black text-xs sm:text-sm md:text-base tracking-wide uppercase shadow-[0_15px_35px_-10px_rgba(10,28,18,0.35)] hover:shadow-[0_20px_45px_-10px_rgba(6,78,59,0.45)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 border border-emerald-900/30 text-center leading-snug"
           >
             <span className="flex items-center justify-center gap-3 text-center">
@@ -176,6 +178,7 @@ export default function PromoUrgencyBeforeSept10({
               href={checkoutUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead({ button_location: "urgency_hotmart" })}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 hover:text-emerald-950 underline underline-offset-4 transition-colors"
             >
               <span>Acessar inscrição imediata na Hotmart</span>

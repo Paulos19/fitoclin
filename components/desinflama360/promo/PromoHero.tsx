@@ -16,6 +16,7 @@ import {
   ArrowUpRight,
   Leaf,
 } from "lucide-react";
+import { trackLead } from "@/lib/fpixel";
 
 interface PromoHeroProps {
   whatsappUrl: string;
@@ -165,6 +166,7 @@ export default function PromoHero({ whatsappUrl }: PromoHeroProps) {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackLead({ button_location: "hero" })}
                   className="group relative inline-flex items-center justify-center w-full py-4 sm:py-5 px-6 sm:px-8 rounded-2xl bg-[#0A1C12] hover:bg-[#064E3B] text-white font-bold text-xs sm:text-sm md:text-base tracking-wide uppercase shadow-[0_12px_30px_-8px_rgba(10,28,18,0.35)] hover:shadow-[0_16px_36px_-8px_rgba(6,78,59,0.45)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 border border-emerald-900/30 text-center leading-snug"
                 >
                   <span className="flex items-center justify-center gap-2.5">

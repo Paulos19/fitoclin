@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   Layers,
 } from "lucide-react";
+import { trackLead } from "@/lib/fpixel";
 
 interface PromoPillarsAndMethodProps {
   whatsappUrl: string;
@@ -168,6 +169,7 @@ export default function PromoPillarsAndMethod({ whatsappUrl }: PromoPillarsAndMe
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead({ button_location: "pillars_method" })}
               className="inline-flex items-center justify-center gap-2.5 px-8 py-4 sm:px-10 sm:py-5 rounded-2xl bg-[#0A1C12] hover:bg-[#064E3B] text-white font-extrabold text-xs sm:text-sm md:text-base uppercase tracking-wider shadow-[0_12px_30px_-8px_rgba(10,28,18,0.35)] hover:shadow-[0_16px_36px_-8px_rgba(6,78,59,0.45)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 border border-emerald-900/30"
             >
               <span>QUERO CONHECER A CONDIÇÃO ESPECIAL</span>

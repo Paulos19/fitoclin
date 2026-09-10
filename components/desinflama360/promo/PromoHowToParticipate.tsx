@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
 } from "lucide-react";
+import { trackLead } from "@/lib/fpixel";
 
 interface PromoHowToParticipateProps {
   whatsappUrl: string;
@@ -140,6 +141,7 @@ export default function PromoHowToParticipate({ whatsappUrl }: PromoHowToPartici
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead({ button_location: "how_to_participate" })}
               className="group relative inline-flex items-center justify-center w-full max-w-2xl px-6 py-4 sm:px-8 sm:py-5 rounded-2xl bg-white hover:bg-emerald-50 text-[#0A1C12] font-black text-xs sm:text-sm md:text-base tracking-wide uppercase shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 border border-neutral-200 text-center leading-snug"
             >
               <span className="flex items-center justify-center gap-2.5">

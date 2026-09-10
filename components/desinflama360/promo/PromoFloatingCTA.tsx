@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Gift, ArrowRight } from "lucide-react";
+import { trackLead } from "@/lib/fpixel";
 
 interface PromoFloatingCTAProps {
   whatsappUrl: string;
@@ -57,6 +58,7 @@ export default function PromoFloatingCTA({ whatsappUrl }: PromoFloatingCTAProps)
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead({ button_location: "floating_cta" })}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#0A1C12] hover:bg-[#064E3B] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-center shrink-0"
             >
               <MessageCircle className="w-4 h-4 fill-white" />
