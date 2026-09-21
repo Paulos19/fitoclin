@@ -139,7 +139,7 @@ export default function PricingOfferSection({ checkoutUrl }: PricingOfferSection
 
               {/* De */}
               <div className="text-sm text-emerald-400/60 line-through mb-2 font-medium">
-                De R$ 797,00
+                De R$ 997,00
               </div>
 
               {/* Por */}
@@ -151,12 +151,12 @@ export default function PricingOfferSection({ checkoutUrl }: PricingOfferSection
                   <span className="text-base sm:text-lg font-bold text-emerald-300">12x de</span>
                   <span className="text-xl font-bold text-emerald-400">R$</span>
                   <span className="text-4xl sm:text-5xl font-extrabold font-serif text-white tracking-tight">
-                    30,72
+                    61,74
                   </span>
                   <span className="text-lg font-bold text-amber-300 ml-0.5">*</span>
                 </div>
                 <span className="text-xs sm:text-sm text-emerald-200/90 font-medium block mt-1.5">
-                  Ou <strong className="text-amber-300 font-bold">R$ 297,00</strong> à vista
+                  Ou <strong className="text-amber-300 font-bold">R$ 597,00</strong> à vista
                 </span>
               </div>
 
