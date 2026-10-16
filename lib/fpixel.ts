@@ -1,4 +1,6 @@
 export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
+export const FB_DESINFLAMA_PIXEL_ID =
+  process.env.NEXT_PUBLIC_META_PIXEL_DESINFLAMA_ID || "1812713553212107";
 
 declare global {
   interface Window {
@@ -30,4 +32,11 @@ export const trackEvent = (name: string, options: Record<string, any> = {}) => {
  */
 export const trackLead = (options: Record<string, any> = {}) => {
   trackEvent("Lead", options);
+};
+
+/**
+ * Dispara evento de conversão 'InitiateCheckout'
+ */
+export const trackInitiateCheckout = (options: Record<string, any> = {}) => {
+  trackEvent("InitiateCheckout", options);
 };

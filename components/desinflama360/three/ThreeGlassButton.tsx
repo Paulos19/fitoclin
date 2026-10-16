@@ -10,6 +10,7 @@ interface ThreeGlassButtonProps {
   className?: string;
   variant?: "primary" | "secondary" | "subtle";
   icon?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 export default function ThreeGlassButton({
@@ -18,6 +19,7 @@ export default function ThreeGlassButton({
   className = "",
   variant = "primary",
   icon = true,
+  onClick,
 }: ThreeGlassButtonProps) {
   const buttonRef = useRef<HTMLAnchorElement>(null);
   const [coords, setCoords] = useState({ x: 50, y: 50 });
@@ -49,6 +51,7 @@ export default function ThreeGlassButton({
     <Link
       ref={buttonRef}
       href={href}
+      onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

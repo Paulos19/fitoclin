@@ -13,6 +13,7 @@ import {
   Flame,
 } from "lucide-react";
 import ThreeGlassButton from "./three/ThreeGlassButton";
+import { trackInitiateCheckout } from "@/lib/fpixel";
 
 interface OfferLightSectionProps {
   checkoutUrl: string;
@@ -171,6 +172,14 @@ export default function OfferLightSection({ checkoutUrl }: OfferLightSectionProp
               {/* Botão de Compra com Estilo 3D de Vidro Botânico */}
               <ThreeGlassButton
                 href={checkoutUrl}
+                onClick={() => {
+                  trackInitiateCheckout({
+                    content_name: "Clube Desinflama 360",
+                    value: 597.0,
+                    currency: "BRL",
+                    content_type: "product",
+                  });
+                }}
                 variant="primary"
                 className="w-full text-center text-sm sm:text-base py-4"
               >

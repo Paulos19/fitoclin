@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Sparkles, Leaf } from "lucide-react";
 import ThreeGlassButton from "./three/ThreeGlassButton";
+import { trackInitiateCheckout } from "@/lib/fpixel";
 
 interface FinalLightCtaProps {
   checkoutUrl: string;
@@ -38,7 +39,19 @@ export default function FinalLightCta({ checkoutUrl }: FinalLightCtaProps) {
           </p>
 
           <div className="pt-4 flex justify-center">
-            <ThreeGlassButton href={checkoutUrl} variant="primary">
+            <ThreeGlassButton
+              href={checkoutUrl}
+              onClick={() => {
+                trackInitiateCheckout({
+                  content_name: "Clube Desinflama 360",
+                  value: 597.0,
+                  currency: "BRL",
+                  content_type: "product",
+                  location: "footer_final_cta",
+                });
+              }}
+              variant="primary"
+            >
               QUERO ENTRAR PARA O CLUBE DESINFLAMA 360
             </ThreeGlassButton>
           </div>
